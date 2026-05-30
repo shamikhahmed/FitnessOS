@@ -324,6 +324,7 @@ function addRestTime(s) {
 ════════════════════════════════════════ */
 let _wkt = [];
 let _wktActive = false;
+let _wktStarted = false;
 let _wktStart = null;
 let _exGrp = 'all';
 let _exQ = '';
@@ -338,7 +339,11 @@ App.register('workouts', async function () {
     Storage.getAll('templates')
   ]);
 
-  if (!_wktActive || !_wkt.length) {
+  const day = WE.getSplitDay(user, workouts);
+  const sp = SPLITS[user.split] || SPLITS.ppl;
+
+  /* Build plan if empty */
+  if (!_wkt.length) {
     const plan = WE.buildWorkout(user, workouts);
     _wkt = plan.map(function (ex) {
       const rn = parseInt((ex.reps || '8').split('-')[0]) || 8;
@@ -348,70 +353,113 @@ App.register('workouts', async function () {
       }
       return { n: ex.n, em: ex.em, pri: ex.pri, sec: ex.sec, cues: ex.cues, bw: ex.bw, sets: sets, reps: ex.reps, expanded: true, prev: ex.prev };
     });
-    _wktActive = true;
-    _wktStart = Date.now();
   }
 
-  const day = WE.getSplitDay(user, workouts);
-  const sp = SPLITS[user.split] || SPLITS.ppl;
+  /* ── Ready / Start Screen ── */
+  if (!_wktStarted) {
+    let h = App.topbar(sp.n, 'Day ' + (user.splitDay || 1) + ' · ' + (day ? day.muscles.join(', ') : ''));
+    h += '<div style="padding:20px 16px">';
+
+    if (templates.length) {
+      h += App.sh('Templates');
+      h += '<div class="scroll-row" style="margin-bottom:16px">';
+      templates.forEach(function (t) {
+        h += '<div class="template-chip" onclick="Wkt.loadTemplate(' + t.id + ')">📋 ' + App.esc(t.name) + '</div>';
+      });
+      h += '</div>';
+    }
+
+    /* Today's plan preview */
+    if (day) {
+      h += '<div class="card" style="margin:0 0 16px;text-align:center;padding:28px 20px">';
+      h += '<div style="font-size:52px;margin-bottom:12px">🏋️</div>';
+      h += '<div style="font-size:22px;font-weight:900;letter-spacing:-0.4px;margin-bottom:4px">' + day.n + '</div>';
+      h += '<div style="font-size:13px;color:var(--txt3);margin-bottom:20px">' + day.muscles.join(' · ') + '</div>';
+      h += '<button class="btn btn-primary" onclick="Wkt.startWorkout()" style="margin-bottom:12px;font-size:16px">Start Workout ⚡</button>';
+      h += '<button class="btn btn-secondary btn-sm" onclick="Wkt.reset()" style="margin:0 auto">↺ Rebuild Plan</button>';
+      h += '</div>';
+
+      h += App.sh("Today's Exercises");
+      h += '<div class="card" style="margin:0 0 16px">';
+      _wkt.forEach(function (ex) {
+        h += '<div class="exr">';
+        h += '<div class="ex-ic">' + ex.em + '</div>';
+        h += '<div class="ex-inf"><div class="ex-nm">' + App.esc(ex.n) + '</div>';
+        h += '<div class="ex-sub">' + ex.pri + ' · ' + ex.sets.length + ' sets · ' + ex.reps + '</div></div>';
+        if (ex.prev && ex.prev.sets && ex.prev.sets[0]) {
+          const ps = ex.prev.sets[0];
+          h += '<div style="font-size:11px;color:var(--txt3);text-align:right;flex-shrink:0">' +
+            (ex.bw ? 'BW' : ps.weight + (user.units === 'imperial' ? 'lbs' : 'kg')) + ' × ' + ps.reps + '</div>';
+        }
+        h += '</div>';
+      });
+      h += '</div>';
+    }
+
+    h += '<button class="btn btn-secondary" onclick="Wkt.addExercise()" style="font-size:13px;margin-bottom:8px">+ Custom Workout</button>';
+    h += '</div>';
+    return h;
+  }
+
+  /* ── Active Workout Screen ── */
+  _wktActive = true;
   const prog = wktProgress();
+  const elapsedMin = _wktStart ? Math.round((Date.now() - _wktStart) / 60000) : 0;
 
-  let h = App.topbar(day ? day.n : 'Workout', sp.n,
-    '<div class="tb-actions">' +
-    '<button class="btn btn-secondary btn-sm" onclick="Wkt.finish()">Finish ✓</button>' +
-    '</div>');
-
-  h += '<div style="padding:10px 16px">';
+  let h = App.topbar(day ? day.n : 'Workout', elapsedMin + ' min active');
+  h += '<div style="padding:8px 16px 12px">';
   h += '<div style="display:flex;align-items:center;gap:10px">';
   h += '<div style="flex:1;height:6px;background:var(--bg4);border-radius:3px;overflow:hidden">' +
     '<div id="wkt-pb" style="height:6px;width:' + prog + '%;background:var(--accent);border-radius:3px;transition:width .4s var(--ease)"></div></div>';
   h += '<span style="font-size:12px;color:var(--txt3);font-weight:700">' + prog + '%</span>';
   h += '</div></div>';
 
-  if (templates.length) {
-    h += '<div class="scroll-row" style="padding-bottom:8px">';
-    templates.forEach(function (t) {
-      h += '<div class="template-chip" onclick="Wkt.loadTemplate(' + t.id + ')">📋 ' + App.esc(t.name) + '</div>';
-    });
-    h += '</div>';
-  }
-
   _wkt.forEach(function (ex, ei) {
     const dn = ex.sets.filter(function (s) { return s.done; }).length;
     const allDone = dn === ex.sets.length;
-    h += '<div class="card" id="excard-' + ei + '" style="margin:0 16px 10px">';
-    h += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:' + (ex.expanded ? 12 : 0) + 'px;cursor:pointer" onclick="Wkt.toggleEx(' + ei + ')">';
-    h += '<div class="ex-ic">' + ex.em + '</div>';
-    h += '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:800">' + App.esc(ex.n) + '</div>';
-    h += '<div style="font-size:11px;color:var(--txt3);margin-top:2px">' + ex.pri + ' · ' + ex.sets.length + ' sets · ' + ex.reps + '</div></div>';
-    h += '<div style="text-align:right;flex-shrink:0"><div style="font-size:16px;font-weight:800;color:' + (allDone ? 'var(--ok)' : 'var(--txt)') + '">' + dn + '/' + ex.sets.length + '</div>';
-    h += '<div style="font-size:10px;color:var(--txt3)">done</div></div></div>';
+    h += '<div class="card' + (allDone ? ' ex-expanded' : '') + '" id="excard-' + ei + '" style="margin:0 16px 10px">';
+    /* Exercise header */
+    h += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:' + (ex.expanded ? 14 : 0) + 'px;cursor:pointer" onclick="Wkt.toggleEx(' + ei + ')">';
+    h += '<div class="ex-ic" style="' + (allDone ? 'background:var(--ok-glow);border:1px solid rgba(52,199,89,.3)' : '') + '">' + ex.em + '</div>';
+    h += '<div style="flex:1;min-width:0">';
+    h += '<div style="font-size:17px;font-weight:800;letter-spacing:-0.3px">' + App.esc(ex.n) + '</div>';
+    h += '<div style="font-size:11px;margin-top:2px">' +
+      '<span style="color:var(--accent);font-weight:700">' + ex.pri + '</span>' +
+      (ex.sec ? '<span style="color:var(--txt3)"> · ' + ex.sec + '</span>' : '') +
+      '<span style="color:var(--txt3)"> · ' + ex.reps + ' reps</span></div>';
+    h += '</div>';
+    h += '<div style="text-align:right;flex-shrink:0">';
+    h += '<div style="font-size:18px;font-weight:900;color:' + (allDone ? 'var(--ok)' : 'var(--txt3)') + '">' + dn + '/' + ex.sets.length + '</div>';
+    h += '<div style="font-size:9px;color:var(--txt3);font-weight:700;letter-spacing:.05em">DONE</div>';
+    h += '</div></div>';
     if (ex.expanded) {
       if (ex.prev && ex.prev.sets && ex.prev.sets[0]) {
         const ps = ex.prev.sets[0];
-        h += '<div style="background:rgba(10,132,255,0.08);border-radius:10px;padding:7px 12px;margin-bottom:10px;font-size:12px;color:var(--txt3)">';
-        h += 'Last time: ' + (ex.bw ? 'BW' : ps.weight + (user.units === 'imperial' ? 'lbs' : 'kg')) + ' × ' + ps.reps + ' reps</div>';
+        h += '<div style="background:rgba(10,132,255,0.08);border:1px solid rgba(10,132,255,0.15);border-radius:10px;padding:7px 12px;margin-bottom:10px;font-size:12px;color:var(--txt3)">';
+        h += '📊 Last: ' + (ex.bw ? 'Bodyweight' : ps.weight + (user.units === 'imperial' ? ' lbs' : ' kg')) + ' × ' + ps.reps + ' reps</div>';
       }
-      h += '<div style="display:grid;grid-template-columns:34px 1fr 1fr 40px;gap:6px;padding:0 0 5px;margin-bottom:4px">';
-      h += '<span></span>';
-      h += '<span style="font-size:10px;color:var(--txt3);text-align:center;font-weight:700">' + (ex.bw ? 'BW+KG' : (user.units === 'imperial' ? 'LBS' : 'KG')) + '</span>';
-      h += '<span style="font-size:10px;color:var(--txt3);text-align:center;font-weight:700">REPS</span>';
+      /* Sets header */
+      h += '<div style="display:grid;grid-template-columns:34px 1fr 1fr 48px;gap:6px;padding:0 4px 6px;margin-bottom:2px">';
+      h += '<span style="font-size:9px;color:var(--txt3);font-weight:700;text-align:center">NO.</span>';
+      h += '<span style="font-size:9px;color:var(--txt3);font-weight:700;text-align:center">' +
+        (ex.bw ? 'BW+KG' : (user.units === 'imperial' ? 'LBS' : 'KG')) + '</span>';
+      h += '<span style="font-size:9px;color:var(--txt3);font-weight:700;text-align:center">REPS</span>';
       h += '<span></span></div>';
       ex.sets.forEach(function (set, si) {
         h += '<div class="set-row" id="sr-' + ei + '-' + si + '">';
         h += '<div class="set-n' + (set.done ? ' done' : '') + '">' + set.n + '</div>';
-        if (!ex.bw) {
-          h += '<input class="set-inp" type="number" inputmode="decimal" value="' + set.w + '" step="2.5"' + (set.done ? ' disabled' : '') + ' oninput="Wkt.sv(' + ei + ',' + si + ',\'w\',this.value)">';
-        } else {
-          h += '<input class="set-inp" type="number" inputmode="decimal" value="' + set.w + '" step="2.5" placeholder="+0"' + (set.done ? ' disabled' : '') + ' oninput="Wkt.sv(' + ei + ',' + si + ',\'w\',this.value)">';
-        }
-        h += '<input class="set-inp" type="number" inputmode="numeric" value="' + set.r + '" step="1"' + (set.done ? ' disabled' : '') + ' oninput="Wkt.sv(' + ei + ',' + si + ',\'r\',this.value)">';
-        h += '<button class="set-chk' + (set.done ? ' done' : '') + '" onclick="Wkt.doneSet(' + ei + ',' + si + ')">' + (set.done ? App.svgCheck() : '') + '</button>';
+        h += '<input class="set-inp" type="number" inputmode="decimal" value="' + set.w + '" step="2.5"' +
+          (ex.bw ? ' placeholder="+0"' : '') + (set.done ? ' disabled' : '') +
+          ' oninput="Wkt.sv(' + ei + ',' + si + ',\'w\',this.value)">';
+        h += '<input class="set-inp" type="number" inputmode="numeric" value="' + set.r + '" step="1"' + (set.done ? ' disabled' : '') +
+          ' oninput="Wkt.sv(' + ei + ',' + si + ',\'r\',this.value)">';
+        h += '<button class="set-chk' + (set.done ? ' done' : '') + '" onclick="Wkt.doneSet(' + ei + ',' + si + ')">' +
+          (set.done ? App.svgCheck() : '') + '</button>';
         h += '</div>';
       });
-      h += '<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px">';
-      h += '<div style="font-size:12px;color:var(--txt3);font-style:italic;margin-bottom:8px">' + App.esc(ex.cues) + '</div>';
-      h += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">';
+      h += '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">';
+      h += '<div style="font-size:12px;color:var(--txt3);font-style:italic;margin-bottom:8px;line-height:1.5">' + App.esc(ex.cues) + '</div>';
+      h += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
       h += '<button class="btn btn-secondary btn-xs" onclick="Wkt.addSet(' + ei + ')">+ Set</button>';
       h += '<button class="btn btn-secondary btn-xs" onclick="Wkt.showAlts(' + ei + ')">↔ Swap</button>';
       h += '</div></div>';
@@ -419,11 +467,18 @@ App.register('workouts', async function () {
     h += '</div>';
   });
 
-  h += '<div style="padding:0 16px 12px;display:flex;gap:10px">';
-  h += '<button class="btn btn-secondary" onclick="Wkt.addExercise()" style="font-size:13px">+ Add Exercise</button>';
-  h += '<button class="btn btn-secondary" onclick="Wkt.saveTemplate()" style="font-size:13px">💾 Save Template</button>';
+  h += '<div style="padding:0 16px;display:flex;gap:8px;margin-bottom:12px">';
+  h += '<button class="btn btn-secondary" onclick="Wkt.addExercise()" style="font-size:13px">+ Exercise</button>';
+  h += '<button class="btn btn-secondary" onclick="Wkt.saveTemplate()" style="font-size:13px">💾 Template</button>';
   h += '</div>';
-  h += '<div style="height:16px"></div>';
+
+  /* Sticky finish button */
+  h += '<div style="position:sticky;bottom:calc(var(--nav-h) + var(--safe) + 8px);padding:0 16px 4px;z-index:50;' +
+    'background:linear-gradient(to top,var(--bg) 70%,transparent)">';
+  h += '<button class="btn btn-primary" onclick="Wkt.finish()" ' +
+    'style="box-shadow:0 8px 32px var(--accent-glow);font-size:15px">Finish Workout ✓</button>';
+  h += '</div>';
+  h += '<div style="height:12px"></div>';
   return h;
 });
 
@@ -435,6 +490,12 @@ function wktProgress() {
 }
 
 const Wkt = {
+  startWorkout: function () {
+    _wktStarted = true;
+    _wktStart = Date.now();
+    go('workouts');
+  },
+
   toggleEx: function (ei) {
     _wkt[ei].expanded = !_wkt[ei].expanded;
     go('workouts');
@@ -470,7 +531,9 @@ const Wkt = {
 
       const user = await Storage.getUser();
       if (user.restTimer !== false) {
-        startRestTimer(user.restSecs || 90);
+        const secs = user.restSecs || 90;
+        App.toast('Rest ' + Math.floor(secs / 60) + ':' + (secs % 60 < 10 ? '0' : '') + (secs % 60) + ' — tap to skip', 'info');
+        startRestTimer(secs);
       }
     }
 
@@ -575,6 +638,7 @@ const Wkt = {
       return { n: e.n, em: e.em || '💪', pri: e.pri, sec: e.sec, cues: e.cues, bw: e.bw, sets: sets, reps: ex.reps || '8-12', expanded: true, prev: null };
     });
     _wktActive = true;
+    _wktStarted = true;
     _wktStart = Date.now();
     App.toast('Template loaded: ' + template.name);
     go('workouts');
@@ -583,6 +647,7 @@ const Wkt = {
   reset: function () {
     _wkt = [];
     _wktActive = false;
+    _wktStarted = false;
     _wktStart = null;
     go('workouts');
   },
@@ -610,7 +675,7 @@ const Wkt = {
     });
     user.splitDay = ((user.splitDay || 1) % (SPLITS[user.split] || SPLITS.ppl).days) + 1;
     await Storage.setUser(user);
-    _wkt = []; _wktActive = false; _wktStart = null;
+    _wkt = []; _wktActive = false; _wktStarted = false; _wktStart = null;
     App.haptic([50, 30, 50]);
     App.toast('Workout saved! ' + Math.round(totalVol) + 'kg total volume 💪');
     go('dashboard');
