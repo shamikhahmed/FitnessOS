@@ -923,3 +923,172 @@ textarea.field {
   background: linear-gradient(135deg, var(--purple-glow), var(--accent-glow));
   border: 1px solid var(--accent-border);
 }
+
+/* ── EXERCISE TAG (dashboard recent workouts) ─ */
+.ex-tag {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--txt3);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* ── MUSCLE STATUS CHIPS ─────────────────────── */
+.mchip {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 99px;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+.mchip.fresh    { background: rgba(52,199,89,0.12);  color: var(--ok);   }
+.mchip.moderate { background: rgba(255,159,10,0.12); color: var(--warn); }
+.mchip.tired    { background: rgba(255,69,58,0.12);  color: var(--err);  }
+
+/* ── BUTTON SHORTHAND ALIASES ────────────────── */
+.btn-p {
+  background: var(--accent);
+  color: #000;
+  box-shadow: 0 4px 20px var(--accent-glow);
+}
+.btn-p:active { transform: scale(0.95); opacity: 0.9; }
+.btn-s {
+  background: var(--bg3);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+}
+.btn-s:active { transform: scale(0.95); opacity: 0.9; }
+.btn-g {
+  background: var(--bg4);
+  color: var(--txt2);
+  border: 1px solid var(--border);
+}
+.btn-g:active { transform: scale(0.95); opacity: 0.9; }
+
+/* ── RANGE SLIDER ────────────────────────────── */
+.sldr {
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--bg4);
+  outline: none;
+}
+.sldr::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+.sldr::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: none;
+}
+
+/* ── METRIC BOXES ────────────────────────────── */
+.met-box {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--r12);
+  padding: 12px;
+  text-align: center;
+}
+.met-val {
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--txt);
+  letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
+}
+.met-lbl {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--txt3);
+  margin-top: 4px;
+}
+
+/* ── GLOW CARD VARIANT ───────────────────────── */
+.card-glow {
+  box-shadow: 0 0 40px rgba(16,185,129,0.08);
+}
+
+/* ── AI MESSAGE BUBBLE ───────────────────────── */
+.ai-msg {
+  background: var(--bg3);
+  border-radius: var(--r12);
+  padding: 14px;
+  border-left: 3px solid var(--accent);
+}
+.ai-msg p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--txt2);
+  margin: 0;
+}
+
+/* ── COLOR BADGE VARIANTS ────────────────────── */
+.cbadge {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 99px;
+}
+.b-c { background: var(--accent-dim); color: var(--accent); }
+.b-ok { background: var(--ok-glow); color: var(--ok); }
+.b-warn { background: var(--warn-glow); color: var(--warn); }
+.b-err { background: var(--err-glow); color: var(--err); }
+
+/* ── WELCOME / ONBOARDING SCREEN ─────────────── */
+.welcome {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  text-align: center;
+}
+.logo { font-size: 72px; margin-bottom: 16px; line-height: 1; }
+.w-title {
+  font-size: 42px;
+  font-weight: 900;
+  letter-spacing: -2px;
+  line-height: 1.1;
+  margin-bottom: 16px;
+}
+.w-sub {
+  font-size: 16px;
+  color: var(--txt2);
+  line-height: 1.6;
+  max-width: 320px;
+  margin-bottom: 28px;
+}
+.feat-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 32px;
+}
+.feat {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 99px;
+  background: var(--accent-dim);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+}

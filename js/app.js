@@ -242,5 +242,12 @@ const App = (function () {
 function go(id, params) { App.go(id, params); }
 function toast(msg, type) { App.toast(msg, type); }
 function haptic(p) { App.haptic(p); }
+function reg(id, fn) { App.register(id, fn); }
+
+window.go = go;
+window.toast = toast;
+window.haptic = haptic;
+window.reg = reg;
+window.App = App;
 
 document.addEventListener('DOMContentLoaded', function () { App.boot(); });

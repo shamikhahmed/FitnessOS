@@ -75,6 +75,18 @@ function insCard(ins) {
   return card('<div style="display:flex;align-items:flex-start;gap:13px"><span style="font-size:26px">' + ins.i + '</span><div><div style="font-size:14px;font-weight:700;color:' + ins.c + ';margin-bottom:4px">' + ins.t + '</div><p style="font-size:13px;line-height:1.55;margin:0;color:rgba(255,255,255,.6)">' + ins.m + '</p></div></div>');
 }
 
+/* === APP NAMESPACE ALIASES === */
+if (typeof App !== 'undefined') {
+  App.topbar = App.topbar || topbar;
+  App.sh = App.sh || sh;
+  App.statBox = App.statBox || statBox;
+  App.esc = App.esc || function(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+  App.isoNow = App.isoNow || function() { return new Date().toISOString(); };
+  App.haptic = App.haptic || function(p) { try { if (navigator.vibrate) navigator.vibrate(p||30); } catch(e) {} };
+  App.svgCheck = App.svgCheck || function() { return '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>'; };
+  App.fmtDate = App.fmtDate || function(d) { if(!d) return ''; return new Date(d).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}); };
+}
+
 function achHTML() {
   var earned = S.g('achievements') || [];
   return ACHS.map(function(a) {
