@@ -1,176 +1,202 @@
 'use strict';
+/* ── FitnessOS v4 — Nutrition / Supplements / Water ── */
 
 reg('nutrition', function() {
   const user = S.g('user') || {};
   const meals = S.g('meals') || [];
   const water = S.g('water') || [];
-  const todayMeals = meals.filter(m => m.date === today());
-  const todayWater = water.filter(w => w.date === today()).length;
+  const userSupps = S.g('supplements') || [];
+  const logs = S.g('supplementLogs') || [];
 
-  const calTarget = user.calorieTarget || 2000;
-  const protTarget = user.proteinTarget || 150;
-  const carbTarget = user.carbTarget || 200;
-  const fatTarget = user.fatTarget || 65;
+  const todayCals = meals.filter(m=>m.date===today()).reduce((a,m)=>a+(m.calories||0),0);
+  const calTarget = user.calorieTarget || 2200;
+  const todayP = meals.filter(m=>m.date===today()).reduce((a,m)=>a+(m.protein||0),0);
+  const todayC = meals.filter(m=>m.date===today()).reduce((a,m)=>a+(m.carbs||0),0);
+  const todayF = meals.filter(m=>m.date===today()).reduce((a,m)=>a+(m.fat||0),0);
+  const todayWater = water.filter(w=>w.date===today()).length;
   const waterTarget = user.waterTarget || 8;
+  const dueSupps = SupplementEngine.getDueNow();
 
-  const todayCals = todayMeals.reduce((a,m) => a+(m.calories||0), 0);
-  const todayProt = todayMeals.reduce((a,m) => a+(m.protein||0), 0);
-  const todayCarb = todayMeals.reduce((a,m) => a+(m.carbs||0), 0);
-  const todayFat = todayMeals.reduce((a,m) => a+(m.fat||0), 0);
-
-  const calPct = Math.min(Math.round((todayCals/calTarget)*100), 100);
-  const calRemain = Math.max(0, calTarget - todayCals);
-
-  // Donut chart
-  const total = todayProt*4 + todayCarb*4 + todayFat*9 || 1;
-  const protPct = Math.round(todayProt*4/total*100);
-  const carbPct = Math.round(todayCarb*4/total*100);
-  const fatPct = 100 - protPct - carbPct;
-  function arc(startPct, endPct, color) {
-    const r=60, circ=2*Math.PI*r;
-    const start = circ*(startPct/100), len = circ*((endPct-startPct)/100);
-    return '<circle cx="80" cy="80" r="' + r + '" fill="none" stroke="' + color + '" stroke-width="16" stroke-linecap="butt" stroke-dasharray="' + len.toFixed(1) + ' ' + (circ-len).toFixed(1) + '" stroke-dashoffset="' + (-start).toFixed(1) + '" transform="rotate(-90 80 80)"/>';
-  }
-  const donut = '<div style="position:relative;width:160px;height:160px;margin:0 auto">' +
-    '<svg viewBox="0 0 160 160" width="160" height="160">' +
-    '<circle cx="80" cy="80" r="60" fill="none" stroke="var(--bg4)" stroke-width="16"/>' +
-    (todayCals>0 ? arc(0, protPct, 'var(--c1)') + arc(protPct, protPct+carbPct, 'var(--c5)') + arc(protPct+carbPct, 100, 'var(--c4)') : '') +
-    '</svg>' +
-    '<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">' +
-    '<div style="font-size:26px;font-weight:900;font-variant-numeric:tabular-nums">' + todayCals + '</div>' +
-    '<div style="font-size:11px;color:var(--txt3)">kcal</div>' +
-    '</div></div>' +
-    '<div style="display:flex;gap:16px;justify-content:center;margin-top:12px">' +
-    '<div style="display:flex;align-items:center;gap:6px"><div style="width:10px;height:10px;border-radius:50%;background:var(--c1)"></div><span style="font-size:13px">Protein</span></div>' +
-    '<div style="display:flex;align-items:center;gap:6px"><div style="width:10px;height:10px;border-radius:50%;background:var(--c5)"></div><span style="font-size:13px">Carbs</span></div>' +
-    '<div style="display:flex;align-items:center;gap:6px"><div style="width:10px;height:10px;border-radius:50%;background:var(--c4)"></div><span style="font-size:13px">Fat</span></div>' +
-    '</div>';
-
-  // Macro bars
-  function macroBar(name, val, target, color) {
-    const pct = Math.min(Math.round((val/target)*100), 100);
-    return '<div class="macro-bar-wrap">' +
-      '<div class="macro-bar-label"><span class="macro-bar-name">' + name + '</span><span class="macro-bar-val">' + Math.round(val) + ' / ' + target + 'g</span></div>' +
-      '<div class="macro-bar"><div class="macro-bar-fill" style="width:' + pct + '%;background:' + color + '"></div></div>' +
-      '</div>';
-  }
-
-  // Water drops
-  const drops = Array.from({length:waterTarget}, (_,i) =>
-    '<div class="water-drop' + (i<todayWater?' filled':'') + '" onclick="toggleWater(' + i + ')">💧</div>'
-  ).join('');
-
-  // Meal sections
-  const MEAL_TYPES = ['Breakfast','Lunch','Dinner','Snacks'];
-  const mealSections = MEAL_TYPES.map(type => {
-    const typeMeals = todayMeals.filter(m => m.type === type);
-    const typeCals = typeMeals.reduce((a,m)=>a+(m.calories||0),0);
-    return '<div style="margin-bottom:12px">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">' +
-      '<div style="font-size:14px;font-weight:700">' + type + '</div>' +
-      '<div style="display:flex;align-items:center;gap:8px">' +
-      (typeCals ? '<span style="font-size:13px;color:var(--c1)">' + typeCals + ' kcal</span>' : '') +
-      '<button class="btn btn-s btn-sm" style="padding:4px 10px;font-size:12px" onclick="openAddMeal(\'' + type + '\')">+ Add</button>' +
-      '</div></div>' +
-      (typeMeals.map(m =>
-        '<div class="meal-row" style="padding:10px 0">' +
-        '<div class="meal-info"><div class="meal-name">' + esc(m.name) + '</div>' +
-        '<div class="meal-macros">P: ' + (m.protein||0) + 'g · C: ' + (m.carbs||0) + 'g · F: ' + (m.fat||0) + 'g</div></div>' +
-        '<div class="meal-cal">' + (m.calories||0) + '</div>' +
-        '</div>'
-      ).join('') || '<div style="font-size:13px;color:var(--txt4);padding:8px 0">Nothing logged yet</div>') +
-      '</div>';
-  }).join('');
-
-  // Last 7 days cals
-  const last7 = Array.from({length:7}, (_,i) => {
-    const d = new Date(); d.setDate(d.getDate()-6+i);
-    const iso = d.toISOString().slice(0,10);
-    const cal = meals.filter(m=>m.date===iso).reduce((a,m)=>a+(m.calories||0),0);
-    return { iso, cal, label:['Su','Mo','Tu','We','Th','Fr','Sa'][d.getDay()] };
-  });
-  const maxCal = Math.max(...last7.map(d=>d.cal), calTarget*0.5, 1);
-  const calBars = last7.map((d,i) =>
-    '<div style="flex:1;text-align:center">' +
-    '<div style="height:50px;display:flex;align-items:flex-end"><div style="width:100%;background:' + (i===6?'var(--c1)':'var(--bg4)') + ';border-radius:4px 4px 0 0;height:' + Math.max(Math.round((d.cal/maxCal)*50),d.cal?4:0) + 'px"></div></div>' +
-    '<div style="font-size:10px;color:var(--txt3);margin-top:4px">' + d.label + '</div>' +
-    '</div>'
-  ).join('');
-
-  return topbar('Nutrition', null, '<button class="topbar-icon" onclick="openAddMeal(\'Snacks\')">＋</button>') +
-
-  sh('Today') +
-  '<div class="card card-dark" style="margin:0 16px 14px">' +
-  donut +
-  '<div style="margin-top:16px">' +
-  macroBar('Protein', todayProt, protTarget, 'var(--c1)') +
-  macroBar('Carbs', todayCarb, carbTarget, 'var(--c5)') +
-  macroBar('Fat', todayFat, fatTarget, 'var(--c4)') +
-  '</div></div>' +
-
-  sh('Water (' + todayWater + '/' + waterTarget + ' glasses)') +
-  '<div class="card card-dark" style="margin:0 16px 14px">' +
-  '<div class="water-grid">' + drops + '</div>' +
-  '</div>' +
-
-  sh('Meals Today') +
-  '<div class="card card-dark" style="margin:0 16px 14px">' + mealSections + '</div>' +
-
-  sh('7-Day Calories') +
-  '<div class="card card-dark" style="margin:0 16px 14px">' +
-  '<div style="display:flex;align-items:flex-end;height:60px;gap:6px">' + calBars + '</div>' +
-  '<div style="font-size:11px;color:var(--txt3);text-align:center;margin-top:8px">Target: ' + calTarget + ' kcal/day</div>' +
-  '</div>' +
-  '<div style="height:8px"></div>';
+  return '<div class="topbar"><div class="topbar-title">Nutrition & Supplements</div></div>' +
+    _calSection(todayCals, calTarget, todayP, todayC, todayF, user) +
+    _waterSection(todayWater, waterTarget) +
+    _dueSuppsSection(dueSupps) +
+    _mySuppsSection(userSupps, logs) +
+    _stackSuggestions(user) +
+    '<div style="height:20px"></div>';
 });
 
-function toggleWater(idx) {
-  const water = S.g('water') || [];
-  const todayEntries = water.filter(w => w.date === today());
-  if (idx < todayEntries.length) {
-    const lastIdx = water.lastIndexOf(todayEntries[todayEntries.length-1]);
-    water.splice(lastIdx, 1);
-  } else {
-    water.push({ date: today(), time: isoNow() });
-  }
-  S.set('water', water);
-  haptic(6);
-  go('nutrition');
-}
-window.toggleWater = toggleWater;
+function _calSection(cals, target, p, c, f, user) {
+  const pct = Math.min(Math.round((cals/target)*100), 100);
+  const remain = Math.max(0, target - cals);
+  const macros = TDEEEngine.macroSplit(user.goal||'hypertrophy', target);
 
-function openAddMeal(type) {
-  modal('Add ' + (type||'Meal'),
-    '<div class="field-wrap"><label class="field-label">Food Name</label><input class="field" id="meal-name" type="text" placeholder="e.g. Chicken breast" autofocus></div>' +
+  return sh('Today\'s Nutrition', '+ Log', 'showLogMeal()') +
+    '<div class="card card-solid">' +
+    '<div style="display:flex;align-items:center;gap:20px;margin-bottom:16px">' +
+    '<div style="position:relative;width:80px;height:80px;flex-shrink:0">' +
+    '<svg width="80" height="80" viewBox="0 0 80 80" style="transform:rotate(-90deg)">' +
+    '<circle cx="40" cy="40" r="32" fill="none" stroke="var(--bg4)" stroke-width="8"/>' +
+    '<circle cx="40" cy="40" r="32" fill="none" stroke="var(--c1)" stroke-width="8" stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="'+(201*(1-pct/100))+'"/>' +
+    '</svg>' +
+    '<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">' +
+    '<div style="font-size:16px;font-weight:900;color:var(--txt);line-height:1">'+cals+'</div>' +
+    '<div style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--txt3)">kcal</div>' +
+    '</div></div>' +
+    '<div style="flex:1">' +
+    '<div style="font-size:22px;font-weight:800;color:var(--c1)">'+remain+'<span style="font-size:13px;font-weight:500;color:var(--txt3)"> remaining</span></div>' +
+    '<div style="font-size:12px;color:var(--txt3)">Target: '+target+'kcal</div>' +
+    '</div></div>' +
+    '<div class="macro-bar-wrap">' +
+    _macroBar('Protein', p, macros.protein, '#10B981', 'macro-protein') +
+    _macroBar('Carbs', c, macros.carbs, '#3B82F6', 'macro-carbs') +
+    _macroBar('Fat', f, macros.fat, '#f5c842', 'macro-fat') +
+    '</div></div>';
+}
+
+function _macroBar(name, current, target, color, cls) {
+  const pct = target > 0 ? Math.min(Math.round((current/target)*100), 100) : 0;
+  return '<div class="macro-bar-wrap">' +
+    '<div class="macro-bar-row">' +
+    '<span class="macro-bar-name">'+esc(name)+'</span>' +
+    '<span class="macro-bar-val">'+current+'/'+target+'g</span>' +
+    '</div>' +
+    '<div class="macro-bar">' +
+    '<div class="macro-bar-fill '+cls+'" style="width:'+pct+'%"></div>' +
+    '</div></div>';
+}
+
+function _waterSection(current, target) {
+  const drops = Array.from({length: target}, (_, i) =>
+    '<button class="water-drop'+(i<current?' filled':'')+'" onclick="logWater('+(i+1)+')">💧</button>'
+  ).join('');
+  return sh('Water Intake', current+'/'+target+' glasses') +
+    '<div class="water-grid">'+drops+'</div>' +
+    '<div style="padding:4px 16px 14px;font-size:13px;color:var(--txt3)">'+Math.round(current*0.25*10)/10+'L today · Target: '+Math.round(target*0.25*10)/10+'L</div>';
+}
+
+function _dueSuppsSection(due) {
+  if (!due.length) return '';
+  return sh('Due Now 🔔') +
+    due.map(s =>
+      '<div class="supp-card due">' +
+      '<div class="supp-icon">💊</div>' +
+      '<div class="supp-info">' +
+      '<div class="supp-name">'+esc(s.name)+'</div>' +
+      '<div class="supp-timing">'+esc(s.timing)+' · '+esc(s.dose||'')+'</div>' +
+      '</div>' +
+      '<button class="supp-mark" onclick="SupplementEngine.markTaken(\''+esc(s.id)+'\');go(\'nutrition\')">Done ✓</button>' +
+      '</div>'
+    ).join('');
+}
+
+function _mySuppsSection(userSupps, logs) {
+  if (!userSupps.length) return sh('My Stack') +
+    emptyState('💊','No supplements','Add your stack in the onboarding or below','+ Add Supplement','showAddSuppModal()');
+
+  return sh('My Stack', '+ Add', 'showAddSuppModal()') +
+    userSupps.map(s => {
+      const todayLogs = logs.filter(l=>l.suppId===s.id&&l.date===today());
+      const taken = todayLogs.length > 0;
+      const lastTime = todayLogs.length ? new Date(todayLogs[todayLogs.length-1].time).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : null;
+      const dbEntry = SupplementDB.find(d=>d.id===s.id)||{};
+      const cafWarn = dbEntry.caffeine ? SupplementEngine.checkCaffeineWarning(dbEntry,22) : null;
+      return '<div class="supp-card'+(taken?' taken':'')+'">' +
+        '<div class="supp-icon">'+(taken?'✅':'💊')+'</div>' +
+        '<div class="supp-info">' +
+        '<div class="supp-name">'+esc(s.name)+'</div>' +
+        '<div class="supp-timing">'+esc(s.timing)+' · '+esc(s.dose||dbEntry.dose||'')+'</div>' +
+        (taken&&lastTime?'<div class="supp-taken">Taken at '+lastTime+'</div>':'') +
+        (cafWarn?'<div class="supp-warn">⚠️ '+esc(cafWarn)+'</div>':'') +
+        '</div>' +
+        (!taken?'<button class="supp-mark" onclick="SupplementEngine.markTaken(\''+esc(s.id)+'\');go(\'nutrition\')">Done</button>':'') +
+        '</div>';
+    }).join('');
+}
+
+function _stackSuggestions(user) {
+  const goal = user.goal || 'hypertrophy';
+  const stack = SupplementEngine.getStack(goal);
+  const userSuppIds = (S.g('supplements')||[]).map(s=>s.id);
+  const suggestions = stack.filter(s => !userSuppIds.includes(s.id));
+  if (!suggestions.length) return '';
+  return sh('Recommended for Your Goal') +
+    suggestions.slice(0,4).map(s =>
+      '<div class="supp-card">' +
+      '<div class="supp-icon">💡</div>' +
+      '<div class="supp-info">' +
+      '<div class="supp-name">'+esc(s.name)+'</div>' +
+      '<div class="supp-timing">'+esc(s.dose)+' · '+esc(s.timing)+'</div>' +
+      '<div style="font-size:12px;color:var(--txt3)">'+esc(s.notes)+'</div>' +
+      '</div>' +
+      '<button class="supp-mark" onclick="addSuppToStack(\''+s.id+'\')">+ Add</button>' +
+      '</div>'
+    ).join('');
+}
+
+window.logWater = function(n) {
+  const water = S.g('water') || [];
+  const todayCount = water.filter(w=>w.date===today()).length;
+  if (n <= todayCount) {
+    const toRemove = water.filter(w=>w.date===today());
+    if (toRemove.length > 0) {
+      const all = water.filter(w=>w.date!==today());
+      all.push(...toRemove.slice(0, n-1));
+      S.set('water', all);
+    }
+  } else {
+    for (let i=todayCount; i<n; i++) S.push('water', {date:today(), time:isoNow()});
+  }
+  go('nutrition');
+};
+
+window.addSuppToStack = function(id) {
+  const db = SupplementDB.find(s=>s.id===id);
+  if (!db) return;
+  const supps = S.g('supplements') || [];
+  if (!supps.find(s=>s.id===id)) {
+    S.push('supplements', { id:db.id, name:db.name, timing:db.timing, dose:db.dose, active:true });
+    toast(db.name + ' added to stack', 'ok');
+    go('nutrition');
+  }
+};
+
+window.showAddSuppModal = function() {
+  const userSupps = S.g('supplements') || [];
+  const existing = userSupps.map(s=>s.id);
+  const list = SupplementDB.filter(s=>!existing.includes(s.id)).map(s =>
+    '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">' +
+    '<div style="flex:1"><div style="font-size:14px;font-weight:600;color:var(--txt)">'+esc(s.name)+'</div>' +
+    '<div style="font-size:12px;color:var(--txt3)">'+esc(s.dose)+' · '+esc(s.timing)+'</div></div>' +
+    '<button onclick="addSuppToStack(\''+s.id+'\');closeModal()" style="color:var(--c1);background:none;border:none;font-size:13px;font-weight:700;cursor:pointer;padding:8px;min-height:44px">+ Add</button>' +
+    '</div>'
+  ).join('');
+  modal('Add Supplement', list||'<div style="color:var(--txt3);padding:16px">All supplements already in stack</div>');
+};
+
+window.showLogMeal = function() {
+  modal('Log Meal',
+    '<div class="field-wrap"><label class="field-label">Meal Name</label>' +
+    '<input id="meal-name" class="field" type="text" placeholder="e.g. Chicken & Rice"></div>' +
     '<div class="field-row">' +
-    '<div class="field-wrap"><label class="field-label">Calories</label><input class="field" id="meal-cal" type="number" min="0" placeholder="300" inputmode="numeric"></div>' +
-    '<div class="field-wrap"><label class="field-label">Protein (g)</label><input class="field" id="meal-prot" type="number" min="0" placeholder="30" inputmode="numeric"></div>' +
+    '<div class="field-wrap"><label class="field-label">Calories</label><input id="meal-cal" class="field" type="number" placeholder="500"></div>' +
+    '<div class="field-wrap"><label class="field-label">Protein (g)</label><input id="meal-p" class="field" type="number" placeholder="40"></div>' +
     '</div>' +
     '<div class="field-row">' +
-    '<div class="field-wrap"><label class="field-label">Carbs (g)</label><input class="field" id="meal-carb" type="number" min="0" placeholder="20" inputmode="numeric"></div>' +
-    '<div class="field-wrap"><label class="field-label">Fat (g)</label><input class="field" id="meal-fat" type="number" min="0" placeholder="10" inputmode="numeric"></div>' +
+    '<div class="field-wrap"><label class="field-label">Carbs (g)</label><input id="meal-c" class="field" type="number" placeholder="60"></div>' +
+    '<div class="field-wrap"><label class="field-label">Fat (g)</label><input id="meal-f" class="field" type="number" placeholder="15"></div>' +
     '</div>',
-    '<button class="btn btn-p" onclick="saveMeal(\'' + (type||'Snacks') + '\')">Add</button>'
+    '<button class="btn btn-primary" onclick="saveMeal()" style="margin-top:12px">Save Meal</button>'
   );
-}
-window.openAddMeal = openAddMeal;
+};
 
-function saveMeal(type) {
-  const name = document.getElementById('meal-name').value.trim();
-  const cal = parseInt(document.getElementById('meal-cal').value)||0;
-  if (!name) { toast('Enter food name', 'warn'); return; }
-  const meals = S.g('meals') || [];
-  meals.push({
-    date: today(), time: isoNow(), type,
-    name, calories: cal,
-    protein: parseFloat(document.getElementById('meal-prot').value)||0,
-    carbs: parseFloat(document.getElementById('meal-carb').value)||0,
-    fat: parseFloat(document.getElementById('meal-fat').value)||0
-  });
-  S.set('meals', meals);
-  closeModal();
-  toast(name + ' added!', 'ok');
-  haptic(30);
-  go('nutrition');
-}
-window.saveMeal = saveMeal;
+window.saveMeal = function() {
+  const name = document.getElementById('meal-name')?.value;
+  const cal = parseFloat(document.getElementById('meal-cal')?.value)||0;
+  const p = parseFloat(document.getElementById('meal-p')?.value)||0;
+  const c = parseFloat(document.getElementById('meal-c')?.value)||0;
+  const f = parseFloat(document.getElementById('meal-f')?.value)||0;
+  if (!cal) { toast('Enter calories', 'warn'); return; }
+  S.push('meals', { name:name||'Meal', calories:cal, protein:p, carbs:c, fat:f, date:today(), time:isoNow() });
+  closeModal(); toast('Meal logged!', 'ok'); go('nutrition');
+};

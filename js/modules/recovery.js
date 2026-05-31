@@ -1,119 +1,170 @@
 'use strict';
+/* ── FitnessOS v4 — Recovery Screen ── */
 
 reg('recovery', function() {
   const rec = S.g('recovery') || {};
   const user = S.g('user') || {};
+  const loggedToday = rec.date === today();
   const score = ReadinessEngine.score();
   const rl = ReadinessEngine.label(score);
-  const insights = CoachEngine.insights();
-  const isToday = rec.date === today();
 
-  // Last 7 day scores
-  const ws = S.g('workouts') || [];
-  const history = Array.from({length:7}, (_,i) => {
-    const d = new Date(); d.setDate(d.getDate()-6+i);
-    return { label:['Su','Mo','Tu','We','Th','Fr','Sa'][d.getDay()], score: i===6 ? score : Math.floor(Math.random()*30+55) };
-  });
-  const maxScore = 100;
-  const histBars = history.map((h,i) =>
-    '<div style="flex:1;text-align:center">' +
-    '<div style="height:60px;display:flex;align-items:flex-end"><div style="width:100%;background:' + (i===6?'var(--grad)':'var(--bg4)') + ';border-radius:4px 4px 0 0;height:' + Math.round((h.score/maxScore)*60) + 'px;transition:height 0.4s"></div></div>' +
-    '<div style="font-size:10px;color:var(--txt3);margin-top:4px">' + h.label + '</div>' +
-    '</div>'
-  ).join('');
-
-  const sliders = [
-    { k:'sleep', l:'Sleep Hours', min:0, max:12, step:0.5, unit:'h', v:rec.sleep||7.5, emoji:'😴', hint:'0–12 hours' },
-    { k:'soreness', l:'Muscle Soreness', min:0, max:10, step:1, unit:'', v:rec.soreness||3, emoji:'💪', hint:'0=none · 10=severe' },
-    { k:'stress', l:'Stress Level', min:0, max:10, step:1, unit:'', v:rec.stress||4, emoji:'🧠', hint:'0=calm · 10=burnt out' },
-    { k:'energy', l:'Energy Level', min:0, max:10, step:1, unit:'', v:rec.energy||7, emoji:'⚡', hint:'0=exhausted · 10=peak' },
-    { k:'hydration', l:'Water Intake', min:0, max:5, step:0.5, unit:'L', v:rec.hydration||2.5, emoji:'💧', hint:'litres consumed' },
-  ];
-
-  let liveScore = score;
-
-  const sliderHTML = sliders.map(s =>
-    '<div class="slider-wrap">' +
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">' +
-    '<div style="font-size:14px;font-weight:600">' + s.emoji + ' ' + esc(s.l) + '</div>' +
-    '<div class="slider-val" id="sv-' + s.k + '">' + s.v + s.unit + '</div>' +
-    '</div>' +
-    '<input type="range" min="' + s.min + '" max="' + s.max + '" step="' + s.step + '" value="' + s.v + '" oninput="updateSlider(\'' + s.k + '\',this.value,\'' + s.unit + '\')">' +
-    '<div style="display:flex;justify-content:space-between;margin-top:2px">' +
-    '<span style="font-size:11px;color:var(--txt4)">' + esc(s.hint.split('·')[0].trim()) + '</span>' +
-    '<span style="font-size:11px;color:var(--txt4)">' + esc((s.hint.split('·')[1]||'').trim()) + '</span>' +
-    '</div></div>'
-  ).join('');
-
-  return topbar('Recovery', null, '') +
-
-  '<div class="readiness-card" style="margin:12px 16px 14px;border:1.5px solid ' + rl.c + '">' +
-  '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">' +
-  '<div>' +
-  '<div class="readiness-score" id="live-score">' + score + '</div>' +
-  '<div class="readiness-label" id="live-label" style="color:' + rl.c + ';background:' + rl.bg + '">' + esc(rl.l) + '</div>' +
-  '</div>' +
-  '<div style="font-size:13px;color:var(--txt2);max-width:180px;line-height:1.5;text-align:right" id="live-msg">' + esc(ReadinessEngine.message(score)) + '</div>' +
-  '</div>' +
-  (isToday ? '<div style="font-size:12px;color:var(--c3)">✓ Recovery logged today</div>' : '<div style="font-size:12px;color:var(--c1)">Update sliders below to recalculate</div>') +
-  '</div>' +
-
-  sh('Log Recovery') +
-  '<div class="card card-dark" style="margin:0 16px 14px">' + sliderHTML + '</div>' +
-
-  '<div style="padding:0 16px;margin-bottom:14px">' +
-  '<button class="btn btn-p" onclick="saveRecovery()">Save Recovery Data</button>' +
-  '</div>' +
-
-  sh('Recovery Tips') +
-  insights.slice(0,2).map(ins =>
-    '<div class="ai-msg" style="margin:0 16px 10px;border-left-color:' + ins.c + '">' +
-    '<div class="ai-msg-i">' + ins.i + '</div>' +
-    '<div class="ai-msg-t" style="color:' + ins.c + '">' + esc(ins.t) + '</div>' +
-    '<div class="ai-msg-m">' + esc(ins.m) + '</div></div>'
-  ).join('') +
-
-  sh('7-Day Readiness') +
-  '<div class="card card-dark" style="margin:0 16px 14px">' +
-  '<div style="display:flex;align-items:flex-end;height:70px;gap:6px">' + histBars + '</div>' +
-  '</div>' +
-  '<div style="height:8px"></div>';
+  return '<div class="topbar"><div class="topbar-title">Recovery</div></div>' +
+    _readinessSummary(score, rl) +
+    (loggedToday ? _loggedView(rec) : _checkInForm(rec)) +
+    _sleepInsights() +
+    _recoveryRecs(score) +
+    '<div style="height:20px"></div>';
 });
 
-const _recoveryDraft = {};
-
-function updateSlider(key, val, unit) {
-  _recoveryDraft[key] = parseFloat(val);
-  const el = document.getElementById('sv-' + key);
-  if (el) el.textContent = val + unit;
-  // Live score update
-  const cur = Object.assign({}, S.g('recovery')||{}, _recoveryDraft);
-  const draftS = { d: Object.assign({}, S.d, { recovery: cur }) };
-  const tmpScore = (function() {
-    const r = cur;
-    const ws = S.g('workouts') || [];
-    let sc = 100;
-    const sleep = r.sleep||7.5;
-    if(sleep<5)sc-=35; else if(sleep<6)sc-=20; else if(sleep<7)sc-=10; else if(sleep>=8)sc+=5;
-    sc-=(r.soreness||3)*4; sc-=(r.stress||4)*2.5; sc+=((r.energy||7)-5)*3;
-    if((r.hydration||2.5)<1.5)sc-=8;
-    return Math.max(0,Math.min(100,Math.round(sc)));
-  })();
-  const el2 = document.getElementById('live-score'); if(el2) el2.textContent=tmpScore;
-  const rl = ReadinessEngine.label(tmpScore);
-  const el3 = document.getElementById('live-label');
-  if(el3){el3.textContent=rl.l;el3.style.color=rl.c;el3.style.background=rl.bg;}
-  const el4 = document.getElementById('live-msg'); if(el4) el4.textContent=ReadinessEngine.message(tmpScore);
+function _readinessSummary(score, rl) {
+  return '<div class="readiness-card">' +
+    '<div style="display:flex;align-items:center;gap:20px">' +
+    '<div>' +
+    '<div class="readiness-score">'+score+'</div>' +
+    '<div class="readiness-label '+rl.cls+'">'+rl.l+'</div>' +
+    '</div>' +
+    '<div style="flex:1">' +
+    '<div style="font-size:14px;color:var(--txt2);line-height:1.6">'+esc(ReadinessEngine.message(score))+'</div>' +
+    '</div></div>' +
+    '<div class="readiness-metrics">' +
+    _rm('😴','Sleep') + _rm('💪','Soreness') + _rm('🧠','Stress') + _rm('⚡','Energy') +
+    '</div></div>';
 }
-window.updateSlider = updateSlider;
 
-function saveRecovery() {
-  const cur = Object.assign({ date:today(), sleep:7.5, soreness:3, stress:4, energy:7, hydration:2.5 }, S.g('recovery')||{}, _recoveryDraft);
-  cur.date = today();
-  S.set('recovery', cur);
-  Object.keys(_recoveryDraft).forEach(k => delete _recoveryDraft[k]);
-  toast('Recovery saved!', 'ok');
-  haptic(30);
+function _rm(icon, label) {
+  const r = S.g('recovery') || {};
+  const vals = { Sleep:r.sleep||'—', Soreness:r.soreness||'—', Stress:r.stress||'—', Energy:r.energy||'—' };
+  return '<div class="readiness-metric">' +
+    '<div class="readiness-metric-v">'+icon+' '+vals[label]+'</div>' +
+    '<div class="readiness-metric-l">'+esc(label)+'</div></div>';
+}
+
+function _checkInForm(rec) {
+  const sliders = [
+    { key:'sleep', label:'Sleep Duration', min:0, max:12, step:0.5, unit:'hrs', icon:'😴', def:7.5 },
+    { key:'soreness', label:'Muscle Soreness', min:0, max:10, step:1, unit:'/10', icon:'💪', def:3 },
+    { key:'stress', label:'Stress Level', min:0, max:10, step:1, unit:'/10', icon:'🧠', def:4 },
+    { key:'energy', label:'Energy Level', min:0, max:10, step:1, unit:'/10', icon:'⚡', def:7 },
+    { key:'hydration', label:'Water Intake', min:0, max:5, step:0.5, unit:'L', icon:'💧', def:2.5 }
+  ];
+
+  const slidersHTML = sliders.map(s => {
+    const val = rec[s.key] || s.def;
+    return '<div class="slider-wrap">' +
+      '<div class="slider-header">' +
+      '<span style="font-size:18px">'+s.icon+'</span>' +
+      '<span class="slider-name">'+esc(s.label)+'</span>' +
+      '<span class="slider-val" id="sv-'+s.key+'">'+val+'</span>' +
+      '<span class="slider-unit">'+esc(s.unit)+'</span>' +
+      '</div>' +
+      '<input type="range" min="'+s.min+'" max="'+s.max+'" step="'+s.step+'" value="'+val+'" ' +
+        'oninput="document.getElementById(\'sv-'+s.key+'\').textContent=this.value;_recTmp.'+s.key+'=parseFloat(this.value)">' +
+      '<div class="slider-labels">' +
+      '<span>'+s.min+(s.unit==='hrs'?' hrs':'')+' </span>' +
+      '<span>'+s.max+(s.unit==='hrs'?' hrs':'')+'</span>' +
+      '</div></div>';
+  }).join('');
+
+  return sh('Daily Check-In') +
+    '<script>window._recTmp=' + JSON.stringify({
+      sleep: rec.sleep||7.5, soreness: rec.soreness||3,
+      stress: rec.stress||4, energy: rec.energy||7, hydration: rec.hydration||2.5
+    }) + '</script>' +
+    '<div style="padding:0 16px">' +
+    slidersHTML +
+    '<button class="btn btn-primary" onclick="saveRecovery()">Log Recovery</button>' +
+    '</div>';
+}
+
+function _loggedView(rec) {
+  return sh('Today\'s Check-In', 'Edit', 'resetRecovery()') +
+    '<div class="card card-solid">' +
+    '<div style="display:flex;flex-wrap:wrap;gap:16px">' +
+    _recStat('😴', rec.sleep||'—', 'hrs sleep') +
+    _recStat('💪', rec.soreness||'—', '/10 sore') +
+    _recStat('🧠', rec.stress||'—', '/10 stress') +
+    _recStat('⚡', rec.energy||'—', '/10 energy') +
+    _recStat('💧', rec.hydration||'—', 'L hydration') +
+    '</div>' +
+    '<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">' +
+    '<div style="font-size:13px;color:var(--txt3)">Breakdown:</div>' +
+    '<div style="font-size:14px;color:var(--txt2);margin-top:4px;line-height:1.6">'+esc(_recoveryBreakdown(rec))+'</div>' +
+    '</div></div>';
+}
+
+function _recStat(icon, val, label) {
+  return '<div style="text-align:center;flex:1;min-width:60px">' +
+    '<div style="font-size:22px">'+icon+'</div>' +
+    '<div style="font-size:20px;font-weight:800;color:var(--c1)">'+esc(String(val))+'</div>' +
+    '<div style="font-size:10px;color:var(--txt3)">'+esc(label)+'</div>' +
+    '</div>';
+}
+
+function _recoveryBreakdown(rec) {
+  const parts = [];
+  if ((rec.sleep||7.5) < 6) parts.push('Sleep is limiting recovery — aim for 8+ hrs tonight');
+  else if ((rec.sleep||7.5) >= 8) parts.push('Sleep quality is excellent');
+  if ((rec.soreness||3) >= 7) parts.push('High muscle soreness — consider reducing intensity');
+  if ((rec.energy||7) >= 8) parts.push('Energy levels are high');
+  else if ((rec.energy||7) < 5) parts.push('Low energy — ensure adequate nutrition and rest');
+  if ((rec.hydration||2.5) < 1.5) parts.push('Hydration is low — drink more water throughout the day');
+  return parts.length ? parts.join('. ') + '.' : 'Recovery metrics look balanced. Train as planned.';
+}
+
+function _sleepInsights() {
+  const ws = S.g('workouts') || [];
+  const recs = S.g('recovery') ? [S.g('recovery')] : [];
+  const avgSleep = recs.reduce ? (recs.reduce((a,r)=>a+(r.sleep||7.5),0)/Math.max(recs.length,1)).toFixed(1) : '7.5';
+  return sh('Sleep Insights') +
+    '<div class="card card-solid">' +
+    '<div style="font-size:28px;font-weight:900;color:var(--c1)">'+avgSleep+'<span style="font-size:14px;color:var(--txt3);font-weight:500"> hrs avg</span></div>' +
+    '<div style="font-size:13px;color:var(--txt2);margin-top:8px;line-height:1.6">' +
+    (parseFloat(avgSleep) >= 8 ? '✅ Excellent sleep average — optimising recovery and performance.' :
+     parseFloat(avgSleep) >= 7 ? '👍 Good sleep average. Aim for 8+ for optimal performance.' :
+     '⚠️ Below recommended. Even 30 more minutes per night makes a significant difference.') +
+    '</div></div>';
+}
+
+function _recoveryRecs(score) {
+  const recs = [];
+  if (score < 50) {
+    recs.push({ icon:'🚿', text:'Take a cold shower (3 min cold) — reduces muscle soreness by up to 20%' });
+    recs.push({ icon:'🧘', text:'20 min yoga or light mobility work — enhances circulation and recovery' });
+    recs.push({ icon:'🚶', text:'Light 20 min walk at 5 km/h — active recovery without adding fatigue' });
+  } else if (score < 70) {
+    recs.push({ icon:'🫧', text:'Foam roll legs and back — 10 min thorough rolling session' });
+    recs.push({ icon:'😴', text:'Aim for 8+ hrs tonight — get to bed 30 min earlier' });
+    recs.push({ icon:'💧', text:'Drink 500ml water in the next 30 min' });
+  } else {
+    recs.push({ icon:'💪', text:'You\'re ready to train hard — execute your planned workout' });
+    recs.push({ icon:'🥩', text:'Hit protein target post-workout for optimal muscle protein synthesis' });
+    recs.push({ icon:'⚡', text:'Consider a 10 min dynamic warm-up to prime your CNS' });
+  }
+  return sh('Recommendations') +
+    '<div style="padding:0 16px">' +
+    recs.map(r =>
+      '<div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">' +
+      '<div style="font-size:24px;flex-shrink:0">'+r.icon+'</div>' +
+      '<div style="font-size:14px;color:var(--txt2);line-height:1.5">'+esc(r.text)+'</div>' +
+      '</div>'
+    ).join('') + '</div>';
+}
+
+window.saveRecovery = function() {
+  const tmp = window._recTmp || {};
+  S.set('recovery', {
+    sleep: tmp.sleep || 7.5,
+    soreness: tmp.soreness || 3,
+    stress: tmp.stress || 4,
+    energy: tmp.energy || 7,
+    hydration: tmp.hydration || 2.5,
+    date: today()
+  });
+  toast('Recovery logged!', 'ok');
   go('recovery');
-}
-window.saveRecovery = saveRecovery;
+};
+
+window.resetRecovery = function() {
+  S.set('recovery', { ...S.g('recovery'), date:'' });
+  go('recovery');
+};

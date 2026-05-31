@@ -1,111 +1,69 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="electric">
+<html lang="en" data-theme="carbon">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FitnessOS">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#000000">
-  <title>FitnessOS Pro</title>
-  <link rel="manifest" href="./manifest.json">
-  <link rel="apple-touch-icon" href="./icon.svg">
-  <link rel="stylesheet" href="./css/base.css">
-  <link rel="stylesheet" href="./css/layout.css">
-  <link rel="stylesheet" href="./css/components.css">
+  <meta name="description" content="FitnessOS — Your Intelligent Training Operating System">
+  <title>FitnessOS</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <style>
+    html,body{height:100%;overflow:hidden;}
+    #app{position:relative;z-index:1;height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;}
+    #view{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--nav-h) + var(--safe) + 16px);}
+  </style>
 </head>
 <body>
   <canvas id="bg-canvas"></canvas>
   <div id="app">
-    <div id="view"></div>
-    <nav id="nav">
-      <button class="nb" id="nb-dashboard" onclick="go('dashboard')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        <span>Home</span>
-      </button>
-      <button class="nb" id="nb-workouts" onclick="go('workouts')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="5.5" cy="12" r="2.5"/><circle cx="18.5" cy="12" r="2.5"/><line x1="8" y1="12" x2="16" y2="12"/><circle cx="5.5" cy="7" r="1.5"/><circle cx="5.5" cy="17" r="1.5"/><circle cx="18.5" cy="7" r="1.5"/><circle cx="18.5" cy="17" r="1.5"/></svg>
-        <span>Workout</span>
-      </button>
-      <button class="nb" id="nb-progress" onclick="go('progress')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-        <span>Progress</span>
-      </button>
-      <button class="nb" id="nb-ai" onclick="go('ai')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a6 6 0 016 6v4a6 6 0 01-12 0V8a6 6 0 016-6z"/><path d="M8 21h8M12 17v4"/><circle cx="9" cy="9" r="1" fill="currentColor"/><circle cx="15" cy="9" r="1" fill="currentColor"/></svg>
-        <span>AI Coach</span>
-      </button>
-      <button class="nb" id="nb-settings" onclick="go('settings')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-        <span>Settings</span>
-      </button>
-    </nav>
+    <div id="view">
+      <div style="height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px">
+        <div style="font-size:48px">⚡</div>
+        <div style="font-size:18px;font-weight:700;color:var(--txt)">Loading FitnessOS...</div>
+      </div>
+    </div>
+    <nav id="nav" style="display:none"></nav>
   </div>
-  <div id="toast" class="toast"></div>
-  <div id="modal-overlay"></div>
-
-  <script src="./js/storage.js"></script>
-  <script src="./js/app.js"></script>
-  <script src="./js/modules/dashboard.js"></script>
-  <script src="./js/modules/workouts.js"></script>
-  <script src="./js/modules/bodystats.js"></script>
-  <script src="./js/modules/cardio.js"></script>
-  <script src="./js/modules/progress.js"></script>
-  <script src="./js/modules/nutrition.js"></script>
-  <script src="./js/modules/injuries.js"></script>
-  <script src="./js/modules/recovery.js"></script>
-  <script src="./js/modules/settings.js"></script>
+  <div id="toast" style="display:none;opacity:0">
+    <span class="toast-icon"></span>
+    <span class="toast-msg"></span>
+  </div>
+  <div id="rest-sheet"></div>
 
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // Animated background orbs
-      (function() {
-        var canvas = document.getElementById('bg-canvas');
-        if (!canvas) return;
-        var ctx = canvas.getContext('2d');
-        var orbs = [
-          { x: 0.3, y: 0.2, r: 200, hue: 195, vx: 0.15, vy: 0.1 },
-          { x: 0.7, y: 0.6, r: 250, hue: 200, vx: -0.12, vy: 0.08 },
-          { x: 0.5, y: 0.8, r: 180, hue: 265, vx: 0.1, vy: -0.15 },
-          { x: 0.15, y: 0.7, r: 220, hue: 270, vx: -0.08, vy: -0.1 },
-        ];
-        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-        resize();
-        window.addEventListener('resize', resize);
-        function draw() {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          orbs.forEach(function(o) {
-            o.x += o.vx / canvas.width;
-            o.y += o.vy / canvas.height;
-            if (o.x < 0 || o.x > 1) o.vx *= -1;
-            if (o.y < 0 || o.y > 1) o.vy *= -1;
-            var grd = ctx.createRadialGradient(o.x*canvas.width, o.y*canvas.height, 0, o.x*canvas.width, o.y*canvas.height, o.r);
-            grd.addColorStop(0, 'hsla(' + o.hue + ',100%,60%,0.06)');
-            grd.addColorStop(1, 'hsla(' + o.hue + ',100%,60%,0)');
-            ctx.fillStyle = grd;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-          });
-          requestAnimationFrame(draw);
-        }
-        draw();
-      })();
+    // Re-show toast on demand
+    document.getElementById('toast').style.display = 'flex';
+  </script>
 
-      // Boot: S.init() MUST run before go()
-      S.init();
-      var theme = S.g('user.theme') || 'electric';
-      document.documentElement.setAttribute('data-theme', theme);
-      buildNav();
-      if (!S.g('onboarded')) {
-        document.getElementById('nav').style.display = 'none';
-        go('welcome');
-      } else {
-        go('dashboard');
-      }
+  <!-- Core -->
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
 
-      // Service worker
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js').catch(function() {});
-      }
-    });
+  <!-- Modules -->
+  <script src="js/modules/onboarding.js"></script>
+  <script src="js/modules/dashboard.js"></script>
+  <script src="js/modules/workout.js"></script>
+  <script src="js/modules/bodymap.js"></script>
+  <script src="js/modules/coach.js"></script>
+  <script src="js/modules/progress.js"></script>
+  <script src="js/modules/nutrition.js"></script>
+  <script src="js/modules/recovery.js"></script>
+  <script src="js/modules/settings.js"></script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+      });
+    }
   </script>
 </body>
 </html>

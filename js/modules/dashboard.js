@@ -1,271 +1,211 @@
 'use strict';
+/* ── FitnessOS v4 — Dashboard ── */
 
 reg('dashboard', function() {
-  const user = S.g('user') || {};
-  const ws = S.g('workouts') || [];
-  const meals = S.g('meals') || [];
-  const water = S.g('water') || [];
-  const prs = S.g('prs') || [];
-  const recovery = S.g('recovery') || {};
+  try {
+    const user = S.g('user') || {};
+    const ws = S.g('workouts') || [];
+    const meals = S.g('meals') || [];
+    const water = S.g('water') || [];
+    const prs = S.g('prs') || [];
 
-  const score = ReadinessEngine.score();
-  const rl = ReadinessEngine.label(score);
-  const streak = StreakEngine.get();
-  const weekWkts = StreakEngine.weekWorkouts();
-  const muscles = MuscleEngine.status();
-  const insights = CoachEngine.insights();
+    const score = ReadinessEngine.score();
+    const rl = ReadinessEngine.label(score);
+    const streak = StreakEngine.get();
+    const weekWkts = StreakEngine.weekWorkouts();
+    const insights = CoachEngine.insights();
+    const splitDay = SplitEngine.getSplitDay();
+    const muscles = MuscleEngine.status();
+    const dueSupps = SupplementEngine.getDueNow();
 
-  const hr = new Date().getHours();
-  const greeting = hr < 12 ? 'Good Morning' : hr < 17 ? 'Good Afternoon' : 'Good Evening';
-  const name = user.name || 'Athlete';
-  const todayStr = new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+    const name = (user.name || 'Athlete').split(' ')[0];
+    const hr = new Date().getHours();
+    const greeting = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
+    const todayStr = new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
 
-  // Today calories
-  const todayCals = meals.filter(m => m.date === today()).reduce((a,m) => a + (m.calories||0), 0);
-  const calTarget = user.calorieTarget || 2000;
-  const calPct = Math.min(Math.round((todayCals / calTarget) * 100), 100);
+    // Metrics
+    const todayCals = meals.filter(m => m.date === today()).reduce((a,m) => a+(m.calories||0),0);
+    const calTarget = user.calorieTarget || 2200;
+    const calPct = Math.min(Math.round((todayCals/calTarget)*100),100);
+    const todayWater = water.filter(w => w.date === today()).length;
+    const waterPct = Math.min(Math.round((todayWater/(user.waterTarget||8))*100),100);
+    const weekGoal = user.weeklyGoal || 4;
+    const weekPct = Math.min(Math.round((weekWkts.length/weekGoal)*100),100);
+    const totalVol = StreakEngine.totalVolume();
+    const weekVol = StreakEngine.weekVolume();
+    const recoveryToday = S.g('recovery') || {};
+    const loggedToday = recoveryToday.date === today();
 
-  // Water today
-  const todayWater = water.filter(w => w.date === today()).length;
-  const waterTarget = user.waterTarget || 8;
-  const waterPct = Math.min(Math.round((todayWater / waterTarget) * 100), 100);
-
-  // Weekly workout rings
-  const weekGoal = user.weeklyGoal || 4;
-  const weekPct = Math.min(Math.round((weekWkts.length / weekGoal) * 100), 100);
-
-  // Today's split suggestion
-  let splitCard = '';
-  if (typeof WE !== 'undefined') {
-    try {
-      const day = WE.getSplitDay();
-      if (day) {
-        const exList = (day.exercises || []).slice(0, 4).map(e => '<span class="pill">' + esc(e) + '</span>').join('');
-        const muscles_pills = (day.muscles || []).map(m => '<span class="mchip fresh">' + esc(m) + '</span>').join('');
-        splitCard = '<div class="card card-tap card-dark" onclick="go(\'workouts\')">' +
-          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
-          '<div><div style="font-size:18px;font-weight:800">' + esc(day.n) + '</div>' +
-          '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">' + muscles_pills + '</div></div>' +
-          '<span style="font-size:28px">💪</span></div>' +
-          '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">' + exList + '</div>' +
-          '<button class="btn btn-p" onclick="event.stopPropagation();go(\'workouts\')">Start Workout →</button></div>';
-      }
-    } catch(e) {}
-  }
-
-  // Last workout timer
-  let lastWktStr = '';
-  if (ws.length) {
-    const d = daysAgo(ws[ws.length-1].date);
-    lastWktStr = d === 0 ? 'Trained today' : d === 1 ? 'Last trained yesterday' : 'Last trained ' + d + ' days ago';
-  }
-
-  // Rings HTML
-  function ring(pct, color, label, sub) {
-    const r = 28, circ = 2*Math.PI*r, dash = circ*(pct/100);
-    return '<div class="ring-wrap"><div class="ring-outer">' +
-      '<svg class="ring-svg" width="72" height="72" viewBox="0 0 72 72">' +
-      '<circle cx="36" cy="36" r="' + r + '" fill="none" stroke="var(--bg4)" stroke-width="6"/>' +
-      '<circle cx="36" cy="36" r="' + r + '" fill="none" stroke="' + color + '" stroke-width="6" stroke-linecap="round" stroke-dasharray="' + circ.toFixed(1) + '" stroke-dashoffset="' + (circ - dash).toFixed(1) + '"/>' +
-      '</svg>' +
-      '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;transform:rotate(90deg)">' + pct + '%</div>' +
-      '</div><div class="ring-label">' + esc(label) + '<br><span style="color:var(--txt3);font-size:10px">' + esc(sub) + '</span></div></div>';
-  }
-
-  // Muscle chips
-  const muscleChips = muscles.map(m =>
-    '<div class="mchip ' + m.status + '" style="margin:4px">' + esc(m.name) + '</div>'
-  ).join('');
-
-  // AI insights
-  const insightCards = insights.map(ins =>
-    '<div class="ai-msg" style="border-left-color:' + ins.c + '">' +
-    '<div class="ai-msg-i">' + ins.i + '</div>' +
-    '<div class="ai-msg-t" style="color:' + ins.c + '">' + esc(ins.t) + '</div>' +
-    '<div class="ai-msg-m">' + esc(ins.m) + '</div></div>'
-  ).join('');
-
-  // Recent workouts
-  const recentWkts = ws.slice(-2).reverse().map(w =>
-    '<div class="ex-row" style="padding:12px 16px" onclick="go(\'progress\')">' +
-    '<div class="ex-icon">💪</div>' +
-    '<div class="ex-info"><div class="ex-name">' + esc(w.name||'Workout') + '</div>' +
-    '<div class="ex-sub">' + fmtDate(w.date) + ' · ' + (w.exercises||[]).length + ' exercises</div></div>' +
-    '<div style="text-align:right"><div style="font-size:14px;font-weight:700;color:var(--c1)">' + ((w.totalVol||0)/1000).toFixed(1) + 't</div>' +
-    '<div style="font-size:11px;color:var(--txt3)">volume</div></div></div>'
-  ).join('') || emptyState('💪', 'No workouts yet', 'Start your first session', 'Start Workout', "go('workouts')");
-
-  return topbar(greeting + ', ' + esc(name), todayStr,
-    '<button class="topbar-icon" onclick="go(\'recovery\')" title="Log Recovery">😴</button>' +
-    '<button class="topbar-icon" onclick="go(\'settings\')" title="Settings">⚙️</button>') +
-
-  // Readiness hero
-  '<div class="readiness-card card-tap" onclick="go(\'recovery\')" style="margin:12px 16px 14px;border:1.5px solid ' + rl.c + '">' +
-  '<div style="display:flex;align-items:flex-start;justify-content:space-between">' +
-  '<div><div class="readiness-score">' + score + '</div>' +
-  '<div class="readiness-label" style="color:' + rl.c + ';background:' + rl.bg + '">' + esc(rl.l) + '</div>' +
-  '<div class="readiness-msg">' + esc(ReadinessEngine.message(score)) + '</div></div>' +
-  '<div style="text-align:right"><div style="font-size:36px">⚡</div>' +
-  (lastWktStr ? '<div style="font-size:11px;color:var(--txt3);margin-top:4px">' + esc(lastWktStr) + '</div>' : '') +
-  '</div></div>' +
-  '<div class="readiness-metrics">' +
-  '<div class="readiness-metric"><div class="readiness-metric-v">' + (recovery.sleep||'—') + '</div><div class="readiness-metric-l">Sleep (h)</div></div>' +
-  '<div class="readiness-metric"><div class="readiness-metric-v" style="color:' + ((recovery.soreness||3)>=7?'var(--c4)':'var(--txt)') + '">' + (recovery.soreness||'—') + '</div><div class="readiness-metric-l">Soreness</div></div>' +
-  '<div class="readiness-metric"><div class="readiness-metric-v">' + (recovery.stress||'—') + '</div><div class="readiness-metric-l">Stress</div></div>' +
-  '<div class="readiness-metric"><div class="readiness-metric-v" style="color:var(--c3)">' + (recovery.energy||'—') + '</div><div class="readiness-metric-l">Energy</div></div>' +
-  '</div>' +
-  (recovery.date !== today() ? '<div style="font-size:12px;color:var(--c1);margin-top:10px;text-align:center">Tap to log today\'s recovery →</div>' : '') +
-  '</div>' +
-
-  // Today's workout
-  (splitCard ? sh('Today\'s Plan') + splitCard : '') +
-
-  // Activity rings
-  sh('Activity') +
-  '<div class="card card-dark" style="margin:0 16px 14px">' +
-  '<div style="display:flex;justify-content:space-around;padding:8px 0">' +
-  ring(weekPct, 'var(--c3)', 'Workouts', weekWkts.length + '/' + weekGoal) +
-  ring(calPct, 'var(--c1)', 'Calories', todayCals + ' kcal') +
-  ring(waterPct, 'var(--c2)', 'Water', todayWater + '/' + waterTarget) +
-  '</div></div>' +
-
-  // Stats row
-  sh('Stats') +
-  '<div class="stats-grid">' +
-  '<div class="stat cyan"><div class="stat-v">' + streak + '🔥</div><div class="stat-l">Day Streak</div></div>' +
-  '<div class="stat purple"><div class="stat-v">' + (weekWkts.reduce((a,w)=>a+(w.totalVol||0),0)/1000).toFixed(1) + 't</div><div class="stat-l">Week Volume</div></div>' +
-  '<div class="stat green"><div class="stat-v">' + ws.length + '</div><div class="stat-l">Workouts</div></div>' +
-  '<div class="stat amber"><div class="stat-v">' + prs.length + '</div><div class="stat-l">PRs Set</div></div>' +
-  '</div>' +
-
-  // Muscle recovery
-  sh('Muscle Recovery', 'Details', "go('progress')") +
-  '<div class="card card-dark" style="margin:0 16px 14px">' +
-  '<div style="display:flex;flex-wrap:wrap;gap:4px">' + muscleChips + '</div></div>' +
-
-  // AI insights
-  sh('AI Insights', 'Full Analysis', "go('ai')") +
-  insightCards +
-
-  // Recent workouts
-  sh('Recent Workouts', 'All', "go('progress')") +
-  '<div class="card card-dark" style="margin:0 16px 14px;padding:0 4px">' + recentWkts + '</div>' +
-
-  // Explore
-  sh('Explore FitnessOS') +
-  '<div class="module-list">' +
-  '<button class="module-card" onclick="go(\'bodystats\')">' +
-    '<div class="module-card-icon">📏</div>' +
-    '<div class="module-card-body"><div class="module-card-title">Body Stats</div><div class="module-card-sub">Weight & measurements</div></div>' +
-    '<div class="module-card-arrow">→</div>' +
-  '</button>' +
-  '<button class="module-card" onclick="go(\'cardio\')">' +
-    '<div class="module-card-icon">🏃</div>' +
-    '<div class="module-card-body"><div class="module-card-title">Cardio</div><div class="module-card-sub">Track runs & sessions</div></div>' +
-    '<div class="module-card-arrow">→</div>' +
-  '</button>' +
-  '<button class="module-card" onclick="go(\'nutrition\')">' +
-    '<div class="module-card-icon">🥗</div>' +
-    '<div class="module-card-body"><div class="module-card-title">Nutrition</div><div class="module-card-sub">Calories & macros</div></div>' +
-    '<div class="module-card-arrow">→</div>' +
-  '</button>' +
-  '<button class="module-card" onclick="go(\'injuries\')">' +
-    '<div class="module-card-icon">🩹</div>' +
-    '<div class="module-card-body"><div class="module-card-title">Injuries</div><div class="module-card-sub">Smart injury guard</div></div>' +
-    '<div class="module-card-arrow">→</div>' +
-  '</button>' +
-  '<button class="module-card" onclick="go(\'progress\')">' +
-    '<div class="module-card-icon">📊</div>' +
-    '<div class="module-card-body"><div class="module-card-title">Progress</div><div class="module-card-sub">Charts & PRs</div></div>' +
-    '<div class="module-card-arrow">→</div>' +
-  '</button>' +
-  '<button class="module-card" onclick="go(\'settings\')">' +
-    '<div class="module-card-icon">⚙️</div>' +
-    '<div class="module-card-body"><div class="module-card-title">Settings</div><div class="module-card-sub">Profile & preferences</div></div>' +
-    '<div class="module-card-arrow">→</div>' +
-  '</button>' +
-  '</div>' +
-  '<div style="height:8px"></div>';
-});
-
-// AI Coach screen
-reg('ai', function() {
-  const user = S.g('user') || {};
-  const recovery = S.g('recovery') || {};
-  const score = ReadinessEngine.score();
-  const rl = ReadinessEngine.label(score);
-  const muscles = MuscleEngine.status();
-  const insights = CoachEngine.insights();
-  const weekInsights = CoachEngine.weeklyInsights();
-  const ws = S.g('workouts') || [];
-  const prs = S.g('prs') || [];
-  const weekWkts = StreakEngine.weekWorkouts();
-  const weekGoal = user.weeklyGoal || 4;
-  const consistency = ws.length ? Math.round((weekWkts.length / weekGoal) * 100) : 0;
-
-  const insightCards = insights.map(ins =>
-    '<div class="ai-msg" style="border-left-color:' + ins.c + ';margin-bottom:10px">' +
-    '<div class="ai-msg-i">' + ins.i + '</div>' +
-    '<div class="ai-msg-t" style="color:' + ins.c + '">' + esc(ins.t) + '</div>' +
-    '<div class="ai-msg-m">' + esc(ins.m) + '</div></div>'
-  ).join('');
-
-  const muscleMap = muscles.map(m => {
-    const colors = { fresh:'var(--c3)', moderate:'var(--c5)', tired:'var(--c4)' };
-    const pct = m.pct || 0;
-    return '<div style="margin-bottom:10px">' +
-      '<div style="display:flex;justify-content:space-between;margin-bottom:4px">' +
-      '<span style="font-size:13px;font-weight:600">' + esc(m.name) + '</span>' +
-      '<span style="font-size:12px;color:' + colors[m.status] + '">' + esc(m.label) + (m.hrs ? ' (' + Math.round(m.hrs) + 'h ago)' : '') + '</span>' +
+    // ── Topbar
+    const topbarHTML = '<div class="topbar">' +
+      '<div class="topbar-left">' +
+      '<div class="topbar-greeting">'+esc(greeting)+', '+esc(name)+' 👋</div>' +
+      '<div class="topbar-date">'+esc(todayStr)+'</div>' +
       '</div>' +
-      '<div style="height:6px;background:var(--bg4);border-radius:3px;overflow:hidden">' +
-      '<div style="width:' + pct + '%;height:100%;background:' + colors[m.status] + ';border-radius:3px;transition:width 0.5s"></div>' +
+      '<div class="topbar-right">' +
+      '<button class="topbar-icon" onclick="applyTheme(\''+_nextTheme(user.theme||\'carbon\')+'\')">🎨</button>' +
+      '<button class="topbar-icon" onclick="go(\'settings\')">⚙️</button>' +
       '</div></div>';
-  }).join('');
 
-  const sliders = [
-    { k:'sleep', l:'Sleep', range:'0-12h', v: recovery.sleep||7.5 },
-    { k:'soreness', l:'Soreness', range:'0=none 10=severe', v: recovery.soreness||3 },
-    { k:'stress', l:'Stress', range:'0=calm 10=burnt out', v: recovery.stress||4 },
-    { k:'energy', l:'Energy', range:'0=exhausted 10=peak', v: recovery.energy||7 },
-    { k:'hydration', l:'Hydration', range:'litres', v: recovery.hydration||2.5 },
-  ];
+    // ── Readiness hero
+    const r = S.g('recovery') || {};
+    const readinessHTML = '<div class="readiness-card">' +
+      '<div style="display:flex;align-items:flex-start;gap:16px">' +
+      '<div>' +
+      '<div class="readiness-score">'+score+'</div>' +
+      '<div class="readiness-label '+rl.cls+'">'+rl.l+'</div>' +
+      '</div>' +
+      '<div style="flex:1;padding-top:4px">' +
+      '<div class="readiness-msg">'+esc(ReadinessEngine.coachQuote(score, user.coachPersonality))+'</div>' +
+      '</div></div>' +
+      '<div class="readiness-metrics">' +
+      _metricPill('😴', r.sleep||7.5, 'Sleep') +
+      _metricPill('💪', r.soreness||3, 'Soreness') +
+      _metricPill('🧠', r.stress||4, 'Stress') +
+      _metricPill('⚡', r.energy||7, 'Energy') +
+      '</div>' +
+      (!loggedToday ? '<button class="readiness-log-btn" onclick="go(\'recovery\')">📊 Log today\'s recovery</button>' : '') +
+      '</div>' +
+      '<div class="readiness-quote">'+esc(CoachEngine.motivationalQuote())+'</div>';
 
-  return topbar('AI Coach') +
-  '<div class="readiness-card" style="margin:12px 16px 14px;border:1.5px solid ' + rl.c + '">' +
-  '<div style="display:flex;align-items:center;gap:20px">' +
-  '<div><div class="readiness-score">' + score + '</div>' +
-  '<div class="readiness-label" style="color:' + rl.c + ';background:' + rl.bg + '">' + esc(rl.l) + '</div></div>' +
-  '<div style="flex:1"><div style="font-size:14px;color:var(--txt2);line-height:1.6">' + esc(ReadinessEngine.message(score)) + '</div></div>' +
-  '</div>' +
-  '<div class="readiness-metrics" style="margin-top:16px">' +
-  sliders.map(s => '<div class="readiness-metric"><div class="readiness-metric-v">' + s.v + '</div><div class="readiness-metric-l">' + esc(s.l) + '</div></div>').join('') +
-  '</div></div>' +
+    // ── Today's plan card
+    const exChips = (splitDay.exercises||[]).slice(0,4).map(e=>
+      '<span class="pill">'+esc(e)+'</span>'
+    ).join('');
+    const planHTML = '<div style="padding:0 16px 14px">' +
+      '<div class="card card-grad-border" style="margin:0">' +
+      '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">' +
+      '<div style="font-size:32px">🏋️</div>' +
+      '<div><div style="font-size:16px;font-weight:800;color:var(--txt)">'+esc(splitDay.n||'Rest Day')+'</div>' +
+      '<div style="font-size:12px;color:var(--txt3);margin-top:2px">'+esc((splitDay.muscles||[]).join(', '))+'</div></div>' +
+      '</div>' +
+      '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px">'+exChips+'</div>' +
+      '<div style="display:flex;gap:10px">' +
+      '<button class="btn btn-primary" style="flex:1" onclick="go(\'workout\')">Start Workout</button>' +
+      '<button class="btn btn-secondary" style="width:auto;padding:16px 18px" onclick="showSubstitutes()">🔄</button>' +
+      '</div></div></div>';
 
-  sh('Today\'s Insights') +
-  '<div style="padding:0 16px">' + insightCards + '</div>' +
+    // ── Activity rings
+    const ringsHTML = '<div class="rings-section"><div class="sh-t" style="padding:20px 0 14px">This Week</div>' +
+      '<div class="rings-row">' +
+      buildRing(weekPct, '#10B981', 'Workouts', weekWkts.length+'/'+weekGoal) +
+      buildRing(calPct, 'var(--c1)', 'Calories', todayCals+'/'+calTarget) +
+      buildRing(waterPct, '#3B82F6', 'Water', todayWater+'/'+(user.waterTarget||8)) +
+      '</div></div>';
 
-  sh('Muscle Recovery') +
-  '<div class="card card-dark" style="margin:0 16px 14px">' + muscleMap + '</div>' +
+    // ── Stats row
+    const statsHTML = '<div class="stats-row">' +
+      '<div class="stat stat-accent"><div class="stat-v">'+streak+'🔥</div><div class="stat-l">Streak</div></div>' +
+      '<div class="stat"><div class="stat-v">'+prs.length+'</div><div class="stat-l">PRs Set</div></div>' +
+      '<div class="stat"><div class="stat-v">'+(weekVol>1000?round2(weekVol/1000)+'t':weekVol+'kg')+'</div><div class="stat-l">Week Vol</div></div>' +
+      '<div class="stat"><div class="stat-v">'+ws.length+'</div><div class="stat-l">Sessions</div></div>' +
+      '</div>';
 
-  sh('Progression Analysis') +
-  '<div class="stats-grid" style="margin-bottom:14px">' +
-  '<div class="stat cyan"><div class="stat-v">' + StreakEngine.weekVolume().toLocaleString() + '</div><div class="stat-l">Week Volume kg</div></div>' +
-  '<div class="stat purple"><div class="stat-v">' + prs.length + '</div><div class="stat-l">Total PRs</div></div>' +
-  '<div class="stat green"><div class="stat-v">' + consistency + '%</div><div class="stat-l">Consistency</div></div>' +
-  '<div class="stat amber"><div class="stat-v">' + ws.length + '</div><div class="stat-l">Total Sessions</div></div>' +
-  '</div>' +
+    // ── Due supplements
+    let suppHTML = '';
+    if (dueSupps.length) {
+      suppHTML = sh('Due Soon', 'View all', 'go(\'nutrition\')') +
+        dueSupps.slice(0,2).map(s => '<div class="supp-card due">' +
+          '<div class="supp-icon">💊</div>' +
+          '<div class="supp-info"><div class="supp-name">'+esc(s.name)+'</div><div class="supp-timing">'+esc(s.timing)+'</div></div>' +
+          '<button class="supp-mark" onclick="SupplementEngine.markTaken(\''+s.id+'\');go(\'dashboard\')">Done</button></div>'
+        ).join('');
+    }
 
-  (weekInsights.length ? sh('Weekly Insights') + weekInsights.map(i => '<div class="ai-msg" style="margin:0 16px 10px"><div class="ai-msg-m">' + esc(i) + '</div></div>').join('') : '') +
+    // ── Muscle chips
+    const muscleChips = muscles.slice(0,8).map(m =>
+      '<span class="mchip mchip-'+m.status+'">'+esc(m.name)+'</span>'
+    ).join('');
+    const muscleHTML = sh('Muscle Recovery') + '<div class="mchips-wrap">'+muscleChips+'</div>';
 
-  sh('Quick Actions') +
-  '<div class="btn-row">' +
-  '<button class="btn btn-p btn-sm" onclick="go(\'workouts\')">💪 Workout</button>' +
-  '<button class="btn btn-s btn-sm" onclick="go(\'recovery\')">😴 Recovery</button>' +
-  '</div>' +
-  '<div class="btn-row">' +
-  '<button class="btn btn-s btn-sm" onclick="go(\'progress\')">📈 Progress</button>' +
-  '<button class="btn btn-s btn-sm" onclick="go(\'bodystats\')">📏 Body Stats</button>' +
-  '</div>' +
-  '<div style="height:8px"></div>';
+    // ── Recent workouts
+    let recentHTML = '';
+    if (ws.length) {
+      recentHTML = sh('Recent Sessions', 'All', 'go(\'progress\')') +
+        ws.slice(-2).reverse().map(w =>
+          '<div class="card card-solid card-tap" style="margin-bottom:10px" onclick="go(\'progress\')">' +
+          '<div class="row-between">' +
+          '<div><div style="font-size:15px;font-weight:700;color:var(--txt)">'+esc(w.name||'Workout')+'</div>' +
+          '<div style="font-size:12px;color:var(--txt3);margin-top:2px">'+fmtDate(w.date)+'</div></div>' +
+          '<div style="text-align:right">' +
+          '<div style="font-size:15px;font-weight:700;color:var(--c1)">'+(w.totalVol||0)+'kg</div>' +
+          '<div style="font-size:11px;color:var(--txt3)">'+fmtMins(w.duration||0)+'</div>' +
+          '</div></div></div>'
+        ).join('');
+    }
+
+    // ── Explore grid
+    const exploreHTML = sh('Explore') +
+      '<div class="explore-grid">' +
+      _eCard('💪','Workout','Log a session','workout') +
+      _eCard('🫀','Body Map','Muscle visualiser','bodymap') +
+      _eCard('📈','Progress','Charts & PRs','progress') +
+      _eCard('💊','Supplements','Stack & reminders','nutrition') +
+      _eCard('🏃','Recovery','Sleep & readiness','recovery') +
+      _eCard('📊','Analytics','Deep insights','progress') +
+      '</div>';
+
+    // ── AI Insights
+    const insightHTML = sh('Daily Insights') +
+      insights.map(ins =>
+        '<div class="insight-card"><div class="insight-icon">'+ins.i+'</div>' +
+        '<div class="insight-label" style="color:'+ins.c+'">'+esc(ins.t)+'</div>' +
+        '<div class="insight-text">'+esc(ins.m)+'</div></div>'
+      ).join('');
+
+    return topbarHTML +
+      readinessHTML +
+      '<div style="padding:0 16px">' + ringsHTML + '</div>' +
+      statsHTML +
+      planHTML +
+      muscleHTML +
+      suppHTML +
+      insightHTML +
+      recentHTML +
+      exploreHTML +
+      '<div style="height:20px"></div>';
+  } catch(e) {
+    console.error('dashboard', e);
+    return '<div style="padding:28px;color:var(--txt)">' +
+      '<div style="font-size:48px;margin-bottom:16px">⚡</div>' +
+      '<div style="font-size:22px;font-weight:800;margin-bottom:8px">FitnessOS</div>' +
+      '<div style="color:var(--txt3);margin-bottom:24px">Ready to train.</div>' +
+      '<button class="btn btn-primary" onclick="go(\'workout\')">Start Workout 💪</button>' +
+      '</div>';
+  }
 });
+
+function _metricPill(icon, val, label) {
+  return '<div class="readiness-metric">' +
+    '<div class="readiness-metric-v">'+icon+' '+val+'</div>' +
+    '<div class="readiness-metric-l">'+esc(label)+'</div></div>';
+}
+
+function _eCard(icon, title, sub, screen) {
+  return '<button class="explore-card press" onclick="go(\''+screen+'\')">' +
+    '<div class="explore-icon">'+icon+'</div>' +
+    '<div class="explore-title">'+esc(title)+'</div>' +
+    '<div class="explore-sub">'+esc(sub)+'</div>' +
+    '</button>';
+}
+
+const THEMES = ['carbon','stealth','forest','arctic','electric','sunset'];
+function _nextTheme(current) {
+  const idx = THEMES.indexOf(current);
+  return THEMES[(idx+1) % THEMES.length];
+}
+window._nextTheme = _nextTheme;
+
+window.showSubstitutes = function() {
+  const day = SplitEngine.getSplitDay();
+  const subs = (day.exercises||[]).slice(0,4).map(e => {
+    const alts = SplitEngine.getSubstitutes(e, '');
+    return '<div style="padding:12px 0;border-bottom:1px solid var(--border)">' +
+      '<div style="font-size:13px;font-weight:700;color:var(--txt);margin-bottom:6px">'+esc(e)+'</div>' +
+      (alts.length ? alts.map(a=>'<div style="font-size:13px;color:var(--txt2);padding:3px 0">→ '+esc(a)+'</div>').join('') :
+        '<div style="font-size:12px;color:var(--txt3)">No substitutes available</div>') +
+      '</div>';
+  }).join('');
+  modal('Exercise Alternatives', subs,
+    '<button class="btn btn-secondary" onclick="closeModal()" style="margin-top:16px">Close</button>');
+};
