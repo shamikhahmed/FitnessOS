@@ -43,7 +43,7 @@ reg('dashboard', function() {
       '<div class="topbar-date">'+esc(todayStr)+'</div>' +
       '</div>' +
       '<div class="topbar-right">' +
-      '<button class="topbar-icon" onclick="applyTheme(\''+_nextTheme(user.theme||\'carbon\')+'\')">🎨</button>' +
+      '<button class="topbar-icon" onclick="applyTheme(\''+_nextTheme(user.theme||'carbon')+'\')">🎨</button>' +
       '<button class="topbar-icon" onclick="go(\'settings\')">⚙️</button>' +
       '</div></div>';
 

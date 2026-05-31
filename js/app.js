@@ -893,17 +893,3 @@ function buildNav() {
 }
 window.buildNav = buildNav;
 
-/* ══════════════════════════════════════════════════════
-   APP INIT
-══════════════════════════════════════════════════════ */
-// DISABLED window.addEventListener("load", () => {
-  S.init();
-  applyTheme(S.g('user.theme') || 'carbon');
-  buildNav();
-  initCanvas();
-  if (!S.g('onboarded')) {
-    go('onboarding');
-  } else {
-    go('dashboard');
-  }
-});
