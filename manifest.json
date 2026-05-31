@@ -1,27 +1,20 @@
 {
-  "name": "FitnessOS",
+  "name": "FitnessOS Pro",
   "short_name": "FitnessOS",
-  "description": "Professional fitness tracking PWA",
+  "description": "The intelligent fitness system that learns, adapts, and evolves with you",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#080808",
-  "theme_color": "#080808",
+  "background_color": "#000000",
+  "theme_color": "#000000",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ],
-  "categories": ["health", "fitness"],
-  "screenshots": []
+  "categories": ["health", "fitness"]
 }

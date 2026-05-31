@@ -1,223 +1,170 @@
 'use strict';
 
-App.register('bodystats', async function () {
-  const [user, bodyStats] = await Promise.all([Storage.getUser(), Storage.getAll('bodyStats')]);
-  const sorted = bodyStats.slice().sort(function (a, b) { return new Date(a.date) - new Date(b.date); });
-  const latest = sorted.length ? sorted[sorted.length - 1] : null;
-  const unit = user.units === 'imperial' ? 'lbs' : 'kg';
-  const hmCm = user.units === 'imperial' ? 'in' : 'cm';
+reg('bodystats', function() {
+  const user = S.g('user') || {};
+  const stats = (S.g('bodyStats') || []).sort((a,b) => new Date(a.date)-new Date(b.date));
+  const latest = stats[stats.length-1] || {};
+  const prev = stats[stats.length-2] || {};
+  const unit = user.units === 'imperial' ? 'lb' : 'kg';
 
-  function bmi(w, h) {
-    if (!w || !h) return 0;
-    const hm = user.units === 'imperial' ? h * 0.0254 : h / 100;
-    const wk = user.units === 'imperial' ? w * 0.453592 : w;
-    return Math.round(wk / (hm * hm) * 10) / 10;
-  }
+  const w = parseFloat(latest.weight || user.weight || 0);
+  const h = user.height || 175;
+  const bmi = h > 0 ? (w / Math.pow(h/100, 2)).toFixed(1) : '—';
+  const bmiCat = bmi > 30 ? 'Obese' : bmi > 25 ? 'Overweight' : bmi > 18.5 ? 'Normal' : 'Underweight';
+  const bmiColor = bmi > 30 ? 'var(--c4)' : bmi > 25 ? 'var(--c5)' : bmi > 18.5 ? 'var(--c3)' : 'var(--c1)';
 
-  function bmiCategory(b) {
-    if (b < 18.5) return ['Underweight', 'var(--info)'];
-    if (b < 25) return ['Healthy', 'var(--ok)'];
-    if (b < 30) return ['Overweight', 'var(--warn)'];
-    return ['Obese', 'var(--err)'];
-  }
+  const bf = latest.bodyfat;
+  const bfCat = bf ? (bf > 30 ? 'High' : bf > 20 ? 'Average' : bf > 12 ? 'Fit' : 'Athletic') : null;
 
-  /* SVG Weight Trend Chart */
+  const goalW = user.goalWeight || 70;
+  const startW = stats[0] ? parseFloat(stats[0].weight) : parseFloat(user.weight||75);
+  const goalPct = startW !== goalW ? Math.min(100, Math.max(0, Math.round(Math.abs((startW-w)/(startW-goalW)*100)))) : 100;
+
+  // Weight chart SVG
   function weightChart() {
-    const pts = sorted.filter(function (s) { return s.weight; }).slice(-30);
-    if (pts.length < 2) return '<div style="text-align:center;color:var(--txt3);padding:32px;font-size:13px">Log at least 2 weigh-ins to see your trend</div>';
-    const W = 320, H = 100, pad = 16;
-    const weights = pts.map(function (p) { return p.weight; });
-    const minW = Math.min.apply(null, weights) - 1;
-    const maxW = Math.max.apply(null, weights) + 1;
-    const xScale = (W - pad * 2) / (pts.length - 1);
-    const yScale = (H - pad * 2) / (maxW - minW);
-    const points = pts.map(function (p, i) {
-      const x = pad + i * xScale;
-      const y = H - pad - (p.weight - minW) * yScale;
-      return x + ',' + y;
-    });
-    const pathD = 'M ' + points.join(' L ');
-    const areaD = 'M ' + pad + ',' + (H - pad) + ' L ' + points.join(' L ') + ' L ' + (pad + (pts.length - 1) * xScale) + ',' + (H - pad) + ' Z';
-    return '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:auto;overflow:visible">' +
-      '<defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--accent)" stop-opacity="0.3"/><stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>' +
-      '<path d="' + areaD + '" fill="url(#wg)"/>' +
-      '<path d="' + pathD + '" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>' +
-      pts.map(function (p, i) {
-        const x = pad + i * xScale;
-        const y = H - pad - (p.weight - minW) * yScale;
-        return '<circle cx="' + x + '" cy="' + y + '" r="3" fill="var(--accent)"/>';
-      }).join('') +
+    const entries = stats.slice(-30);
+    if (entries.length < 2) return '<div style="text-align:center;padding:24px;color:var(--txt3)">Log at least 2 entries to see chart</div>';
+    const vals = entries.map(e => parseFloat(e.weight)||0);
+    const min = Math.min(...vals) - 1;
+    const max = Math.max(...vals) + 1;
+    const W = 320, H = 100;
+    const xScale = (W-40) / (vals.length-1);
+    const yScale = H / (max-min);
+    const points = vals.map((v,i) => [(i*xScale+20).toFixed(1), (H-(v-min)*yScale).toFixed(1)]);
+    const pathD = 'M' + points.map(p=>p.join(',')).join('L');
+    const areaD = pathD + 'L' + points[points.length-1][0] + ',' + H + 'L20,' + H + 'Z';
+    const goalY = (H-(goalW-min)*yScale).toFixed(1);
+    return '<svg viewBox="0 0 ' + W + ' ' + (H+20) + '" class="chart-svg">' +
+      '<defs><linearGradient id="wgrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--c1)" stop-opacity="0.3"/><stop offset="100%" stop-color="var(--c1)" stop-opacity="0"/></linearGradient></defs>' +
+      '<path d="' + areaD + '" fill="url(#wgrad)"/>' +
+      '<path d="' + pathD + '" fill="none" stroke="var(--c1)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+      (goalW ? '<line x1="20" y1="' + goalY + '" x2="' + (W-20) + '" y2="' + goalY + '" stroke="var(--c3)" stroke-width="1" stroke-dasharray="4,3"/>' : '') +
+      '<circle cx="' + points[points.length-1][0] + '" cy="' + points[points.length-1][1] + '" r="5" fill="var(--c1)"/>' +
+      '<text x="' + points[points.length-1][0] + '" y="' + (parseFloat(points[points.length-1][1])-8) + '" text-anchor="middle" fill="var(--c1)" font-size="11" font-weight="700">' + vals[vals.length-1] + unit + '</text>' +
+      (goalW ? '<text x="' + (W-22) + '" y="' + (parseFloat(goalY)-4) + '" text-anchor="end" fill="var(--c3)" font-size="10">Goal</text>' : '') +
       '</svg>';
   }
 
-  const bmiVal = bmi(latest ? latest.weight : user.weight, user.height);
-  const [bmiCat, bmiColor] = bmiCategory(bmiVal);
-  const meas = (latest && latest.measurements) ? latest.measurements : {};
-  const bodyFat = latest ? (latest.bodyFat || null) : null;
-  const photos = (latest && latest.photos) ? latest.photos : {};
+  // Measurements
+  const MEAS = ['Chest','Waist','Hips','Arms','Thighs','Calves','Neck','Shoulders'];
+  const measCards = MEAS.map(m => {
+    const key = m.toLowerCase();
+    const cur = latest.measurements && latest.measurements[key];
+    const old = prev.measurements && prev.measurements[key];
+    const delta = cur && old ? (parseFloat(cur)-parseFloat(old)).toFixed(1) : null;
+    const deltaClass = delta === null ? '' : parseFloat(delta) > 0 ? 'up' : 'down';
+    const deltaStr = delta === null ? '' : (parseFloat(delta) > 0 ? '+' : '') + delta + 'cm';
+    return '<div class="meas-card" onclick="logMeasurement(\'' + m + '\')">' +
+      '<div class="meas-v">' + (cur || '—') + (cur ? '<span style="font-size:12px;color:var(--txt3)">cm</span>' : '') + '</div>' +
+      '<div class="meas-l">' + esc(m) + '</div>' +
+      (deltaStr ? '<div class="meas-delta ' + deltaClass + '">' + deltaStr + '</div>' : '') +
+      '</div>';
+  }).join('');
 
-  let h = App.topbar('Body Stats', 'Track your physique');
+  const historyRows = stats.slice(-10).reverse().map(e =>
+    '<div class="ex-row" style="padding:12px 0">' +
+    '<div class="ex-icon">⚖️</div>' +
+    '<div class="ex-info"><div class="ex-name">' + (e.weight||'—') + ' ' + unit + '</div>' +
+    '<div class="ex-sub">' + fmtDate(e.date) + (e.bodyfat?' · '+e.bodyfat+'% BF':'') + '</div></div>' +
+    '</div>'
+  ).join('') || '<div style="padding:16px;color:var(--txt3)">No entries yet</div>';
 
-  h += '<div style="padding:14px 16px 0">';
+  return topbar('Body Stats', null, '<button class="topbar-icon" onclick="logWeightModal()">＋</button>') +
 
-  /* ── BMI & Stats ── */
-  h += '<div class="g4" style="margin-bottom:12px">';
-  h += App.statBox(latest ? latest.weight.toFixed(1) : '--', unit, 'stat-accent');
-  h += App.statBox(bmiVal || '--', 'BMI', '');
-  h += App.statBox(bodyFat ? bodyFat + '%' : '--', 'Body Fat', bodyFat ? (bodyFat > 25 ? 'stat-warn' : 'stat-ok') : '');
-  h += App.statBox(sorted.length, 'Entries', 'stat-info');
-  h += '</div>';
+  '<div class="stats-grid" style="margin:12px 16px 14px">' +
+  '<div class="stat cyan"><div class="stat-v">' + (w||'—') + '</div><div class="stat-l">Weight (' + unit + ')</div></div>' +
+  '<div class="stat amber"><div class="stat-v" style="color:' + bmiColor + '">' + bmi + '</div><div class="stat-l">BMI · ' + bmiCat + '</div></div>' +
+  '<div class="stat purple"><div class="stat-v">' + (bf||'—') + (bf?'%':'') + '</div><div class="stat-l">Body Fat' + (bfCat?' · '+bfCat:'') + '</div></div>' +
+  '<div class="stat green"><div class="stat-v">' + stats.length + '</div><div class="stat-l">Entries</div></div>' +
+  '</div>' +
 
-  if (bmiVal > 0) {
-    h += '<div style="background:rgba(16,185,129,0.06);border:1px solid var(--border2);border-radius:var(--r16);padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">';
-    h += '<span style="font-size:14px;font-weight:700">BMI ' + bmiVal + '</span>';
-    h += '<span style="font-size:13px;font-weight:700;color:' + bmiColor + '">' + bmiCat + '</span>';
-    h += '</div>';
-  }
+  (stats.length > 0 ?
+    sh('Weight Trend') +
+    '<div class="chart-wrap">' + weightChart() + '</div>' +
+    '<div style="display:flex;justify-content:space-between;padding:0 16px;margin-bottom:16px">' +
+    '<div style="font-size:12px;color:var(--txt3)">Goal: ' + goalW + unit + '</div>' +
+    '<div style="font-size:12px;color:var(--c3)">' + goalPct + '% to goal</div>' +
+    '</div>'
+  : emptyState('⚖️', 'No weight data', 'Log your first weigh-in', '+ Log Weight', 'logWeightModal()')) +
 
-  /* ── Weight Chart ── */
-  h += App.sh('Weight Trend');
-  h += '<div class="card" style="margin:0 0 12px">' + weightChart() + '</div>';
+  '<div style="padding:0 16px;margin-bottom:14px">' +
+  '<button class="btn btn-p" onclick="logWeightModal()">+ Log Today\'s Weight</button>' +
+  '</div>' +
 
-  /* ── Log Weight ── */
-  h += App.sh('Log Today');
-  h += '<div class="card" style="margin:0 0 12px">';
-  h += '<div class="g2 mb12">';
-  h += '<div class="fw"><label class="field-label">Weight (' + unit + ')</label><input id="bs-weight" class="field" type="number" inputmode="decimal" step="0.1" placeholder="' + (latest ? latest.weight : user.weight) + '" value=""></div>';
-  h += '<div class="fw"><label class="field-label">Body Fat %</label><input id="bs-bf" class="field" type="number" inputmode="decimal" step="0.1" placeholder="e.g. 15" value="' + (bodyFat || '') + '"></div>';
-  h += '</div>';
-  h += '<button class="btn btn-primary btn-sm" onclick="BS.logWeight()">Save Weight</button>';
-  h += '</div>';
+  sh('Measurements') +
+  '<div class="meas-grid">' + measCards + '</div>' +
 
-  /* ── Measurements ── */
-  h += App.sh('Measurements (' + hmCm + ')');
-  h += '<div class="card" style="margin:0 0 12px">';
-  const measFields = [
-    ['chest', 'Chest'], ['waist', 'Waist'], ['hips', 'Hips'],
-    ['leftArm', 'L. Arm'], ['rightArm', 'R. Arm'], ['leftThigh', 'L. Thigh'], ['rightThigh', 'R. Thigh'],
-    ['leftCalf', 'L. Calf'], ['rightCalf', 'R. Calf']
-  ];
-  h += '<div class="g3">';
-  measFields.forEach(function (f) {
-    h += '<div class="fw"><label class="field-label">' + f[1] + '</label>';
-    h += '<input id="m-' + f[0] + '" class="field field-sm" type="number" inputmode="decimal" step="0.1" placeholder="--" value="' + (meas[f[0]] || '') + '"></div>';
-  });
-  h += '</div>';
-  h += '<button class="btn btn-secondary btn-sm" onclick="BS.logMeasurements()">Save Measurements</button>';
-  h += '</div>';
+  sh('Progress Photos') +
+  '<div class="photo-row">' +
+  ['Front','Side','Back'].map(v =>
+    '<div class="photo-slot" onclick="capturePhoto(\'' + v + '\')">' +
+    '<div class="photo-slot-icon">📷</div>' +
+    '<div class="photo-slot-l">' + v + '</div>' +
+    '</div>'
+  ).join('') + '</div>' +
 
-  /* ── Progress Photos ── */
-  h += App.sh('Progress Photos');
-  h += '<div class="g3" style="margin:0 16px 12px">';
-  ['front', 'back', 'side'].forEach(function (view) {
-    h += '<div class="photo-slot" onclick="BS.addPhoto(\'' + view + '\')" id="photo-' + view + '">';
-    if (photos[view]) {
-      h += '<img src="' + photos[view] + '" alt="' + view + '">';
-    } else {
-      h += '<span style="font-size:24px">📷</span><span>' + view.charAt(0).toUpperCase() + view.slice(1) + '</span>';
-    }
-    h += '</div>';
-  });
-  h += '</div>';
-
-  /* ── History ── */
-  if (sorted.length) {
-    h += App.sh('History', sorted.length > 5 ? 'See all' : '', '');
-    h += '<div class="card" style="margin:0 0 20px">';
-    sorted.slice(-6).reverse().forEach(function (entry) {
-      h += '<div class="info-row">';
-      h += '<span class="info-label">' + App.fmtDate(entry.date) + '</span>';
-      h += '<span class="info-value">' + entry.weight + ' ' + unit;
-      if (entry.bodyFat) h += ' · ' + entry.bodyFat + '% BF';
-      h += '</span>';
-      h += '</div>';
-    });
-    h += '</div>';
-  }
-
-  h += '</div>';
-  return h;
+  sh('History') +
+  '<div class="card card-dark" style="margin:0 16px 14px;padding:0 4px">' + historyRows + '</div>' +
+  '<div style="height:8px"></div>';
 });
 
-const BS = {
-  logWeight: async function () {
-    const w = parseFloat(document.getElementById('bs-weight').value);
-    const bf = parseFloat(document.getElementById('bs-bf').value) || null;
-    if (isNaN(w) || w <= 0) { App.toast('Enter a valid weight', 'warn'); return; }
-    const user = await Storage.getUser();
-    const meas = {};
-    ['chest','waist','hips','leftArm','rightArm','leftThigh','rightThigh','leftCalf','rightCalf'].forEach(function (k) {
-      const el = document.getElementById('m-' + k);
-      if (el && el.value) meas[k] = parseFloat(el.value);
-    });
-    await Storage.set('bodyStats', { date: App.isoNow(), weight: w, bodyFat: bf, measurements: meas, photos: {} });
-    if (w !== user.weight) { user.weight = w; await Storage.setUser(user); }
-    App.haptic(30);
-    App.toast('Body stats saved!');
-    go('bodystats');
-  },
+function logWeightModal() {
+  const user = S.g('user') || {};
+  const unit = user.units === 'imperial' ? 'lb' : 'kg';
+  const body = '<div class="field-wrap"><label class="field-label">Weight (' + unit + ')</label>' +
+    '<input class="field" id="log-weight" type="number" step="0.1" min="20" max="500" placeholder="e.g. 75.5" inputmode="decimal" autofocus></div>' +
+    '<div class="field-wrap"><label class="field-label">Body Fat % (optional)</label>' +
+    '<input class="field" id="log-bf" type="number" step="0.1" min="3" max="60" placeholder="e.g. 15.2" inputmode="decimal"></div>' +
+    '<div class="field-wrap"><label class="field-label">Notes (optional)</label>' +
+    '<input class="field" id="log-weight-note" type="text" placeholder="e.g. morning weight"></div>';
+  modal('Log Weight', body, '<button class="btn btn-p" onclick="saveWeightLog()">Save</button>');
+}
+window.logWeightModal = logWeightModal;
 
-  logMeasurements: async function () {
-    const user = await Storage.getUser();
-    const allStats = await Storage.getAll('bodyStats');
-    const sorted = allStats.sort(function (a, b) { return new Date(b.date) - new Date(a.date); });
-    const latest = sorted[0];
-    const meas = latest ? Object.assign({}, latest.measurements || {}) : {};
-    ['chest','waist','hips','leftArm','rightArm','leftThigh','rightThigh','leftCalf','rightCalf'].forEach(function (k) {
-      const el = document.getElementById('m-' + k);
-      if (el && el.value) meas[k] = parseFloat(el.value);
-    });
-    if (latest && latest.date.startsWith(App.today())) {
-      latest.measurements = meas;
-      await Storage.set('bodyStats', latest);
-    } else {
-      await Storage.set('bodyStats', { date: App.isoNow(), weight: user.weight, bodyFat: null, measurements: meas, photos: {} });
-    }
-    App.haptic(30);
-    App.toast('Measurements saved!');
-    go('bodystats');
-  },
+function saveWeightLog() {
+  const w = parseFloat(document.getElementById('log-weight').value);
+  if (!w) { toast('Enter a weight', 'warn'); return; }
+  const bf = parseFloat(document.getElementById('log-bf').value) || null;
+  const note = document.getElementById('log-weight-note').value;
+  const stats = S.g('bodyStats') || [];
+  stats.push({ date: isoNow(), weight: w, bodyfat: bf, note, measurements: {} });
+  S.set('bodyStats', stats);
+  S.set('user.weight', w);
+  closeModal();
+  toast('Weight logged!', 'ok');
+  haptic(30);
+  go('bodystats');
+}
+window.saveWeightLog = saveWeightLog;
 
-  addPhoto: function (view) {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = async function (e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const canvas = document.createElement('canvas');
-      const img = new Image();
-      img.onload = async function () {
-        const maxDim = 600;
-        let w = img.width, h2 = img.height;
-        if (w > maxDim || h2 > maxDim) {
-          if (w > h2) { h2 = Math.round(h2 * maxDim / w); w = maxDim; }
-          else { w = Math.round(w * maxDim / h2); h2 = maxDim; }
-        }
-        canvas.width = w; canvas.height = h2;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h2);
-        let quality = 0.8;
-        let dataURL = canvas.toDataURL('image/jpeg', quality);
-        while (dataURL.length > 200 * 1024 && quality > 0.3) {
-          quality -= 0.1;
-          dataURL = canvas.toDataURL('image/jpeg', quality);
-        }
-        const allStats = await Storage.getAll('bodyStats');
-        const sorted = allStats.sort(function (a, b) { return new Date(b.date) - new Date(a.date); });
-        const latest = sorted[0];
-        if (latest && latest.date.startsWith(App.today())) {
-          if (!latest.photos) latest.photos = {};
-          latest.photos[view] = dataURL;
-          await Storage.set('bodyStats', latest);
-        } else {
-          const user = await Storage.getUser();
-          await Storage.set('bodyStats', { date: App.isoNow(), weight: user.weight, bodyFat: null, measurements: {}, photos: { [view]: dataURL } });
-        }
-        App.toast('Photo saved!');
-        go('bodystats');
-      };
-      img.src = URL.createObjectURL(file);
-    };
-    input.click();
-  }
-};
+function logMeasurement(part) {
+  const stats = S.g('bodyStats') || [];
+  const latest = stats[stats.length-1] || {};
+  const key = part.toLowerCase();
+  const cur = latest.measurements && latest.measurements[key];
+  modal('Log ' + part, '<div class="field-wrap"><label class="field-label">' + part + ' (cm)</label>' +
+    '<input class="field" id="meas-val" type="number" step="0.1" min="0" placeholder="' + (cur||'e.g. 95') + '" inputmode="decimal" autofocus></div>',
+    '<button class="btn btn-p" onclick="saveMeasurement(\'' + part + '\')">Save</button>');
+}
+window.logMeasurement = logMeasurement;
+
+function saveMeasurement(part) {
+  const val = parseFloat(document.getElementById('meas-val').value);
+  if (!val) { toast('Enter a value', 'warn'); return; }
+  const stats = S.g('bodyStats') || [];
+  if (!stats.length) stats.push({ date: isoNow(), measurements: {} });
+  const last = stats[stats.length-1];
+  if (!last.measurements) last.measurements = {};
+  last.measurements[part.toLowerCase()] = val;
+  S.set('bodyStats', stats);
+  closeModal();
+  toast(part + ' logged!', 'ok');
+  haptic(30);
+  go('bodystats');
+}
+window.saveMeasurement = saveMeasurement;
+
+function capturePhoto(view) {
+  toast('Photo capture requires camera access', 'info');
+}
+window.capturePhoto = capturePhoto;

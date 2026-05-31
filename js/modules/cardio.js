@@ -1,179 +1,131 @@
 'use strict';
 
 const CARDIO_TYPES = [
-  { v: 'run', l: 'Running', em: '🏃', met: 9.8 },
-  { v: 'cycle', l: 'Cycling', em: '🚴', met: 7.5 },
-  { v: 'swim', l: 'Swimming', em: '🏊', met: 8.0 },
-  { v: 'walk', l: 'Walking', em: '🚶', met: 3.5 },
-  { v: 'hike', l: 'Hiking', em: '🥾', met: 6.0 },
-  { v: 'row', l: 'Rowing', em: '🚣', met: 7.0 },
-  { v: 'elliptical', l: 'Elliptical', em: '⚡', met: 5.0 },
-  { v: 'jump_rope', l: 'Jump Rope', em: '⭕', met: 12.3 },
-  { v: 'hiit', l: 'HIIT', em: '🔥', met: 10.0 },
-  { v: 'yoga', l: 'Yoga', em: '🧘', met: 3.0 },
-  { v: 'other', l: 'Other', em: '🏅', met: 5.0 },
+  { v:'run', l:'Running', em:'🏃', met:9.8 },
+  { v:'cycle', l:'Cycling', em:'🚴', met:7.5 },
+  { v:'swim', l:'Swimming', em:'🏊', met:8.0 },
+  { v:'walk', l:'Walking', em:'🚶', met:4.0 },
+  { v:'hiit', l:'HIIT', em:'⚡', met:12.0 },
+  { v:'row', l:'Rowing', em:'🚣', met:7.0 },
+  { v:'jump', l:'Jump Rope', em:'🪢', met:11.0 },
+  { v:'other', l:'Other', em:'🏅', met:6.0 }
 ];
 
-function calBurn(met, weightKg, durationMin) {
-  return Math.round(met * weightKg * (durationMin / 60));
-}
-
-function paceStr(distKm, durationMin) {
-  if (!distKm || !durationMin) return '--';
-  const secPerKm = (durationMin * 60) / distKm;
-  const m = Math.floor(secPerKm / 60);
-  const s = Math.round(secPerKm % 60);
-  return m + ':' + (s < 10 ? '0' : '') + s + '/km';
-}
-
-function speedStr(distKm, durationMin) {
-  if (!distKm || !durationMin) return '--';
-  return (distKm / (durationMin / 60)).toFixed(1) + ' km/h';
-}
-
-App.register('cardio', async function () {
-  const [user, allCardio] = await Promise.all([Storage.getUser(), Storage.getAll('cardio')]);
-  const sorted = allCardio.slice().sort(function (a, b) { return new Date(b.date) - new Date(a.date); });
-  const recent = sorted.slice(0, 20);
-
-  const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 7);
-  const weekCardio = allCardio.filter(function (c) { return new Date(c.date) > cutoff; });
-  const weekDist = weekCardio.reduce(function (a, c) { return a + (c.distance || 0); }, 0);
-  const weekCal = weekCardio.reduce(function (a, c) { return a + (c.calories || 0); }, 0);
-  const weekDur = weekCardio.reduce(function (a, c) { return a + (c.duration || 0); }, 0);
-
-  /* Personal bests */
-  const runs = allCardio.filter(function (c) { return c.type === 'run'; });
-  const fastestPace = runs.reduce(function (best, c) {
-    if (!c.distance || !c.duration) return best;
-    const pace = (c.duration * 60) / c.distance;
-    return (!best || pace < best) ? pace : best;
-  }, null);
-  const longestRun = runs.reduce(function (best, c) { return Math.max(best, c.distance || 0); }, 0);
-
-  let h = App.topbar('Cardio', 'Track your sessions');
-  h += '<div style="padding:14px 16px 0">';
-
-  h += '<div class="g4" style="margin-bottom:12px">';
-  h += App.statBox(weekCardio.length, 'Sessions', 'stat-accent');
-  h += App.statBox(weekDist.toFixed(1) + 'km', 'Distance', 'stat-info');
-  h += App.statBox(weekDur + ' min', 'Time', '');
-  h += App.statBox(weekCal, 'Calories', 'stat-warn');
-  h += '</div>';
-
-  if (fastestPace || longestRun) {
-    h += App.sh('Personal Bests');
-    h += '<div class="g2" style="margin-bottom:12px">';
-    if (fastestPace) {
-      const m = Math.floor(fastestPace / 60);
-      const s = Math.round(fastestPace % 60);
-      h += App.statBox(m + ':' + (s < 10 ? '0' : '') + s + '/km', 'Fastest Pace', 'stat-ok');
-    }
-    if (longestRun > 0) h += App.statBox(longestRun.toFixed(1) + ' km', 'Longest Run', 'stat-info');
-    h += '</div>';
-  }
-
-  h += App.sh('Log Session');
-  h += '<div class="card" style="margin:0 0 12px">';
-  h += '<div class="fw"><label class="field-label">Activity Type</label>';
-  h += '<div class="scroll-row" style="padding:0 0 8px">';
-  CARDIO_TYPES.forEach(function (t) {
-    h += '<button class="pill" id="ct-' + t.v + '" onclick="Cardio.selectType(\'' + t.v + '\')">' + t.em + ' ' + t.l + '</button>';
+reg('cardio', function() {
+  const user = S.g('user') || {};
+  const sessions = (S.g('cardio') || []).sort((a,b) => new Date(b.date)-new Date(a.date));
+  const now = new Date();
+  const monthSessions = sessions.filter(s => {
+    const d = new Date(s.date);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   });
-  h += '</div></div>';
-  h += '<div id="cardio-type-label" style="font-size:14px;font-weight:700;color:var(--accent);margin-bottom:12px">Select activity type above</div>';
-  h += '<div class="g2">';
-  h += '<div class="fw"><label class="field-label">Distance (km)</label><input id="c-dist" class="field" type="number" inputmode="decimal" step="0.01" placeholder="5.0"></div>';
-  h += '<div class="fw"><label class="field-label">Duration (min)</label><input id="c-dur" class="field" type="number" inputmode="numeric" step="1" placeholder="30"></div>';
-  h += '</div>';
-  h += '<div id="cardio-calc" style="background:var(--bg4);border-radius:12px;padding:12px;margin-bottom:12px;font-size:13px;color:var(--txt3)">Enter distance and duration to see pace</div>';
-  h += '<div class="fw"><label class="field-label">Notes (optional)</label><input id="c-notes" class="field" placeholder="e.g. Morning park run"></div>';
-  h += '<button class="btn btn-primary" onclick="Cardio.log()">Save Session</button>';
-  h += '</div>';
 
-  if (recent.length) {
-    h += App.sh('Recent Sessions', recent.length > 5 ? 'History' : '', '');
-    h += '<div class="card" style="margin:0 0 20px">';
-    recent.forEach(function (c) {
-      const ct = CARDIO_TYPES.find(function (t) { return t.v === c.type; }) || CARDIO_TYPES[CARDIO_TYPES.length - 1];
-      h += '<div class="cardio-row">';
-      h += '<div style="width:44px;height:44px;border-radius:12px;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">' + ct.em + '</div>';
-      h += '<div style="flex:1;min-width:0">';
-      h += '<div style="font-size:15px;font-weight:700">' + ct.l + '</div>';
-      h += '<div style="font-size:12px;color:var(--txt3)">' + App.fmtDate(c.date) + (c.duration ? ' · ' + c.duration + ' min' : '') + '</div>';
-      h += '</div>';
-      h += '<div style="text-align:right;flex-shrink:0">';
-      if (c.distance) h += '<div style="font-size:15px;font-weight:800">' + c.distance.toFixed(1) + ' km</div>';
-      if (c.distance && c.duration) h += '<div style="font-size:11px;color:var(--txt3)">' + paceStr(c.distance, c.duration) + '</div>';
-      h += '</div>';
-      h += '<button class="btn btn-err btn-xs" onclick="Cardio.del(' + c.id + ')" style="flex-shrink:0">✕</button>';
-      h += '</div>';
+  const totalDist = monthSessions.reduce((a,s) => a+(s.distance||0), 0).toFixed(1);
+  const totalTime = monthSessions.reduce((a,s) => a+(s.duration||0), 0);
+  const totalCal = Math.round(monthSessions.reduce((a,s) => a+(s.calories||0), 0));
+
+  // Best pace (runs only)
+  const runs = sessions.filter(s => s.type === 'run' && s.distance > 0 && s.duration > 0);
+  const bestPace = runs.length ? Math.min(...runs.map(r => r.duration/r.distance)) : null;
+  const bestPaceStr = bestPace ? Math.floor(bestPace) + ':' + String(Math.round((bestPace%1)*60)).padStart(2,'0') + '/km' : '—';
+
+  // Week bars
+  const weeks = [];
+  for (let i=6; i>=0; i--) {
+    const d = new Date(); d.setDate(d.getDate()-i*7);
+    const wk = sessions.filter(s => {
+      const sd = new Date(s.date);
+      return sd >= new Date(d.getFullYear(), d.getMonth(), d.getDate()-d.getDay()) &&
+             sd < new Date(d.getFullYear(), d.getMonth(), d.getDate()-d.getDay()+7);
     });
-    h += '</div>';
+    weeks.push({ label: ['6w','5w','4w','3w','2w','1w','This'][6-i], count:wk.length, time:wk.reduce((a,s)=>a+(s.duration||0),0) });
   }
+  const maxTime = Math.max(...weeks.map(w=>w.time), 1);
+  const bars = weeks.map((w,i) =>
+    '<div style="flex:1;text-align:center">' +
+    '<div style="height:60px;display:flex;align-items:flex-end">' +
+    '<div style="width:100%;background:' + (i===6?'var(--grad)':'var(--bg4)') + ';border-radius:4px 4px 0 0;height:' + Math.round((w.time/maxTime)*60) + 'px;min-height:' + (w.count?4:0) + 'px;transition:height 0.4s"></div>' +
+    '</div>' +
+    '<div style="font-size:10px;color:var(--txt3);margin-top:4px">' + w.label + '</div>' +
+    '</div>'
+  ).join('');
 
-  h += '</div>';
-  return h;
+  const sessionRows = sessions.slice(0,10).map(s => {
+    const type = CARDIO_TYPES.find(t=>t.v===s.type) || CARDIO_TYPES[7];
+    const paceStr = s.type==='run' && s.distance>0 ? (s.duration/s.distance).toFixed(1) + ' min/km' : '';
+    return '<div class="ex-row" style="padding:12px 0">' +
+      '<div class="ex-icon">' + type.em + '</div>' +
+      '<div class="ex-info"><div class="ex-name">' + esc(type.l) + '</div>' +
+      '<div class="ex-sub">' + fmtDate(s.date) + ' · ' + (s.duration||0) + 'min' + (s.distance?' · '+(s.distance)+(user.distanceUnit||'km'):'') + (paceStr?' · '+paceStr:'') + '</div></div>' +
+      '<div style="text-align:right"><div style="font-size:14px;font-weight:700;color:var(--c1)">' + (s.calories||0) + '</div><div style="font-size:11px;color:var(--txt3)">kcal</div></div>' +
+      '</div>';
+  }).join('') || emptyState('🏃', 'No cardio sessions', 'Log your first run or session', '+ Log Session', "openCardioLog()");
+
+  return topbar('Cardio', null, '<button class="topbar-icon" onclick="openCardioLog()">＋</button>') +
+
+  '<div class="stats-grid" style="margin:12px 16px 14px">' +
+  '<div class="stat cyan"><div class="stat-v">' + totalDist + '</div><div class="stat-l">km This Month</div></div>' +
+  '<div class="stat green"><div class="stat-v">' + fmtTime(totalTime) + '</div><div class="stat-l">Total Time</div></div>' +
+  '<div class="stat purple"><div class="stat-v">' + totalCal + '</div><div class="stat-l">Calories</div></div>' +
+  '<div class="stat amber"><div class="stat-v">' + bestPaceStr + '</div><div class="stat-l">Best Pace</div></div>' +
+  '</div>' +
+
+  sh('Weekly Activity') +
+  '<div class="card card-dark" style="margin:0 16px 14px">' +
+  '<div style="display:flex;align-items:flex-end;height:70px;gap:6px">' + bars + '</div>' +
+  '</div>' +
+
+  '<div style="padding:0 16px;margin-bottom:14px">' +
+  '<button class="btn btn-p" onclick="openCardioLog()">+ Log Session</button>' +
+  '</div>' +
+
+  sh('Sessions') +
+  '<div class="card card-dark" style="margin:0 16px 14px;padding:0 4px">' + sessionRows + '</div>' +
+  '<div style="height:8px"></div>';
 });
 
-App.afterRender('cardio', function () {
-  const distEl = document.getElementById('c-dist');
-  const durEl = document.getElementById('c-dur');
-  function updateCalc() {
-    const dist = parseFloat(distEl ? distEl.value : 0);
-    const dur = parseFloat(durEl ? durEl.value : 0);
-    const calc = document.getElementById('cardio-calc');
-    if (!calc) return;
-    if (dist && dur) {
-      const pace = paceStr(dist, dur);
-      const speed = speedStr(dist, dur);
-      calc.innerHTML = '<span style="color:var(--txt2)">Pace: <b>' + pace + '</b> · Speed: <b>' + speed + '</b></span>';
-    } else {
-      calc.textContent = 'Enter distance and duration to see pace';
-    }
-  }
-  if (distEl) distEl.addEventListener('input', updateCalc);
-  if (durEl) durEl.addEventListener('input', updateCalc);
-});
+let _cardioType = 'run';
 
-let _cardioType = null;
+function openCardioLog() {
+  _cardioType = 'run';
+  const typeGrid = CARDIO_TYPES.map(t =>
+    '<div class="cardio-type' + (t.v==='run'?' sel':'') + '" id="ctype-' + t.v + '" onclick="selectCardioType(\'' + t.v + '\')">' +
+    '<div class="cardio-type-icon">' + t.em + '</div>' +
+    '<div class="cardio-type-name">' + t.l + '</div>' +
+    '</div>'
+  ).join('');
+  const user = S.g('user') || {};
+  const distUnit = user.distanceUnit || 'km';
+  const body = '<div class="cardio-type-grid" id="cardio-type-grid">' + typeGrid + '</div>' +
+    '<div class="field-wrap"><label class="field-label">Duration (minutes)</label><input class="field" id="cardio-dur" type="number" min="1" max="600" placeholder="e.g. 30" inputmode="numeric"></div>' +
+    '<div class="field-wrap"><label class="field-label">Distance (' + distUnit + ') — optional</label><input class="field" id="cardio-dist" type="number" step="0.1" min="0" placeholder="e.g. 5.0" inputmode="decimal"></div>' +
+    '<div class="field-wrap"><label class="field-label">Notes (optional)</label><input class="field" id="cardio-note" type="text" placeholder="e.g. morning run"></div>';
+  modal('Log Cardio', body, '<button class="btn btn-p" onclick="saveCardioLog()">Save</button>');
+}
+window.openCardioLog = openCardioLog;
 
-const Cardio = {
-  selectType: function (v) {
-    _cardioType = v;
-    document.querySelectorAll('[id^="ct-"]').forEach(function (b) { b.classList.remove('on'); });
-    const btn = document.getElementById('ct-' + v);
-    if (btn) btn.classList.add('on');
-    const label = document.getElementById('cardio-type-label');
-    const ct = CARDIO_TYPES.find(function (t) { return t.v === v; });
-    if (label && ct) label.textContent = ct.em + ' ' + ct.l + ' selected';
-  },
+function selectCardioType(v) {
+  _cardioType = v;
+  document.querySelectorAll('.cardio-type').forEach(el => el.classList.remove('sel'));
+  const sel = document.getElementById('ctype-' + v);
+  if (sel) sel.classList.add('sel');
+}
+window.selectCardioType = selectCardioType;
 
-  log: async function () {
-    if (!_cardioType) { App.toast('Select an activity type', 'warn'); return; }
-    const dist = parseFloat(document.getElementById('c-dist').value) || 0;
-    const dur = parseFloat(document.getElementById('c-dur').value) || 0;
-    if (!dur) { App.toast('Enter a duration', 'warn'); return; }
-    const user = await Storage.getUser();
-    const ct = CARDIO_TYPES.find(function (t) { return t.v === _cardioType; });
-    const cal = ct ? calBurn(ct.met, user.weight || 75, dur) : 0;
-    const notes = document.getElementById('c-notes').value || '';
-    await Storage.set('cardio', {
-      date: App.isoNow(), type: _cardioType, distance: dist || null,
-      duration: dur, calories: cal,
-      pace: (dist && dur) ? Math.round((dur * 60) / dist) : null,
-      notes: notes
-    });
-    App.haptic(30);
-    App.toast('Session saved! ' + (cal ? cal + ' kcal burned' : ''));
-    _cardioType = null;
-    go('cardio');
-  },
-
-  del: async function (id) {
-    await Storage.delete('cardio', id);
-    App.haptic([50, 30, 50]);
-    App.toast('Removed');
-    go('cardio');
-  }
-};
+function saveCardioLog() {
+  const dur = parseInt(document.getElementById('cardio-dur').value);
+  if (!dur) { toast('Enter duration', 'warn'); return; }
+  const dist = parseFloat(document.getElementById('cardio-dist').value) || null;
+  const note = document.getElementById('cardio-note').value;
+  const user = S.g('user') || {};
+  const type = CARDIO_TYPES.find(t => t.v === _cardioType) || CARDIO_TYPES[0];
+  const cals = Math.round(type.met * (user.weight||75) * (dur/60));
+  const sessions = S.g('cardio') || [];
+  sessions.push({ date: isoNow(), type: _cardioType, duration: dur, distance: dist, calories: cals, note });
+  S.set('cardio', sessions);
+  closeModal();
+  toast('Session logged! ' + cals + ' kcal', 'ok');
+  haptic(30);
+  go('cardio');
+}
+window.saveCardioLog = saveCardioLog;
