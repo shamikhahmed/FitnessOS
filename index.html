@@ -8,7 +8,6 @@
   <meta name="apple-mobile-web-app-title" content="FitnessOS">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#000000">
-  <meta name="description" content="FitnessOS — Your Intelligent Training Operating System">
   <title>FitnessOS</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon.svg">
@@ -32,22 +31,14 @@
     </div>
     <nav id="nav" style="display:none"></nav>
   </div>
-  <div id="toast" style="display:none;opacity:0">
+  <div id="toast" style="display:flex;opacity:0">
     <span class="toast-icon"></span>
     <span class="toast-msg"></span>
   </div>
   <div id="rest-sheet"></div>
 
-  <script>
-    // Re-show toast on demand
-    document.getElementById('toast').style.display = 'flex';
-  </script>
-
-  <!-- Core -->
   <script src="js/storage.js"></script>
   <script src="js/app.js"></script>
-
-  <!-- Modules -->
   <script src="js/modules/onboarding.js"></script>
   <script src="js/modules/dashboard.js"></script>
   <script src="js/modules/workout.js"></script>
@@ -59,18 +50,14 @@
   <script src="js/modules/settings.js"></script>
 
   <script>
+    S.init();
+    applyTheme(S.g('user.theme') || 'carbon');
+    buildNav();
+    initCanvas();
+    if (!S.g('onboarded')) { go('onboarding'); } else { go('dashboard'); }
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch(() => {});
-      });
+      navigator.serviceWorker.register('sw.js').catch(() => {});
     }
   </script>
 </body>
 </html>
-<script>
-  S.init();
-  applyTheme(S.g('user.theme') || 'carbon');
-  buildNav();
-  initCanvas();
-  if (!S.g('onboarded')) { go('onboarding'); } else { go('dashboard'); }
-</script>
