@@ -379,6 +379,22 @@ function renderObStep(step) {
 function go_ob(step) { _obStep = step; go('onboard'); }
 window.go_ob = go_ob;
 
+window.obSelect = function(field, val) {
+  _obData[field] = val;
+  if (field === 'location') {
+    var equipMap = {
+      full: ['barbell','dumbbell','cables','machine','bar','kettlebell'],
+      home_db: ['dumbbell','bar','bands'],
+      bw: ['none','bar'],
+      mixed: ['barbell','dumbbell','cables','machine','bar','bands','none']
+    };
+    _obData.equipment = equipMap[val] || [];
+  }
+  document.querySelectorAll('.ob-opt').forEach(function(b) { b.classList.remove('sel'); });
+  var btn = document.getElementById(field + '-' + val);
+  if (btn) btn.classList.add('sel');
+};
+
 function obStep1() {
   return '<div class="ob-body">' +
     '<div class="ob-title">What should we call you? 👋</div>' +
@@ -410,7 +426,7 @@ function obStep2() {
     '<div class="ob-title">What\'s your main goal?</div>' +
     '<div class="ob-sub">Your program, weights, and AI advice adapt to this.</div>' +
     goals.map(g =>
-      '<button class="ob-opt' + (_obData.goal===g.id?' sel':'') + '" id="goal-' + g.id + '" onclick="obSelectGoal(\'' + g.id + '\')">' +
+      '<button class="ob-opt' + (_obData.goal===g.id?' sel':'') + '" id="goal-' + g.id + '" onclick="obSelect(\'goal\',\'' + g.id + '\')">' +
       '<div class="ob-opt-icon">' + g.i + '</div>' +
       '<div class="ob-opt-info"><div class="ob-opt-title">' + g.t + '</div><div class="ob-opt-sub">' + g.s + '</div></div>' +
       '</button>'
@@ -443,7 +459,7 @@ function obStep3() {
     '<div class="ob-title">Experience level?</div>' +
     '<div class="ob-sub">This sets your starting weights and program complexity.</div>' +
     levels.map(l =>
-      '<button class="ob-opt' + (_obData.exp===l.id?' sel':'') + '" id="exp-' + l.id + '" onclick="obSelectExp(\'' + l.id + '\')">' +
+      '<button class="ob-opt' + (_obData.exp===l.id?' sel':'') + '" id="exp-' + l.id + '" onclick="obSelect(\'exp\',\'' + l.id + '\')">' +
       '<div class="ob-opt-icon">' + l.i + '</div>' +
       '<div class="ob-opt-info"><div class="ob-opt-title">' + l.t + '</div><div class="ob-opt-sub">' + l.s + '</div></div>' +
       '</button>'
@@ -464,7 +480,7 @@ function obStep4() {
     '<div class="ob-title">Training split?</div>' +
     '<div class="ob-sub">How many days per week and how you split muscle groups.</div>' +
     splits.map(([id,data]) =>
-      '<button class="ob-opt' + (_obData.split===id?' sel':'') + '" id="split-' + id + '" onclick="obSelectSplit(\'' + id + '\')">' +
+      '<button class="ob-opt' + (_obData.split===id?' sel':'') + '" id="split-' + id + '" onclick="obSelect(\'split\',\'' + id + '\')">' +
       '<div class="ob-opt-icon">📅</div>' +
       '<div class="ob-opt-info"><div class="ob-opt-title">' + esc(data.n) + '</div><div class="ob-opt-sub">' + data.days + ' days/week</div></div>' +
       '</button>'
@@ -490,7 +506,7 @@ function obStep5() {
     '<div class="ob-title">Where do you train?</div>' +
     '<div class="ob-sub">Determines which exercises appear in your workouts.</div>' +
     locs.map(l =>
-      '<button class="ob-opt' + (_obData.location===l.id?' sel':'') + '" id="loc-' + l.id + '" onclick="obSelectLoc(\'' + l.id + '\')">' +
+      '<button class="ob-opt' + (_obData.location===l.id?' sel':'') + '" id="location-' + l.id + '" onclick="obSelect(\'location\',\'' + l.id + '\')">' +
       '<div class="ob-opt-icon">' + l.i + '</div>' +
       '<div class="ob-opt-info"><div class="ob-opt-title">' + l.t + '</div><div class="ob-opt-sub">' + l.s + '</div></div>' +
       '</button>'

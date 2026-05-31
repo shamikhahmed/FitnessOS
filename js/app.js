@@ -9,22 +9,27 @@ let _currentScreen = null;
 function reg(id, fn) { _screens[id] = fn; }
 
 function go(id, data) {
-  if (!_screens[id]) { console.warn('No screen:', id); return; }
-  _currentScreen = id;
-  const nav = document.getElementById('nav');
-  if (nav) nav.style.display = ['welcome','onboard'].includes(id) ? 'none' : '';
-  document.querySelectorAll('.nb').forEach(b => b.classList.remove('on'));
-  const nb = document.getElementById('nb-' + id);
-  if (nb) nb.classList.add('on');
-  const v = document.getElementById('view');
-  if (!v) return;
-  v.scrollTop = 0;
-  const div = document.createElement('div');
-  div.className = 'screen';
-  const html = _screens[id](data);
-  div.innerHTML = html || '';
-  v.innerHTML = '';
-  v.appendChild(div);
+  try {
+    if (!_screens[id]) { console.error('No screen:', id); return; }
+    _currentScreen = id;
+    const html = _screens[id](data) || '';
+    const v = document.getElementById('view');
+    v.scrollTop = 0;
+    const div = document.createElement('div');
+    div.className = 'screen';
+    div.innerHTML = html;
+    v.innerHTML = '';
+    v.appendChild(div);
+    document.querySelectorAll('.nb').forEach(b => b.classList.remove('on'));
+    const nb = document.getElementById('nb-' + id);
+    if (nb) nb.classList.add('on');
+    const nav = document.getElementById('nav');
+    if (nav) nav.style.display = ['welcome','onboard'].includes(id) ? 'none' : '';
+  } catch(e) {
+    console.error('Screen error in', id, e);
+    const v = document.getElementById('view');
+    if (v) v.innerHTML = '<div style="padding:24px;color:#ff6b6b;font-size:14px">Error loading ' + id + ': ' + e.message + '</div>';
+  }
 }
 window.go = go;
 

@@ -56,41 +56,41 @@
   <script src="./js/modules/settings.js"></script>
 
   <script>
-    // Animated background orbs
-    (function() {
-      const canvas = document.getElementById('bg-canvas');
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      const orbs = [
-        { x: 0.3, y: 0.2, r: 200, hue: 195, vx: 0.15, vy: 0.1 },
-        { x: 0.7, y: 0.6, r: 250, hue: 200, vx: -0.12, vy: 0.08 },
-        { x: 0.5, y: 0.8, r: 180, hue: 265, vx: 0.1, vy: -0.15 },
-        { x: 0.15, y: 0.7, r: 220, hue: 270, vx: -0.08, vy: -0.1 },
-      ];
-      function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-      resize();
-      window.addEventListener('resize', resize);
-      function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        orbs.forEach(o => {
-          o.x += o.vx / canvas.width;
-          o.y += o.vy / canvas.height;
-          if (o.x < 0 || o.x > 1) o.vx *= -1;
-          if (o.y < 0 || o.y > 1) o.vy *= -1;
-          const grd = ctx.createRadialGradient(o.x*canvas.width, o.y*canvas.height, 0, o.x*canvas.width, o.y*canvas.height, o.r);
-          grd.addColorStop(0, 'hsla(' + o.hue + ',100%,60%,0.06)');
-          grd.addColorStop(1, 'hsla(' + o.hue + ',100%,60%,0)');
-          ctx.fillStyle = grd;
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-        });
-        requestAnimationFrame(draw);
-      }
-      draw();
-    })();
-
-    // Boot
-    S.init();
     document.addEventListener('DOMContentLoaded', function() {
+      // Animated background orbs
+      (function() {
+        var canvas = document.getElementById('bg-canvas');
+        if (!canvas) return;
+        var ctx = canvas.getContext('2d');
+        var orbs = [
+          { x: 0.3, y: 0.2, r: 200, hue: 195, vx: 0.15, vy: 0.1 },
+          { x: 0.7, y: 0.6, r: 250, hue: 200, vx: -0.12, vy: 0.08 },
+          { x: 0.5, y: 0.8, r: 180, hue: 265, vx: 0.1, vy: -0.15 },
+          { x: 0.15, y: 0.7, r: 220, hue: 270, vx: -0.08, vy: -0.1 },
+        ];
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        resize();
+        window.addEventListener('resize', resize);
+        function draw() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          orbs.forEach(function(o) {
+            o.x += o.vx / canvas.width;
+            o.y += o.vy / canvas.height;
+            if (o.x < 0 || o.x > 1) o.vx *= -1;
+            if (o.y < 0 || o.y > 1) o.vy *= -1;
+            var grd = ctx.createRadialGradient(o.x*canvas.width, o.y*canvas.height, 0, o.x*canvas.width, o.y*canvas.height, o.r);
+            grd.addColorStop(0, 'hsla(' + o.hue + ',100%,60%,0.06)');
+            grd.addColorStop(1, 'hsla(' + o.hue + ',100%,60%,0)');
+            ctx.fillStyle = grd;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+          });
+          requestAnimationFrame(draw);
+        }
+        draw();
+      })();
+
+      // Boot: S.init() MUST run before go()
+      S.init();
       var theme = S.g('user.theme') || 'electric';
       document.documentElement.setAttribute('data-theme', theme);
       buildNav();
@@ -100,12 +100,12 @@
       } else {
         go('dashboard');
       }
-    });
 
-    // Service worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').catch(function() {});
-    }
+      // Service worker
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').catch(function() {});
+      }
+    });
   </script>
 </body>
 </html>
