@@ -248,29 +248,47 @@ function _strengthCharts(ws, prs) {
 }
 
 function _bodyStatsChart(bodyStats, user) {
-  if (!bodyStats||!bodyStats.length) return sh('Weight Trend') +
-    emptyState('⚖️','No weight data','Log your weight in Settings → Profile');
-  const goal = user?.goalWeight||70;
-  const pts = bodyStats.slice(-12);
-  if (pts.length < 2) return '';
-  const weights = pts.map(s=>s.weight||75);
-  const minW = Math.min(...weights, goal) - 2;
-  const maxW = Math.max(...weights) + 2;
-  const W=280, H=80;
-  const toY = v => H - ((v-minW)/(maxW-minW||1))*(H-8) - 4;
-  const points = pts.map((p,i)=>((i/(pts.length-1||1))*W)+','+toY(p.weight||75)).join(' ');
-  const goalY = toY(goal);
-  return sh('Weight Trend') +
-    '<div style="padding:0 16px">' +
-    '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" style="width:100%;overflow:visible">' +
-    '<line x1="0" y1="'+goalY+'" x2="'+W+'" y2="'+goalY+'" stroke="rgba(var(--c1-rgb),0.35)" stroke-width="1.5" stroke-dasharray="6,4"/>' +
-    '<polyline points="'+points+'" fill="none" stroke="var(--c1)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>' +
-    '</svg>' +
-    '<div style="display:flex;justify-content:space-between;margin-top:6px">' +
-    '<div style="font-size:12px;color:var(--txt3)">'+fmtDate(pts[0].date)+'</div>' +
-    '<div style="font-size:12px;color:var(--c1)">Goal: '+goal+'kg</div>' +
-    '<div style="font-size:12px;color:var(--txt3)">'+fmtDate(pts[pts.length-1].date)+'</div>' +
-    '</div></div>';
+  if (!bodyStats || !bodyStats.length) return sh('Weight Trend') +
+    emptyState('⚖️','No weight data','Log your weight in Body Map');
+  var isImperial = (user||{}).units === 'imperial';
+  var pts = bodyStats.slice(-12);
+
+  var W = 320, H = 160, padL = 44, padB = 24, padT = 16, padR = 12;
+  var chartW = W - padL - padR, chartH = H - padT - padB;
+  var weights = pts.map(function(p){return p.weight;});
+  var minW = Math.max(0, Math.min.apply(null,weights)-2);
+  var maxW = Math.max.apply(null,weights)+2;
+
+  var toX = function(i){return padL+(pts.length>1?i/(pts.length-1):0.5)*chartW;};
+  var toY = function(v){return padT+(1-(v-minW)/(maxW-minW||1))*chartH;};
+
+  var polyPts = pts.map(function(p,i){return toX(i)+','+toY(p.weight);}).join(' ');
+  var fillPts = polyPts+' '+toX(pts.length-1)+','+(padT+chartH)+' '+padL+','+(padT+chartH);
+  var gradId = 'bsg'+Date.now();
+
+  var dots = pts.map(function(p,i){
+    var cx=toX(i), cy=toY(p.weight), isLast=i===pts.length-1;
+    var w = isImperial ? Math.round(p.weight*2.205*10)/10 : p.weight;
+    return '<circle cx="'+cx+'" cy="'+cy+'" r="'+(isLast?7:4)+'" fill="'+(isLast?'white':'var(--c2)')+'" stroke="var(--c2)" stroke-width="2"/>' +
+      (isLast?'<text x="'+cx+'" y="'+(cy-12)+'" font-size="10" fill="var(--txt)" text-anchor="middle" font-weight="700">'+w+(isImperial?'lb':'kg')+'</text>':'');
+  }).join('');
+
+  var goalLine = (user && user.goalWeight) ?
+    '<line x1="'+padL+'" y1="'+toY(user.goalWeight)+'" x2="'+(W-padR)+'" y2="'+toY(user.goalWeight)+'" stroke="#30d158" stroke-width="1.5" stroke-dasharray="4,3"/>' +
+    '<text x="'+(W-padR-2)+'" y="'+(toY(user.goalWeight)-4)+'" font-size="9" fill="#30d158" text-anchor="end">Goal</text>' : '';
+
+  return sh('Weight Trend', '+ Log', 'go(\'bodymap\')') +
+    '<div style="padding:0 16px 14px">' +
+    '<svg width="100%" viewBox="0 0 '+W+' '+H+'" overflow="visible">' +
+    '<defs><linearGradient id="'+gradId+'" x1="0" y1="0" x2="0" y2="1">' +
+    '<stop offset="0%" stop-color="var(--c2)" stop-opacity="0.25"/>' +
+    '<stop offset="100%" stop-color="var(--c2)" stop-opacity="0"/>' +
+    '</linearGradient></defs>' +
+    goalLine +
+    '<polygon points="'+fillPts+'" fill="url(#'+gradId+')" />' +
+    '<polyline points="'+polyPts+'" fill="none" stroke="var(--c2)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+    dots +
+    '</svg></div>';
 }
 
 function _achievementWall(earned) {
