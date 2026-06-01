@@ -1,154 +1,156 @@
-# FitnessOS — Your Intelligent Training Partner
+# FitnessOS Pro
 
-![PWA](https://img.shields.io/badge/PWA-Offline--first-00d5ff?style=flat-square)
-![iOS](https://img.shields.io/badge/iOS-Compatible-6b5fff?style=flat-square)
-![Version](https://img.shields.io/badge/Version-4.0-10B981?style=flat-square)
-![Exercises](https://img.shields.io/badge/Exercises-160%2B-f5c842?style=flat-square)
+**Your AI-powered fitness operating system — built as a single offline-first PWA.**
 
-> AI-powered · Offline-first · No account · Your data stays on your device
+🔗 **Live:** https://shamikhahmed.github.io/FitnessOS  
+📁 **Repo:** https://github.com/shamikhahmed/FitnessOS
+
+---
+
+## What it is
+
+FitnessOS Pro is a comprehensive fitness tracking PWA built entirely in vanilla HTML, CSS, and JavaScript — no frameworks, no CDNs, no backend. It runs fully offline, installs on any device, and stores all data locally.
+
+Built by Shamikh Ahmed across 14 development sessions as a production-grade personal project.
 
 ---
 
 ## Features
 
-- 🧠 **AI Coach** — 5 personalities: Alex (Drill Sergeant), Maya (Sports Scientist), Sam (Motivator), Zen (Mindful), Rex (Powerlifter)
-- 💪 **Smart Workouts** — PPL, Upper-Lower, Full Body, Bro Split, Strength, Home — all auto-generated with progressive overload
-- 🫀 **Body Map** — Animated SVG anatomy with real-time muscle recovery coloring (sore/recovering/fresh)
-- 📊 **Readiness Engine** — 0–100 score calculated from sleep, soreness, stress, energy, hydration, and consecutive training days
-- 💊 **Supplement Stack** — 20 pre-loaded supplements with timing schedules, caffeine warnings, and daily logging
-- 📈 **Progress Analytics** — PR tracking, estimated 1RM charts, volume trends, workout calendar, weight tracking
-- 🏆 **20+ Achievements** — From First Rep to Iron Will (30-day streak) to Volume King (100,000kg)
-- 📴 **Offline-First PWA** — Works without internet, installs to home screen, all data in localStorage
-- 🎨 **6 Themes** — Carbon, Stealth, Forest, Arctic, Electric, Sunset
+### 🏋️ Workout System
+- **300+ exercise database** with coaching cues, setup, common mistakes, breathing, joint stress heatmap
+- **Active workout logger** — set-by-set tracking with KG/reps inputs, circular checkmark, PR detection
+- **Rest timer** — SVG ring countdown with Skip and +30s controls
+- **PR detection** — automatic personal record tracking with 🏆 badge
+- **Superset mode** — SS toggle for paired exercises
+- **Quick Workout** — auto-generates 4-exercise × 3-set session
+- **Custom exercise adding** — persisted to localStorage
+- **Browse all exercises** — searchable/filterable library with difficulty + spotter flags
+
+### ❤️ Cardio Protocols
+- **HIIT** — Tabata, 30/30 intervals, work-rest pyramid
+- **LISS** — Incline walk, fasted walk, steady bike
+- **MISS** — Tempo run, rowing MISS, stair climber
+- **SIT** — Wingate protocol, hill sprints
+- **Fartlek** — Street fartlek, music-driven
+- **Circuit Training** — Push-pull-legs, barbell complex, AMRAP
+- Each with science notes, warmup/cooldown, warnings, session logging
+
+### 🫀 Body Map & Measurements
+- **Interactive SVG body map** — front/back, clickable muscles, recovery status
+- **11-point measurements** — neck to calves, cm/in toggle, change tracking
+- **Body stats** — BMI, BMR, TDEE, healthy range, weight history
+- **Weight logging** — metric/imperial, goal tracking
+
+### 🤖 AI Coach
+- **Daily Briefing** — readiness score, coach quote, today's plan, injury alerts, supplement reminders
+- **5 coach personalities** — Maya (Sports Scientist), Alex (Drill Sergeant), Sam (Motivator), Zen (Mindful), Rex (Powerlifter)
+- **3 coach tones** — Motivational, Scientific, Hardcore
+- **Goal-aware insights** — fat loss, strength, hypertrophy, recomp, athletic, maintenance
+- **Deload signals** — streak-based fatigue detection
+
+### 💪 Recovery & Readiness
+- **Readiness score** — sleep, soreness, stress, energy, hydration, streak, injuries
+- **Muscle recovery grid** — 4-column tap-to-detail with recovery %
+- **Injury system** — flags exercises by body part + joint stress, mark-recovered toggle
+
+### 📊 Progress Tracking
+- **Strength trends** — per-exercise SVG charts with goal line
+- **Weight trend** — gradient fill chart, current label, goal line, imperial support
+- **PR wall** — exercise records with date
+- **Achievement system** — milestone badges
+
+### 💊 Nutrition & Supplements
+- **Macro tracking** — calories, protein, carbs, fat
+- **Supplement logger** — timing-aware (morning/pre/post/evening), dose tracking
+- **Water intake** — glass-by-glass tracking
+
+### 👤 Multi-Profile System
+- **Up to unlimited profiles** — each with isolated localStorage
+- **Demo mode** — pre-populated with 16 workouts, 4 PRs, body stats
+- **Legacy migration** — auto-imports single-profile data
+
+### ⚙️ Settings
+- **8 themes** — Carbon, Aurora, Sunset, Midnight, Electric, Stealth, Forest, Light
+- **Nav tab customization** — toggle which tabs appear (min 3)
+- **6 training splits** — PPL, Upper/Lower, Full Body, Bro Split, Strength, Home
+- **Equipment selection** — filters exercises by available gear
+- **Import/Export** — full JSON backup/restore
 
 ---
 
-## Getting Started
+## Tech Stack
 
-1. Open `index.html` in a browser or deploy to any static host
-2. Complete the 12-step onboarding
-3. Start training
-
-To install as a PWA: tap **Share → Add to Home Screen** on iOS Safari.
-
----
-
-## Onboarding (12 Steps)
-
-| Step | Content |
-|------|---------|
-| 1 | Name |
-| 2 | Primary goal (6 options) |
-| 3 | Training experience |
-| 4 | Gender, age, units |
-| 5 | Body stats: height, weight, goal weight, body fat % |
-| 6 | Training split (auto-sets weekly days) |
-| 7 | Training location & equipment + gym brands |
-| 8 | Gym schedule (day picker) |
-| 9 | Injuries & pain areas (multi-select) |
-| 10 | Coach personality (5 options) |
-| 11 | Supplement stack (20 options with timing) |
-| 12 | Summary & welcome |
+| Layer | Tech |
+|-------|------|
+| Frontend | Vanilla HTML5, CSS3, JavaScript (ES6+) |
+| Storage | localStorage (multi-profile, key: `fos_profiles_[id]`) |
+| PWA | Service Worker (cache-first), Web App Manifest |
+| Charts | Hand-rolled SVG — no Chart.js |
+| Icons | SVG + emoji |
+| Build | None — zero build step |
 
 ---
 
-## Engines & Systems
-
-| Engine | Purpose |
-|--------|---------|
-| `ReadinessEngine` | 0–100 readiness score from recovery metrics |
-| `StreakEngine` | Workout streak, week volume, total volume |
-| `ProgEngine` | Epley 1RM, PR detection, double progression |
-| `SplitEngine` | 6 training splits, day rotation, substitutes |
-| `WeightEngine` | Smart weight suggestions, warmup sets, deload detection |
-| `BodyEngine` | BMI, BMR, TDEE, fat loss projections |
-| `MuscleEngine` | Per-muscle recovery status with color mapping |
-| `SupplementEngine` | Due-now alerts, caffeine warnings, stack suggestions |
-| `CoachEngine` | Daily insights, weekly reports, cardio protocols |
-| `AchEngine` | 20+ achievements with automatic unlock detection |
-| `TDEEEngine` | TDEE calculation, macro splits, deficit/surplus planning |
-
----
-
-## Themes
-
-| Theme | Primary | Secondary | Background |
-|-------|---------|-----------|------------|
-| Carbon (default) | #00d5ff | #6b5fff | #000000 |
-| Stealth | #f5c842 | #e8a020 | #0a0800 |
-| Forest | #10B981 | #059669 | #020a06 |
-| Arctic (light) | #007AFF | #5856D6 | #f5f5f7 |
-| Electric | #00f0ff | #0080ff | #000814 |
-| Sunset | #ff6b35 | #f7931e | #0a0400 |
-
----
-
-## Coach Personalities
-
-| Coach | Style | Tagline |
-|-------|-------|---------|
-| 🔥 Alex | Drill Sergeant | "No excuses. Maximum effort." |
-| 🧪 Maya | Sports Scientist | "Data-driven precision training." |
-| ⚡ Sam | Motivator | "You've got this, every rep counts!" |
-| 🧘 Zen | Mindful | "Listen to your body, train smart." |
-| 💪 Rex | Powerlifter | "Strength above all." |
-
----
-
-## Exercise Database
-
-**160+ exercises** across 14 muscle groups:
-
-`chest` · `back` · `legs` · `shoulders` · `biceps` · `triceps` · `core` · `glutes` · `fullbody` · `warmup_drills`
-
-Each exercise includes: muscle groups, coaching cues, setup instructions, common mistakes, joint stress ratings, CNS load, regressions, progressions, and machine alternatives.
-
----
-
-## Supplement Database
-
-20 pre-loaded supplements with timing, dose, caffeine flag, and half-life:
-
-Creatine · Whey · ISO 100 · C4 Ripped · Ghost · Casein · Mass Gainer · BCAAs · Glutamine · Omega-3 · Vitamin D3+K2 · Zinc · Magnesium Glycinate · Multivitamin · Collagen · Ashwagandha · Beta-Alanine · Citrulline Malate · Caffeine Pills · Melatonin
-
----
-
-## File Structure
-
+## Architecture
 ```
-fitnessos/
-├── landing.html          # Marketing landing page
-├── index.html            # App shell (PWA entry)
-├── css/
-│   ├── base.css          # Design tokens, 6 themes, reset, typography
-│   ├── layout.css        # Shell, nav, topbar, safe areas, modals
-│   └── components.css    # All UI components
-├── js/
-│   ├── storage.js        # localStorage state engine
-│   ├── app.js            # Router, engines, helpers, nav
-│   └── modules/
-│       ├── onboarding.js
-│       ├── dashboard.js
-│       ├── workout.js    # Exercise DB + active logger
-│       ├── bodymap.js    # SVG anatomy + measurements
-│       ├── coach.js      # AI coach screen
-│       ├── progress.js   # Charts, PRs, achievements
-│       ├── nutrition.js  # Supplements, water, calories
-│       ├── recovery.js   # Sleep, readiness, check-in
-│       └── settings.js   # 7-tab settings panel
-├── manifest.json
-├── sw.js                 # Service worker (cache-first)
-└── icon.svg
+index.html          — Boot, service worker registration
+css/
+  base.css          — Design tokens, themes, animations (DO NOT EDIT)
+  layout.css        — Nav, screens, topbar (DO NOT EDIT)
+  components.css    — All component styles
+js/
+  app.js            — Router, AI engines (Readiness, Coach, Muscle, Split, etc.)
+  storage.js        — S object, multi-profile localStorage
+  modules/
+    dashboard.js    — Home screen
+    workout.js      — Exercise DB (300+), active logger, cardio protocols
+    bodymap.js      — SVG body map, measurements, body stats
+    coach.js        — Daily briefing, coach screen
+    progress.js     — Charts, PRs, achievements
+    nutrition.js    — Meals, macros, supplements
+    recovery.js     — Readiness sliders
+    settings.js     — 6-tab settings screen
+    profiles.js     — Profile switcher, demo mode
+    onboarding.js   — 12-step onboarding + 4 intro slides
+sw.js               — Service worker (cache: fos-v6)
+manifest.json       — PWA manifest
 ```
 
 ---
 
-## Data & Privacy
+## Running Locally
 
-All data lives in `localStorage` under key `fos_v4`. No server. No account. No tracking. Export a full JSON backup anytime from **Settings → Data**.
+```bash
+git clone https://github.com/shamikhahmed/FitnessOS.git
+cd FitnessOS
+# Open index.html directly or serve with any static server:
+npx serve .
+# or
+python3 -m http.server 8080
+```
+
+No install, no build step, no dependencies.
 
 ---
 
-## by Shamikh Ahmed
+## Design Principles
 
-Built with ❤️ as a fully self-contained, zero-dependency PWA.
+- **Offline-first** — all data in localStorage, no API calls
+- **iPhone-optimised** — tested on Safari 390px (XS Max → 16 Pro Max)
+- **Zero framework** — vanilla JS only, `touch-action:manipulation` on all buttons
+- **Dark-mode default** — cinematic design system with CSS custom properties
+- **Progressive enhancement** — works without service worker, better with it
+
+---
+
+## Author
+
+**Shamikh Ahmed**  
+Director, NEWS Logistics · Founder, TheSolution360  
+MSc Logistics (Cardiff) · MSc Accounting & Finance (BPP/ACCA)  
+Karachi, Pakistan
+
+---
+
+*Built with Claude Code — 14 sessions, production-grade output.*
