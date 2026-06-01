@@ -1,13 +1,13 @@
 {
-  "name": "FitnessOS — Intelligent Training OS",
+  "name": "FitnessOS Pro",
   "short_name": "FitnessOS",
-  "description": "AI-powered training partner with body map, smart splits, supplement tracking, and recovery analytics.",
-  "start_url": "./index.html",
+  "description": "Your AI-powered fitness operating system",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#000000",
-  "orientation": "portrait-primary",
+  "background_color": "#0d0d0f",
+  "theme_color": "#0d0d0f",
+  "orientation": "portrait",
   "categories": ["health", "fitness", "sports"],
   "icons": [
     {

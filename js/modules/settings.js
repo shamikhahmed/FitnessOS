@@ -229,10 +229,30 @@ function _tabAppearance(u) {
     })() +
 
     _sectionTitle('Units') +
-    '<div style="display:flex;gap:8px">' +
+    '<div style="display:flex;gap:8px;margin-bottom:14px">' +
     ['metric','imperial'].map(unit =>
       '<button class="btn btn-'+(u.units===unit?'primary':'secondary')+' btn-sm" style="flex:1" onclick="_setSetting(\'user.units\',\''+unit+'\');go(\'settings\',{tab:\'appearance\'})">'+unit.charAt(0).toUpperCase()+unit.slice(1)+'</button>'
-    ).join('') + '</div>' + '</div>';
+    ).join('') + '</div>' +
+
+    _sectionTitle('Navigation Tabs') +
+    '<div style="font-size:13px;color:var(--txt2);margin-bottom:10px;line-height:1.5">Tap to toggle which tabs appear in the bottom nav (minimum 3).</div>' +
+    (function() {
+      const allTabs = ['dashboard','workout','bodymap','coach','progress','settings'];
+      const tabIcons = {dashboard:'🏠',workout:'💪',bodymap:'🫀',coach:'🤖',progress:'📈',settings:'⚙️'};
+      const cur = S.g('nav.tabs') || ['dashboard','workout','bodymap','coach','settings'];
+      return allTabs.map(function(t) {
+        const active = cur.includes(t);
+        return '<div onclick="toggleNavTab(\''+t+'\')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;touch-action:manipulation">' +
+          '<div style="display:flex;align-items:center;gap:12px">' +
+          '<span style="font-size:20px">'+tabIcons[t]+'</span>' +
+          '<span style="font-size:14px;font-weight:600;color:var(--txt)">'+t.charAt(0).toUpperCase()+t.slice(1)+'</span>' +
+          '</div>' +
+          '<div style="width:24px;height:24px;border-radius:50%;border:2px solid '+(active?'var(--c1)':'var(--border)')+';background:'+(active?'var(--c1)':'transparent')+';display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff">'+(active?'✓':'')+'</div>' +
+          '</div>';
+      }).join('');
+    })() +
+
+    '</div>';
 }
 
 function _tabNotifications(u) {
@@ -403,9 +423,27 @@ window.importData = function(input) {
 };
 
 window.confirmClearData = function() {
-  modal('Clear All Data?',
-    '<div style="font-size:15px;color:var(--txt2);line-height:1.6">This will permanently delete all workouts, progress, and settings. This cannot be undone.</div>',
-    '<button class="btn btn-danger" onclick="S.reset()" style="margin-top:12px">Delete Everything</button>' +
-    '<button class="btn btn-ghost" onclick="closeModal()" style="margin-top:8px">Cancel</button>'
+  modal('Reset Profile?',
+    '<div style="text-align:center;padding:16px 0">' +
+    '<div style="font-size:48px;margin-bottom:12px">⚠️</div>' +
+    '<div style="font-size:16px;font-weight:700;color:var(--txt);margin-bottom:8px">This will delete all your data</div>' +
+    '<div style="font-size:14px;color:var(--txt3);line-height:1.6">Workouts, PRs, measurements, supplements and settings for this profile will be permanently deleted.</div>' +
+    '</div>',
+    '<button class="btn btn-danger" onclick="S.reset()" style="margin-top:8px">Yes, Reset Everything</button>' +
+    '<button class="btn btn-secondary" onclick="closeModal()" style="margin-top:8px">Cancel</button>'
   );
+};
+
+window.toggleNavTab = function(tab) {
+  const cur = S.g('nav.tabs') || ['dashboard','workout','bodymap','coach','settings'];
+  const idx = cur.indexOf(tab);
+  if (idx >= 0) {
+    if (cur.length <= 3) { toast('Minimum 3 tabs required', 'warn'); return; }
+    cur.splice(idx, 1);
+  } else {
+    cur.push(tab);
+  }
+  S.set('nav.tabs', cur);
+  buildNav();
+  go('settings', { tab: 'appearance' });
 };

@@ -114,6 +114,8 @@ reg('dashboard', function() {
       '<div style="display:flex;gap:10px">' +
       '<button class="btn btn-primary" style="flex:1" onclick="go(\'workout\')">▶ Start Workout</button>' +
       '<button class="btn btn-secondary" style="width:auto;padding:16px 18px" onclick="showSubstitutes()">🔄</button>' +
+      '</div>' +
+      '<button class="btn btn-secondary" style="margin-top:8px;width:100%" onclick="startQuickWorkout&&startQuickWorkout()">⚡ Quick (20 min)</button>' +
       '</div></div></div>';
 
     // ── 4. Activity rings ────────────────────────────────
