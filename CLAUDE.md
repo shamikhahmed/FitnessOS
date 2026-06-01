@@ -1,81 +1,62 @@
-# FitnessOS — Claude Instructions
+# FitnessOS Pro v4 — CLAUDE.md
 
-## Owner
-- Shamikh Ahmed, Karachi Pakistan
-- Director, NEWS Logistics | Founder, TheSolution360
-- All apps: shamikhahmed.github.io/[AppName]
+## Project
+- Live: https://shamikhahmed.github.io/FitnessOS
+- Repo: github.com/shamikhahmed/FitnessOS
+- Local: ~/Desktop/Projects/fitnessos
+- Owner: Shamikh Ahmed, Karachi PK
 
-## App
-- **Name**: FitnessOS Pro
-- **Live**: https://shamikhahmed.github.io/FitnessOS
-- **Repo**: github.com/shamikhahmed/FitnessOS
-- **Local**: ~/Desktop/Projects/fitnessos
-
-## Tech Stack — NON-NEGOTIABLE
-- Vanilla JS ONLY — no React, no Vue, no build tools
+## Stack (never change these rules)
+- Vanilla JS only — no React, no frameworks, no build tools
 - Pure localStorage via S object — NO IndexedDB
 - DOMContentLoaded boot — NEVER window.load or async
-- All screens: reg('name', function() { return htmlString; })
+- All screens: reg('name', function(data) { return htmlString; })
 - Router: go('screenName') — always synchronous
 - No CSP meta tags — ever
-- No external CDN dependencies
-- node --check ALL JS before every commit
+- node --check ALL JS before every git commit
 
-## S Object (core state)
-- S.init() — load from localStorage (call before DOMContentLoaded)
-- S.g('user.name') — dot-path getter
-- S.set('user.name', val) — dot-path setter + auto-save
-- S.d — raw state object
-- S._k — storage key: 'fos_v4'
+## File Structure
+index.html
+css/base.css — variables, themes, keyframes, reset
+css/components.css — all UI components
+css/layout.css — shell, nav, topbar, modal
+js/storage.js — S object
+js/app.js — router, engines, helpers, nav
+js/modules/onboarding.js — 12-step onboarding + intro slides
+js/modules/dashboard.js — dashboard + explore grid
+js/modules/workout.js — exercise DB (160+), logger
+js/modules/bodymap.js — body visualiser
+js/modules/coach.js — AI coach screen
+js/modules/progress.js — charts, PRs
+js/modules/nutrition.js — meals, macros, supplements
+js/modules/recovery.js — readiness, sliders
+js/modules/settings.js — 7-tab settings
 
-## File Load Order (index.html)
-js/storage.js → js/app.js → js/modules/onboarding.js → dashboard.js → workout.js → bodymap.js → coach.js → progress.js → nutrition.js → recovery.js → settings.js → inline boot script
+## Screen Flow (new users)
+intro (4 slides) → onboarding (12 steps) → dashboard
+Nav hidden during: intro, onboarding
 
-## Boot Sequence (never change)
-S.init() → applyTheme → buildNav → initCanvas → if !onboarded → go('onboarding') else go('dashboard')
+## Key Engines (all in app.js)
+ReadinessEngine.score() — 0-100
+MuscleEngine.status() — recovery array
+StreakEngine.get() — consecutive days
+ProgEngine.epley(w,r) — 1RM estimate
+CoachEngine.insights() — coaching messages
+SplitEngine.getSplitDay() — today's workout
+WeightEngine.suggest(name, user) — weight recommendation
+SupplementEngine.getDueNow() — due supplements
 
-## Actual Module Files (v4 names)
-- onboarding.js (12-step onboarding)
-- dashboard.js
-- workout.js (NOT workouts.js)
-- bodymap.js (NOT bodystats.js)
-- coach.js
-- progress.js
-- nutrition.js
-- recovery.js
-- settings.js (7 sub-tabs)
-NOTE: workouts.js, bodystats.js, cardio.js, injuries.js do NOT exist — they were renamed in v4 rebuild.
+## Themes (6 total)
+carbon (default), stealth, forest, arctic, electric, sunset
+Applied via data-theme on html element
+User preference saved to S.g('user.theme')
 
-## 5 AI Engines (in js/app.js)
-- ReadinessEngine.score() — 0-100 from sleep/soreness/stress
-- MuscleEngine.status() — recovery % per muscle group
-- StreakEngine.get() — consecutive training days
-- ProgEngine.epley(w,r) — 1RM + PR detection
-- CoachEngine.insights() — up to 4 coaching messages
-
-## Critical CSS Rules
-- touch-action:manipulation on ALL buttons
-- -webkit-appearance:none on ALL inputs + buttons
-- Min 44px on all tap targets
-- ob-opt buttons must NEVER have btn-sm class (breaks touch on iOS)
-- ob-title color comes from CSS var(--txt) — no inline color overrides
-- ob-sub color comes from CSS var(--txt2) — no inline color overrides
-
-## Design System
-- Dark AMOLED default, Electric theme (cyan #00d5ff + purple #6b5fff)
-- Animated glowing canvas orb background (initCanvas())
-- Glassmorphism cards, spring animations
-- Everything works offline, no servers, no accounts
-
-## What Shamikh Hates
-- Blank screens on load
-- Async boot failures
-- CSP meta tags
-- External CDN dependencies
-- Laggy animations
-- Generic boring UI
-- Questions before building
-
-## Commit Protocol
-After every working build:
-git add -A && git commit -m "fix/feat: description" && git push
+## Shamikh's Rules
+- Electric/Carbon dark theme aesthetic
+- Animated canvas orbs always on
+- Premium glassmorphism everywhere
+- Claude Code: always --dangerously-skip-permissions
+- No questions — just build it
+- Test on iPhone Safari 390px viewport
+- Commit and push after every working build
+- node --check before every commit

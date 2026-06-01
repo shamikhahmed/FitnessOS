@@ -23,7 +23,7 @@ function go(id, data) {
     v.innerHTML = '';
     v.appendChild(div);
     const nav = document.getElementById('nav');
-    const noNav = ['onboarding'];
+    const noNav = ['onboarding', 'intro'];
     if (nav) nav.style.display = noNav.includes(id) ? 'none' : 'flex';
     document.querySelectorAll('.nb').forEach(b => b.classList.remove('on'));
     const nb = document.getElementById('nb-' + id);

@@ -538,6 +538,7 @@ input[type="range"]::-moz-range-thumb{
 .explore-icon{font-size:28px;margin-bottom:12px;}
 .explore-title{font-size:14px;font-weight:700;color:var(--txt);letter-spacing:-0.2px;}
 .explore-sub{font-size:12px;color:var(--txt2);margin-top:3px;line-height:1.45;}
+.explore-card-icon{font-size:28px;margin-bottom:10px;}
 .explore-card-t{font-size:14px;font-weight:700;color:var(--txt);letter-spacing:-0.2px;}
 .explore-card-s{font-size:12px;color:var(--txt2);margin-top:3px;line-height:1.45;}
 

@@ -291,9 +291,9 @@ function _animRing(id, val, max, color, label, sublabel) {
 
 function _eCard(icon, title, sub, screen) {
   return '<button class="explore-card press" onclick="go(\''+screen+'\')">' +
-    '<div class="explore-icon">'+icon+'</div>' +
-    '<div class="explore-title">'+esc(title)+'</div>' +
-    '<div class="explore-sub">'+esc(sub)+'</div>' +
+    '<div class="explore-card-icon">'+icon+'</div>' +
+    '<div class="explore-card-t">'+esc(title)+'</div>' +
+    '<div class="explore-card-s">'+esc(sub)+'</div>' +
     '</button>';
 }
 

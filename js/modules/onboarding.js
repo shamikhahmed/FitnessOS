@@ -1,6 +1,139 @@
 'use strict';
 /* ── FitnessOS v4 — Onboarding (12 steps) ── */
 
+/* ── Intro Slides ── */
+let _introSlide = 0;
+
+const INTRO_SLIDES = [
+  {
+    emoji: '⚡',
+    grad: 'linear-gradient(135deg, #00d5ff, #6b5fff)',
+    title: 'FitnessOS Pro',
+    sub: 'The most advanced offline fitness operating system ever built for your iPhone.',
+    bullets: [
+      '🧠 5 AI engines that adapt to your body',
+      '💪 160+ exercises with full coaching cues',
+      '📊 Real-time readiness scoring every day',
+      '🔒 100% offline — your data never leaves your phone'
+    ]
+  },
+  {
+    emoji: '🤖',
+    grad: 'linear-gradient(135deg, #6b5fff, #ff6bff)',
+    title: 'AI That Actually Thinks',
+    sub: 'Not just a tracker. A system that learns and adapts to you.',
+    bullets: [
+      '😴 Adjusts workout intensity based on your sleep',
+      '🏆 Detects personal records on every single set',
+      '⚠️ Injury guard filters dangerous exercises for you',
+      '📈 Auto-progression tells you when to add weight'
+    ]
+  },
+  {
+    emoji: '🏋️',
+    grad: 'linear-gradient(135deg, #00ff88, #00d5ff)',
+    title: 'Elite Workout Logger',
+    sub: 'The fastest gym logging experience. Built for one-handed iPhone use.',
+    bullets: [
+      '⚡ Today\'s AI-generated workout ready in one tap',
+      '⏱️ Rest timer with haptic vibration when done',
+      '🔄 PPL, Upper/Lower, Bro Split and 4 more splits',
+      '🎯 5 coach personalities from drill sergeant to zen master'
+    ]
+  },
+  {
+    emoji: '🎯',
+    grad: 'linear-gradient(135deg, #ff6b6b, #ffb347)',
+    title: 'Built For Your Goals',
+    sub: 'Every feature personalised to your body, goals, and schedule.',
+    bullets: [
+      '📏 Body stats, measurements, and progress tracking',
+      '💊 Supplement stack with timing reminders',
+      '😴 Recovery hub with personalised readiness score',
+      '6 premium themes — Carbon, Forest, Arctic and more'
+    ]
+  }
+];
+
+function _renderIntro(idx) {
+  const slide = INTRO_SLIDES[idx];
+  const isLast = idx === INTRO_SLIDES.length - 1;
+  const dots = INTRO_SLIDES.map(function(_, i) {
+    return '<div style="width:' + (i===idx?'22':'8') + 'px;height:8px;border-radius:4px;' +
+      'background:' + (i===idx?'var(--c1)':'rgba(255,255,255,0.2)') + ';' +
+      'transition:all 0.3s var(--spring)"></div>';
+  }).join('');
+
+  return '<div style="min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;' +
+    'background:var(--bg);padding-top:calc(16px + var(--top-safe))">' +
+
+    '<div style="display:flex;justify-content:flex-end;padding:8px 20px">' +
+    (idx < INTRO_SLIDES.length - 1 ?
+      '<button onclick="go(\'onboarding\')" style="background:none;border:none;' +
+      'color:rgba(255,255,255,0.4);font-size:14px;font-weight:600;cursor:pointer;' +
+      'touch-action:manipulation;padding:8px 4px;min-height:44px">Skip</button>'
+      : '<div style="height:44px"></div>') +
+    '</div>' +
+
+    '<div style="flex:1;display:flex;flex-direction:column;align-items:center;' +
+    'justify-content:center;padding:20px 32px;text-align:center">' +
+
+    '<div style="width:96px;height:96px;border-radius:28px;' +
+    'background:' + slide.grad + ';display:flex;align-items:center;' +
+    'justify-content:center;font-size:46px;margin-bottom:28px;' +
+    'box-shadow:0 20px 60px rgba(0,0,0,0.3);' +
+    'animation:breathe 3s ease-in-out infinite">' + slide.emoji + '</div>' +
+
+    '<div style="font-size:30px;font-weight:900;letter-spacing:-1.5px;' +
+    'color:var(--txt);margin-bottom:12px;line-height:1.15">' + esc(slide.title) + '</div>' +
+
+    '<div style="font-size:15px;color:var(--txt2);margin-bottom:32px;' +
+    'line-height:1.65;max-width:300px">' + esc(slide.sub) + '</div>' +
+
+    '<div style="width:100%;max-width:340px;text-align:left">' +
+    slide.bullets.map(function(b) {
+      return '<div style="display:flex;align-items:flex-start;gap:12px;padding:11px 14px;' +
+        'background:rgba(255,255,255,0.05);border-radius:12px;margin-bottom:8px;' +
+        'border:1px solid rgba(255,255,255,0.08)">' +
+        '<div style="font-size:14px;color:var(--txt);font-weight:500;line-height:1.45">' +
+        esc(b) + '</div></div>';
+    }).join('') +
+    '</div></div>' +
+
+    '<div style="padding:20px 24px calc(40px + var(--safe));' +
+    'display:flex;flex-direction:column;align-items:center;gap:16px">' +
+
+    '<div style="display:flex;gap:8px;align-items:center">' + dots + '</div>' +
+
+    '<button onclick="' + (isLast ? 'go(\'onboarding\')' : '_introNext()') + '" ' +
+    'style="width:100%;max-width:320px;padding:18px;border-radius:16px;' +
+    'background:' + (isLast ? 'var(--grad)' : 'var(--bg3)') + ';' +
+    'color:' + (isLast ? '#fff' : 'var(--c1)') + ';' +
+    'border:' + (isLast ? 'none' : '1.5px solid rgba(var(--c1-rgb),0.25)') + ';' +
+    'font-size:17px;font-weight:700;cursor:pointer;' +
+    'touch-action:manipulation;-webkit-appearance:none;' +
+    'box-shadow:' + (isLast ? '0 4px 20px rgba(var(--c1-rgb),0.3)' : 'none') + '">' +
+    (isLast ? 'Get Started →' : 'Next →') +
+    '</button>' +
+
+    '</div></div>';
+}
+
+window._introNext = function() {
+  _introSlide++;
+  if (_introSlide >= INTRO_SLIDES.length) {
+    go('onboarding');
+    return;
+  }
+  go('intro');
+};
+
+reg('intro', function() {
+  return _renderIntro(_introSlide);
+});
+
+/* ── end intro slides ── */
+
 let _obData = {};
 let _obStep = 1;
 const OB_TOTAL = 12;
