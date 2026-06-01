@@ -19,8 +19,6 @@
   <link rel="stylesheet" href="css/components.css">
   <style>
     html,body{height:100%;overflow:hidden;}
-    #app{position:relative;z-index:1;height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;}
-    #view{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--nav-h) + var(--safe) + 16px);}
   </style>
 </head>
 <body>
@@ -54,7 +52,12 @@
 
   <script>
     S.init();
-    applyTheme(S.g('user.theme') || 'carbon');
+    const _savedMode = S.g('user.mode');
+    if (_savedMode === 'light') {
+      document.documentElement.setAttribute('data-theme', 'light');
+    } else {
+      applyTheme(S.g('user.theme') || 'carbon');
+    }
     buildNav();
     initCanvas();
     if (!S.g('onboarded')) { go('intro'); } else { go('dashboard'); }

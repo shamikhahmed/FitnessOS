@@ -129,40 +129,65 @@ function initCanvas() {
   const ctx = c.getContext('2d');
   let W, H;
   const orbs = [];
-  function resize() { W=c.width=window.innerWidth; H=c.height=window.innerHeight; }
+
+  function resize() {
+    W = c.width = window.innerWidth;
+    H = c.height = window.innerHeight;
+  }
+
+  function getAccentRGB(primary) {
+    const s = getComputedStyle(document.documentElement);
+    const v = s.getPropertyValue(primary ? '--orb1' : '--orb2').trim();
+    if (!v) return primary ? [0,213,255] : [123,95,255];
+    const hex = v.replace('#','');
+    if (hex.length === 6) {
+      return [parseInt(hex.slice(0,2),16), parseInt(hex.slice(2,4),16), parseInt(hex.slice(4,6),16)];
+    }
+    return [0,213,255];
+  }
+
   function initOrbs() {
     orbs.length = 0;
-    for (let i=0; i<4; i++) {
+    const count = window.innerWidth < 400 ? 3 : 4;
+    for (let i = 0; i < count; i++) {
       orbs.push({
-        x:Math.random()*W, y:Math.random()*H,
-        r:Math.random()*180+120,
-        vx:(Math.random()-0.5)*0.4, vy:(Math.random()-0.5)*0.4,
-        primary:i<2
+        x: Math.random() * W,
+        y: Math.random() * H,
+        r: Math.random() * 200 + 120,
+        vx: (Math.random() - 0.5) * 0.35,
+        vy: (Math.random() - 0.5) * 0.35,
+        primary: i < 2,
+        phase: Math.random() * Math.PI * 2
       });
     }
   }
-  function getColor(primary) {
-    const s = getComputedStyle(document.documentElement);
-    const rgb = s.getPropertyValue(primary?'--c1-rgb':'--c2-rgb').trim();
-    return rgb || (primary?'0,213,255':'107,95,255');
-  }
-  function draw() {
-    ctx.clearRect(0,0,W,H);
-    orbs.forEach(o => {
-      const grad = ctx.createRadialGradient(o.x,o.y,0,o.x,o.y,o.r);
-      const rgb = getColor(o.primary);
-      grad.addColorStop(0,'rgba('+rgb+','+(o.primary?'0.07':'0.05')+')');
-      grad.addColorStop(1,'rgba('+rgb+',0)');
-      ctx.beginPath(); ctx.arc(o.x,o.y,o.r,0,Math.PI*2);
-      ctx.fillStyle=grad; ctx.fill();
-      o.x+=o.vx; o.y+=o.vy;
-      if(o.x<-o.r||o.x>W+o.r) o.vx*=-1;
-      if(o.y<-o.r||o.y>H+o.r) o.vy*=-1;
+
+  function draw(ts) {
+    ctx.clearRect(0, 0, W, H);
+    orbs.forEach(function(o) {
+      const pulse = 1 + Math.sin((ts * 0.0008) + o.phase) * 0.12;
+      const r = o.r * pulse;
+      const rgb = getAccentRGB(o.primary);
+      const alpha = o.primary ? 0.055 : 0.038;
+      const grad = ctx.createRadialGradient(o.x, o.y, 0, o.x, o.y, r);
+      grad.addColorStop(0, 'rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+','+alpha+')');
+      grad.addColorStop(0.5, 'rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+','+(alpha*0.4)+')');
+      grad.addColorStop(1, 'rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+',0)');
+      ctx.beginPath();
+      ctx.arc(o.x, o.y, r, 0, Math.PI * 2);
+      ctx.fillStyle = grad;
+      ctx.fill();
+      o.x += o.vx; o.y += o.vy;
+      if (o.x < -r || o.x > W + r) o.vx *= -1;
+      if (o.y < -r || o.y > H + r) o.vy *= -1;
     });
     requestAnimationFrame(draw);
   }
-  resize(); initOrbs(); draw();
-  window.addEventListener('resize', () => { resize(); initOrbs(); });
+
+  resize();
+  initOrbs();
+  requestAnimationFrame(draw);
+  window.addEventListener('resize', function() { resize(); initOrbs(); });
 }
 
 /* ══════════════════════════════════════════════════════
@@ -173,6 +198,19 @@ function applyTheme(t) {
   S.set('user.theme', t||'carbon');
 }
 window.applyTheme = applyTheme;
+
+function applyMode(mode) {
+  if (mode === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+    S.set('user.mode', 'light');
+  } else {
+    const savedTheme = S.g('user.theme') || 'carbon';
+    document.documentElement.setAttribute('data-theme', savedTheme === 'light' ? 'carbon' : savedTheme);
+    S.set('user.mode', 'dark');
+  }
+  toast((mode === 'light' ? '☀️ Light mode' : '🌙 Dark mode'), 'info');
+}
+window.applyMode = applyMode;
 
 /* ══════════════════════════════════════════════════════
    ENGINE — READINESS
@@ -967,21 +1005,26 @@ window.TDEEEngine = TDEEEngine;
 /* ══════════════════════════════════════════════════════
    NAV
 ══════════════════════════════════════════════════════ */
-const NAV_TABS = [
-  { id:'dashboard', label:'Home', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>' },
-  { id:'workout',   label:'Train', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="5.5" cy="12" r="2.5"/><circle cx="18.5" cy="12" r="2.5"/><line x1="8" y1="12" x2="16" y2="12"/><circle cx="5.5" cy="7" r="1.5"/><circle cx="5.5" cy="17" r="1.5"/><circle cx="18.5" cy="7" r="1.5"/><circle cx="18.5" cy="17" r="1.5"/></svg>' },
-  { id:'bodymap',   label:'Body', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="5" r="2"/><path d="M12 7v4m-4 2l4-2 4 2m-8 0l-2 6m10-6l2 6M8 13l-1 6m10-6l1 6"/></svg>' },
-  { id:'coach',     label:'Coach', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>' },
-  { id:'settings',  label:'Settings', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>' }
+const DEFAULT_NAV_TABS = [
+  { id:'dashboard', label:'Home',  icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>' },
+  { id:'workout',   label:'Train', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="5.5" cy="12" r="2.5"/><circle cx="18.5" cy="12" r="2.5"/><line x1="8" y1="12" x2="16" y2="12"/><circle cx="5.5" cy="7" r="1.5"/><circle cx="5.5" cy="17" r="1.5"/><circle cx="18.5" cy="7" r="1.5"/><circle cx="18.5" cy="17" r="1.5"/></svg>' },
+  { id:'bodymap',   label:'Body',  icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="2"/><path d="M12 7v5m-4 2l4-2 4 2m-8 0l-2 6m10-6l2 6M8 13l-1 6m10-6l1 6"/></svg>' },
+  { id:'coach',     label:'Coach', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>' },
+  { id:'settings',  label:'Me',    icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>' }
 ];
+window.DEFAULT_NAV_TABS = DEFAULT_NAV_TABS;
 
 function buildNav() {
   const nav = document.getElementById('nav');
   if (!nav) return;
-  nav.innerHTML = NAV_TABS.map(t =>
-    '<button class="nb" id="nb-'+t.id+'" onclick="go(\''+t.id+'\')">' +
-    t.icon + '<span>'+t.label+'</span></button>'
-  ).join('');
+  const saved = S.g('settings.navTabs');
+  const tabs = (saved && Array.isArray(saved) && saved.length >= 3)
+    ? saved.map(function(id) { return DEFAULT_NAV_TABS.find(function(t) { return t.id === id; }); }).filter(Boolean)
+    : DEFAULT_NAV_TABS;
+  nav.innerHTML = tabs.map(function(t) {
+    return '<button class="nb" id="nb-'+t.id+'" onclick="go(\''+t.id+'\')">' +
+      t.icon + '<span>'+t.label+'</span></button>';
+  }).join('');
 }
 window.buildNav = buildNav;
 
