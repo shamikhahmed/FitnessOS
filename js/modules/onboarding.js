@@ -100,7 +100,7 @@ function _opt(field, val, icon, title, sub, multi) {
   return '<button class="ob-opt'+(isOn?' sel':'')+'" data-field="'+field+'" data-val="'+val+'" onclick="'+fn+'(\''+field+'\',\''+val+'\')">' +
     (icon?'<div class="ob-opt-icon">'+icon+'</div>':'') +
     '<div class="ob-opt-info">' +
-    '<div class="ob-opt-title" style="color:#fff">'+esc(title)+'</div>' +
+    '<div class="ob-opt-title">'+esc(title)+'</div>' +
     (sub?'<div class="ob-opt-sub">'+esc(sub)+'</div>':'') +
     '</div>' +
     '<div class="ob-opt-check">'+(isOn?'✓':'')+'</div>' +
@@ -110,8 +110,8 @@ function _opt(field, val, icon, title, sub, multi) {
 const OB_STEPS = {
   1() {
     return '<div class="ob-screen">' + _dots(1) +
-      '<div class="ob-title" style="color:#fff">Hey there! 👋<br>What should we call you?</div>' +
-      '<div class="ob-sub" style="color:rgba(255,255,255,0.65)">This is your personal training OS. Let\'s make it yours.</div>' +
+      '<div class="ob-title">Hey there! 👋<br>What should we call you?</div>' +
+      '<div class="ob-sub">This is your personal training OS. Let\'s make it yours.</div>' +
       '<div class="ob-body">' +
       '<div class="field-wrap">' +
       '<label class="field-label">Your Name</label>' +
@@ -120,8 +120,8 @@ const OB_STEPS = {
   },
   2() {
     return '<div class="ob-screen">' + _dots(2) +
-      '<div class="ob-title" style="color:#fff">What\'s your primary goal?</div>' +
-      '<div class="ob-sub" style="color:rgba(255,255,255,0.65)">Your AI coach will build everything around this.</div>' +
+      '<div class="ob-title">What\'s your primary goal?</div>' +
+      '<div class="ob-sub">Your AI coach will build everything around this.</div>' +
       '<div class="ob-body">' +
       _opt('goal','hypertrophy','💪','Build Muscle','Gain lean muscle mass and improve body composition') +
       _opt('goal','fat_loss','🔥','Lose Fat','Reduce body fat while preserving muscle') +
@@ -133,8 +133,8 @@ const OB_STEPS = {
   },
   3() {
     return '<div class="ob-screen">' + _dots(3) +
-      '<div class="ob-title" style="color:#fff">Training experience?</div>' +
-      '<div class="ob-sub" style="color:rgba(255,255,255,0.65)">Honest answers get better programs. No judgement here.</div>' +
+      '<div class="ob-title">Training experience?</div>' +
+      '<div class="ob-sub">Honest answers get better programs. No judgement here.</div>' +
       '<div class="ob-body">' +
       _opt('exp','beginner','🌱','Beginner','Less than 1 year of consistent training') +
       _opt('exp','intermediate','💪','Intermediate','1-3 years of consistent training') +
@@ -145,15 +145,15 @@ const OB_STEPS = {
   4() {
     const units = _obData.units || 'metric';
     return '<div class="ob-screen">' + _dots(4) +
-      '<div class="ob-title" style="color:#fff">About you</div>' +
-      '<div class="ob-sub" style="color:rgba(255,255,255,0.65)">Used for accurate calorie and strength calculations.</div>' +
+      '<div class="ob-title">About you</div>' +
+      '<div class="ob-sub">Used for accurate calorie and strength calculations.</div>' +
       '<div class="ob-body">' +
       '<div class="field-row">' +
       '<div class="field-wrap">' +
       '<label class="field-label">Gender</label>' +
       '<div style="display:flex;gap:8px">' +
-      '<button class="ob-opt'+((_obData.gender||'male')==='male'?' sel':'')+'" data-field="gender" data-val="male" onclick="obSelect(\'gender\',\'male\')" style="flex:1;padding:12px 8px;justify-content:center"><div class="ob-opt-title" style="color:#fff">♂ Male</div></button>' +
-      '<button class="ob-opt'+((_obData.gender||'')==='female'?' sel':'')+'" data-field="gender" data-val="female" onclick="obSelect(\'gender\',\'female\')" style="flex:1;padding:12px 8px;justify-content:center"><div class="ob-opt-title" style="color:#fff">♀ Female</div></button>' +
+      '<button class="ob-opt'+((_obData.gender||'male')==='male'?' sel':'')+'" data-field="gender" data-val="male" onclick="obSelect(\'gender\',\'male\')" style="flex:1;padding:12px 8px;justify-content:center"><div class="ob-opt-title">♂ Male</div></button>' +
+      '<button class="ob-opt'+((_obData.gender||'')==='female'?' sel':'')+'" data-field="gender" data-val="female" onclick="obSelect(\'gender\',\'female\')" style="flex:1;padding:12px 8px;justify-content:center"><div class="ob-opt-title">♀ Female</div></button>' +
       '</div></div>' +
       '<div class="field-wrap">' +
       '<label class="field-label">Age</label>' +
@@ -162,8 +162,8 @@ const OB_STEPS = {
       '<div style="margin-bottom:14px">' +
       '<label class="field-label">Units</label>' +
       '<div style="display:flex;gap:8px">' +
-      '<button class="ob-opt'+(units==='metric'?' sel':'')+'" data-field="units" data-val="metric" onclick="obSelect(\'units\',\'metric\');obSelect(\'heightUnit\',\'cm\');obSelect(\'weightUnit\',\'kg\');go(\'onboarding\')" style="flex:1;padding:12px;justify-content:center"><div class="ob-opt-title" style="color:#fff">Metric (kg/cm)</div></button>' +
-      '<button class="ob-opt'+(units==='imperial'?' sel':'')+'" data-field="units" data-val="imperial" onclick="obSelect(\'units\',\'imperial\');obSelect(\'heightUnit\',\'in\');obSelect(\'weightUnit\',\'lb\');go(\'onboarding\')" style="flex:1;padding:12px;justify-content:center"><div class="ob-opt-title" style="color:#fff">Imperial (lb/in)</div></button>' +
+      '<button class="ob-opt'+(units==='metric'?' sel':'')+'" data-field="units" data-val="metric" onclick="obSelect(\'units\',\'metric\');obSelect(\'heightUnit\',\'cm\');obSelect(\'weightUnit\',\'kg\');go(\'onboarding\')" style="flex:1;padding:12px;justify-content:center"><div class="ob-opt-title">Metric (kg/cm)</div></button>' +
+      '<button class="ob-opt'+(units==='imperial'?' sel':'')+'" data-field="units" data-val="imperial" onclick="obSelect(\'units\',\'imperial\');obSelect(\'heightUnit\',\'in\');obSelect(\'weightUnit\',\'lb\');go(\'onboarding\')" style="flex:1;padding:12px;justify-content:center"><div class="ob-opt-title">Imperial (lb/in)</div></button>' +
       '</div></div>' +
       '</div>' + _footer(4) + '</div>';
   },
@@ -173,8 +173,8 @@ const OB_STEPS = {
     const wLabel = u ? 'Weight (lb)' : 'Weight (kg)';
     const gwLabel = u ? 'Goal Weight (lb)' : 'Goal Weight (kg)';
     return '<div class="ob-screen">' + _dots(5) +
-      '<div class="ob-title" style="color:#fff">Body stats</div>' +
-      '<div class="ob-sub" style="color:rgba(255,255,255,0.65)">Used to calculate your TDEE, macros, and progress projections.</div>' +
+      '<div class="ob-title">Body stats</div>' +
+      '<div class="ob-sub">Used to calculate your TDEE, macros, and progress projections.</div>' +
       '<div class="ob-body">' +
       '<div class="field-row">' +
       '<div class="field-wrap"><label class="field-label">'+hLabel+'</label>' +
@@ -192,8 +192,8 @@ const OB_STEPS = {
   },
   6() {
     return '<div class="ob-screen">' + _dots(6) +
-      '<div class="ob-title" style="color:#fff">Training split</div>' +
-      '<div class="ob-sub" style="color:rgba(255,255,255,0.65)">Your weekly workout structure. Weekly days auto-set.</div>' +
+      '<div class="ob-title">Training split</div>' +
+      '<div class="ob-sub">Your weekly workout structure. Weekly days auto-set.</div>' +
       '<div class="ob-body">' +
       _opt('split','ppl','🔄','Push Pull Legs','6 days/week — the gold standard for hypertrophy') +
       _opt('split','ul','↕️','Upper Lower','4 days/week — balanced frequency and volume') +
@@ -214,21 +214,21 @@ const OB_STEPS = {
     ];
     const brandList = ['Life Fitness','Technogym','Hammer Strength','Precor','Matrix','No preference'];
     return '<div class="ob-screen">' + _dots(7) +
-      '<div class="ob-title" style="color:#fff">Where do you train?</div>' +
-      '<div class="ob-sub" style="color:rgba(255,255,255,0.65)">Select all equipment you have regular access to.</div>' +
+      '<div class="ob-title">Where do you train?</div>' +
+      '<div class="ob-sub">Select all equipment you have regular access to.</div>' +
       '<div class="ob-body">' +
       '<div class="ob-sub" style="color:rgba(255,255,255,0.5);font-size:11px;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px">EQUIPMENT</div>' +
       equipList.map(e => {
         const on = equip.includes(e.v);
-        return '<button class="ob-opt'+(on?' sel':'')+' btn-sm" data-field="equipment" data-val="'+e.v+'" onclick="obToggle(\'equipment\',\''+e.v+'\')" style="margin-bottom:8px;width:100%">' +
-          '<div class="ob-opt-title" style="color:#fff">'+e.l+'</div>' +
+        return '<button class="ob-opt'+(on?' sel':'')+'" data-field="equipment" data-val="'+e.v+'" onclick="obToggle(\'equipment\',\''+e.v+'\')" style="margin-bottom:8px;width:100%">' +
+          '<div class="ob-opt-title">'+e.l+'</div>' +
           '<div class="ob-opt-check" style="margin-left:auto">'+(on?'✓':'')+'</div></button>';
       }).join('') +
       '<div class="ob-sub" style="color:rgba(255,255,255,0.5);font-size:11px;text-transform:uppercase;letter-spacing:0.1em;margin:16px 0 8px">GYM BRAND (optional)</div>' +
       brandList.map(b => {
         const on = brands.includes(b);
-        return '<button class="ob-opt'+(on?' sel':'')+' btn-sm" data-field="gymBrands" data-val="'+b+'" onclick="obToggle(\'gymBrands\',\''+esc(b)+'\')" style="margin-bottom:8px;width:100%">' +
-          '<div class="ob-opt-title" style="color:#fff">'+esc(b)+'</div>' +
+        return '<button class="ob-opt'+(on?' sel':'')+'" data-field="gymBrands" data-val="'+b+'" onclick="obToggle(\'gymBrands\',\''+esc(b)+'\')" style="margin-bottom:8px;width:100%">' +
+          '<div class="ob-opt-title">'+esc(b)+'</div>' +
           '<div class="ob-opt-check" style="margin-left:auto">'+(on?'✓':'')+'</div></button>';
       }).join('') +
       '</div>' + _footer(7) + '</div>';
@@ -237,14 +237,14 @@ const OB_STEPS = {
     const days = _obData.gymDays || [];
     const dList = [{v:'mon',l:'Mon'},{v:'tue',l:'Tue'},{v:'wed',l:'Wed'},{v:'thu',l:'Thu'},{v:'fri',l:'Fri'},{v:'sat',l:'Sat'},{v:'sun',l:'Sun'}];
     return '<div class="ob-screen">' + _dots(8) +
-      '<div class="ob-title" style="color:#fff">Gym schedule</div>' +
-      '<div class="ob-sub" style="color:rgba(255,255,255,0.65)">Which days do you train? Select all that apply.</div>' +
+      '<div class="ob-title">Gym schedule</div>' +
+      '<div class="ob-sub">Which days do you train? Select all that apply.</div>' +
       '<div class="ob-body">' +
       '<div style="display:flex;flex-wrap:wrap;gap:10px">' +
       dList.map(d => {
         const on = days.includes(d.v);
         return '<button class="ob-opt'+(on?' sel':'')+'" data-field="gymDays" data-val="'+d.v+'" onclick="obToggle(\'gymDays\',\''+d.v+'\')" style="flex:1;min-width:80px;justify-content:center;padding:16px 8px">' +
-          '<div class="ob-opt-title" style="color:#fff;text-align:center">'+d.l+'</div></button>';
+          '<div class="ob-opt-title" style="text-align:center">'+d.l+'</div></button>';
       }).join('') +
       '</div></div>' + _footer(8) + '</div>';
   },
@@ -259,8 +259,8 @@ const OB_STEPS = {
     ];
     const inj = _obData.injuries || [];
     return '<div class="ob-screen">' + _dots(9) +
-      '<div class="ob-title" style="color:#fff">Any injuries or pain areas?</div>' +
-      '<div class="ob-sub" style="color:rgba(255,255,255,0.65)">Your coach will modify exercises to protect these areas.</div>' +
+      '<div class="ob-title">Any injuries or pain areas?</div>' +
+      '<div class="ob-sub">Your coach will modify exercises to protect these areas.</div>' +
       '<div class="ob-body">' +
       parts.map(p => {
         const on = inj.includes(p.v) || (p.v==='none' && inj.length===0 && _obData._injTouched);
@@ -268,7 +268,7 @@ const OB_STEPS = {
           (p.v==='none' ? '_obData.injuries=[];_obData._injTouched=true;document.querySelectorAll(\'[data-field=injuries]\').forEach(e=>e.classList.remove(\'sel\'));this.classList.add(\'sel\')' :
           '_obData._injTouched=true;obToggle(\'injuries\',\''+p.v+'\')') +
           '" style="margin-bottom:8px;width:100%">' +
-          '<div class="ob-opt-title" style="color:#fff">'+p.l+'</div></button>';
+          '<div class="ob-opt-title">'+p.l+'</div></button>';
       }).join('') +
       '</div>' + _footer(9) + '</div>';
   },
@@ -281,8 +281,8 @@ const OB_STEPS = {
       {v:'rex',e:'💪',n:'Rex — The Powerlifter',d:'"Strength above all. Add weight, repeat forever."'}
     ];
     return '<div class="ob-screen">' + _dots(10) +
-      '<div class="ob-title" style="color:#fff">Pick your coach</div>' +
-      '<div class="ob-sub" style="color:rgba(255,255,255,0.65)">Their personality shapes all coaching messages and motivation.</div>' +
+      '<div class="ob-title">Pick your coach</div>' +
+      '<div class="ob-sub">Their personality shapes all coaching messages and motivation.</div>' +
       '<div class="ob-body">' +
       coaches.map(c => _opt('personality', c.v, c.e, c.n, c.d)) .join('') +
       '</div>' + _footer(10) + '</div>';
@@ -292,15 +292,15 @@ const OB_STEPS = {
     const timingOptions = ['pre','post','morning','night','anytime','with_meal'];
     const timingLabels = { pre:'Pre-Workout', post:'Post-Workout', morning:'Morning', night:'Before Bed', anytime:'Any Time', with_meal:'With Meal' };
     return '<div class="ob-screen">' + _dots(11) +
-      '<div class="ob-title" style="color:#fff">Supplement stack</div>' +
-      '<div class="ob-sub" style="color:rgba(255,255,255,0.65)">Select what you take. We\'ll build a timing schedule.</div>' +
+      '<div class="ob-title">Supplement stack</div>' +
+      '<div class="ob-sub">Select what you take. We\'ll build a timing schedule.</div>' +
       '<div class="ob-body">' +
       SupplementDB.map(s => {
         const isOn = sel.includes(s.id);
         const timing = _obData['suppTiming_'+s.id] || s.timing;
         return '<div style="margin-bottom:8px">' +
           '<button class="ob-opt'+(isOn?' sel':'')+'" data-field="supplements" data-val="'+s.id+'" onclick="obToggle(\'supplements\',\''+s.id+'\')" style="margin-bottom:0;width:100%;border-radius:'+(isOn?'16px 16px 0 0':'16px')+'">' +
-          '<div class="ob-opt-title" style="color:#fff">'+esc(s.name)+'</div>' +
+          '<div class="ob-opt-title">'+esc(s.name)+'</div>' +
           '<div class="ob-opt-sub">'+esc(s.dose)+'</div>' +
           '<div class="ob-opt-check" style="margin-left:auto">'+(isOn?'✓':'')+'</div>' +
           '</button>' +
