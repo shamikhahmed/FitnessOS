@@ -14,6 +14,7 @@ reg('dashboard', function() {
     const streak = StreakEngine.get();
     const weekWkts = StreakEngine.weekWorkouts();
     const insights = CoachEngine.insights();
+    const weekReport = CoachEngine.weeklyReport();
     const splitDay = SplitEngine.getSplitDay();
     const muscles = MuscleEngine.status();
     const dueSupps = SupplementEngine.getDueNow();
@@ -101,6 +102,24 @@ reg('dashboard', function() {
       '<div class="stat"><div class="stat-v">'+ws.length+'</div><div class="stat-l">Sessions</div></div>' +
       '</div>';
 
+    // ── Monday weekly summary auto-show
+    const isMonday = new Date().getDay() === 1;
+    let weekSummaryHTML = '';
+    if (isMonday && weekReport) {
+      const vLabel = weekReport.thisVol > 1000 ? Math.round(weekReport.thisVol/100)/10+'t' : weekReport.thisVol+'kg';
+      const chColor = weekReport.change > 0 ? '#10B981' : weekReport.change < 0 ? '#ff6b35' : 'var(--txt3)';
+      const chLabel = weekReport.change !== 0 ? (weekReport.change>0?'↑':'↓')+Math.abs(weekReport.change)+'% volume vs last week' : 'Same volume as last week';
+      weekSummaryHTML = sh('Weekly Review 📊', 'Full report', 'go(\'coach\')') +
+        '<div class="card card-solid" style="margin:0 16px 14px">' +
+        '<div style="font-size:13px;color:var(--txt3);margin-bottom:10px">Monday recap — last 7 days</div>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:12px">' +
+        '<div style="flex:1;min-width:72px"><div style="font-size:20px;font-weight:900;color:var(--c1)">'+esc(vLabel)+'</div><div style="font-size:11px;color:var(--txt3)">Volume</div><div style="font-size:12px;color:'+chColor+'">'+esc(chLabel)+'</div></div>' +
+        '<div style="flex:1;min-width:72px"><div style="font-size:20px;font-weight:900;color:var(--txt)">'+weekReport.weekWorkouts+'/'+weekReport.weeklyGoal+'</div><div style="font-size:11px;color:var(--txt3)">Sessions</div></div>' +
+        (weekReport.mostImproved ? '<div style="flex:1;min-width:72px"><div style="font-size:16px;font-weight:800;color:#10B981">+'+weekReport.mostImproved.gain+'%</div><div style="font-size:11px;color:var(--txt3)">'+esc(weekReport.mostImproved.name)+' 1RM</div></div>' : '') +
+        (weekReport.bestMuscle ? '<div style="flex:1;min-width:72px"><div style="font-size:15px;font-weight:800;color:var(--c2)">'+esc(weekReport.bestMuscle)+'</div><div style="font-size:11px;color:var(--txt3)">Best recovered</div></div>' : '') +
+        '</div></div>';
+    }
+
     // ── Due supplements
     let suppHTML = '';
     if (dueSupps.length) {
@@ -157,6 +176,7 @@ reg('dashboard', function() {
       readinessHTML +
       '<div style="padding:0 16px">' + ringsHTML + '</div>' +
       statsHTML +
+      weekSummaryHTML +
       planHTML +
       muscleHTML +
       suppHTML +

@@ -192,6 +192,21 @@ function _tabAppearance(u) {
       '</div>'
     ).join('') +
 
+    _sectionTitle('Coach Tone') +
+    (function() {
+      const curTone = S.g('settings.coachTone') || 'motivational';
+      const tones = [{v:'motivational',l:'🔥 Motivational'},{v:'scientific',l:'🧪 Scientific'},{v:'hardcore',l:'💪 Hardcore'}];
+      const examples = {
+        motivational:'"🔥 You\'re crushing it — shoulders are 92% recovered!"',
+        scientific:'"Deltoid recovery index: 92%. Optimal training window active."',
+        hardcore:'"Shoulders are ready. No excuses. Get in there."'
+      };
+      return '<div style="display:flex;gap:8px;margin-bottom:8px">' +
+        tones.map(t=>'<button class="btn btn-'+(curTone===t.v?'primary':'secondary')+' btn-sm" style="flex:1" onclick="_setSetting(\'settings.coachTone\',\''+t.v+'\');go(\'settings\',{tab:\'appearance\'})">'+esc(t.l)+'</button>').join('') +
+        '</div>' +
+        '<div style="font-size:13px;color:var(--txt3);font-style:italic;padding:8px 12px;background:var(--bg3);border-radius:8px;margin-bottom:4px">'+esc(examples[curTone]||examples.motivational)+'</div>';
+    })() +
+
     _sectionTitle('Units') +
     '<div style="display:flex;gap:8px">' +
     ['metric','imperial'].map(unit =>

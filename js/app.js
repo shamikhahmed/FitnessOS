@@ -720,19 +720,60 @@ const CoachEngine = {
       const r = S.g('recovery') || {};
       const score = ReadinessEngine.score();
       const streak = StreakEngine.get();
-      const ws = S.g('workouts') || [];
       const weeklyGoal = S.g('user.weeklyGoal') || 4;
       const weekWkts = StreakEngine.weekWorkouts();
+      const tone = S.g('settings.coachTone') || 'motivational';
       const msgs = [];
-      if ((r.sleep||7.5) < 6) msgs.push({t:'Critical Sleep Debt',m:'Under 6 hours impairs muscle protein synthesis and performance. Prioritise 8+ hours tonight.',i:'😴',c:'#ff4444'});
-      else if ((r.sleep||7.5) >= 8) msgs.push({t:'Optimal Recovery',m:'8+ hours logged. Sleep is your most powerful performance tool.',i:'⚡',c:'#10B981'});
-      if ((r.soreness||3) >= 7) msgs.push({t:'High Soreness Alert',m:'Significant soreness detected. Target fresh muscle groups or reduce volume 25%.',i:'💊',c:'#f5c842'});
-      if (score >= 85) msgs.push({t:'Peak Performance Window',m:'Every metric is optimal. Today is the day to attempt PRs and push your working weights.',i:'🔥',c:'#10B981'});
-      if (streak >= 5) msgs.push({t:'Deload Signal',m:streak+' consecutive training days. Schedule a deload — same frequency, 50% volume.',i:'⚠️',c:'#f5c842'});
+      function m3(mot, sci, hrd) { return tone==='scientific'?sci:tone==='hardcore'?hrd:mot; }
+
+      if ((r.sleep||7.5) < 6) msgs.push({t:'Critical Sleep Debt',
+        m:m3('Under 6 hours impairs muscle protein synthesis and performance. Prioritise 8+ hours tonight.',
+             'Sub-6h sleep reduces MPS by ~18% and impairs CNS recovery. Sleep duration must increase tonight.',
+             'Under 6 hours. That\'s a weakness. Fix it tonight — no excuses.'),
+        i:'😴',c:'#ff4444'});
+      else if ((r.sleep||7.5) >= 8) msgs.push({t:'Optimal Recovery',
+        m:m3('8+ hours logged. Sleep is your most powerful performance tool.',
+             '8h+ sleep: peak GH release window, full MPS cycle, CNS restoration complete.',
+             '8 hours. Good. Don\'t waste it — get in there and perform.'),
+        i:'⚡',c:'#10B981'});
+
+      if ((r.soreness||3) >= 7) msgs.push({t:'High Soreness Alert',
+        m:m3('Significant soreness detected. Target fresh muscle groups or reduce volume 25%.',
+             'Elevated soreness index (7+/10). DOMS present — reduce volume 20-25% or pivot to fresh muscle groups.',
+             'High soreness. Adjust, not quit. Hit different muscles or cut volume. Move forward.'),
+        i:'💊',c:'#f5c842'});
+
+      if (score >= 85) msgs.push({t:'Peak Performance Window',
+        m:m3('Every metric is optimal. Today is the day to attempt PRs and push your working weights.',
+             'All biometric indicators at peak. Optimal window for maximal strength expression and PR attempts.',
+             'Readiness at 85+. No excuses. Load the bar. Break records. Today.'),
+        i:'🔥',c:'#10B981'});
+
+      if (streak >= 5) msgs.push({t:'Deload Signal',
+        m:m3(streak+' consecutive training days. Schedule a deload — same frequency, 50% volume.',
+             streak+' consecutive training days. Accumulated fatigue risk elevated. Implement deload protocol: maintain frequency, reduce intensity 40-50%.',
+             streak+' days straight. CNS needs a reset. Deload week — same schedule, half the volume. Non-negotiable.'),
+        i:'⚠️',c:'#f5c842'});
+
       const rem = weeklyGoal - weekWkts.length;
-      if (rem > 0 && rem <= 2) msgs.push({t:'Weekly Goal In Reach',m:weekWkts.length+'/'+weeklyGoal+' done. '+rem+' more to hit your target.',i:'🎯',c:'var(--c1)'});
-      if ((r.hydration||2.5) < 1.5) msgs.push({t:'Hydration Critical',m:'Low water intake detected. Dehydration reduces strength up to 20%. Drink 500ml now.',i:'💧',c:'var(--c1)'});
-      if (!msgs.length) msgs.push({t:'Looking Strong',m:'Recovery metrics solid. Execute the plan, track sets, keep the streak alive.',i:'✅',c:'#10B981'});
+      if (rem > 0 && rem <= 2) msgs.push({t:'Weekly Goal In Reach',
+        m:m3(weekWkts.length+'/'+weeklyGoal+' done. '+rem+' more to hit your target.',
+             'Training frequency: '+weekWkts.length+'/'+weeklyGoal+' sessions. '+rem+' required to meet weekly volume prescription.',
+             weekWkts.length+'/'+weeklyGoal+' done. '+rem+' left. Finish what you started.'),
+        i:'🎯',c:'var(--c1)'});
+
+      if ((r.hydration||2.5) < 1.5) msgs.push({t:'Hydration Critical',
+        m:m3('Low water intake detected. Dehydration reduces strength up to 20%. Drink 500ml now.',
+             'Fluid intake <1.5L. Hypohydration at 2% body mass loss reduces strength by 19%. Increase fluid intake immediately.',
+             'Under 1.5L of water. Drink now. Dehydration kills performance. 500ml before your next rep.'),
+        i:'💧',c:'var(--c1)'});
+
+      if (!msgs.length) msgs.push({t:'Looking Strong',
+        m:m3('Recovery metrics solid. Execute the plan, track sets, keep the streak alive.',
+             'All recovery indices nominal. Execute planned sets, maintain progressive overload protocol.',
+             'Metrics are solid. No excuses. Go train. Track every set.'),
+        i:'✅',c:'#10B981'});
+
       return msgs.slice(0,4);
     } catch(e) { return []; }
   },
@@ -767,12 +808,63 @@ const CoachEngine = {
     return quotes[new Date().getDate() % quotes.length];
   },
   weeklyReport() {
-    const ws = S.g('workouts') || [];
-    if (ws.length < 2) return null;
-    const thisVol = StreakEngine.weekVolume();
-    const lastVol = ws.filter(w => { const d=daysAgo(w.date); return d>=7&&d<14; }).reduce((a,w)=>a+(w.totalVol||0),0);
-    const change = lastVol > 0 ? Math.round(((thisVol-lastVol)/lastVol)*100) : 0;
-    return { thisVol, lastVol, change, weekWorkouts: StreakEngine.weekWorkouts().length };
+    try {
+      const ws = S.g('workouts') || [];
+      if (ws.length < 2) return null;
+      const thisVol = StreakEngine.weekVolume();
+      const lastVol = ws.filter(w => { const d=daysAgo(w.date); return d>=7&&d<14; }).reduce((a,w)=>a+(w.totalVol||0),0);
+      const change = lastVol > 0 ? Math.round(((thisVol-lastVol)/lastVol)*100) : 0;
+      const weekWkts = StreakEngine.weekWorkouts();
+      const weeklyGoal = S.g('user.weeklyGoal') || 4;
+      const muscleStatus = MuscleEngine.status();
+      let bestMuscle = null, bestMuscleScore = 0;
+      muscleStatus.forEach(m => { if (m.pct > bestMuscleScore) { bestMuscleScore = m.pct; bestMuscle = m.name; } });
+      let mostImproved = null, bestGain = 0;
+      const recentE1RM = {}, olderE1RM = {};
+      ws.forEach(wo => {
+        const d = daysAgo(wo.date);
+        (wo.exercises||[]).forEach(ex => {
+          const done = (ex.sets||[]).filter(s=>s.done&&(s.weight||0)>0);
+          if (!done.length) return;
+          const best = done.reduce((mx,s)=>Math.max(mx,ProgEngine.epley(s.weight||0,s.reps||1)),0);
+          if (!isFinite(best)||best<=0) return;
+          if (d<7) { if (!recentE1RM[ex.name]||best>recentE1RM[ex.name]) recentE1RM[ex.name]=best; }
+          if (d>=7&&d<14) { if (!olderE1RM[ex.name]||best>olderE1RM[ex.name]) olderE1RM[ex.name]=best; }
+        });
+      });
+      Object.keys(recentE1RM).forEach(name => {
+        if (olderE1RM[name]&&olderE1RM[name]>0) {
+          const gain = Math.round(((recentE1RM[name]-olderE1RM[name])/olderE1RM[name])*100);
+          if (gain>bestGain) { bestGain=gain; mostImproved={name,gain}; }
+        }
+      });
+      return { thisVol, lastVol, change, weekWorkouts:weekWkts.length, weeklyGoal, bestMuscle, bestMuscleScore, mostImproved, currentReadiness:ReadinessEngine.score() };
+    } catch(e) { return null; }
+  },
+  exerciseProgression(name) {
+    try {
+      const ws = S.g('workouts') || [];
+      const sessions = [];
+      ws.forEach(wo => {
+        const ex = (wo.exercises||[]).find(e=>e.name===name);
+        if (!ex) return;
+        const done = (ex.sets||[]).filter(s=>s.done&&(s.weight||0)>0);
+        if (!done.length) return;
+        const best = done.reduce((mx,s)=>Math.max(mx,ProgEngine.epley(s.weight||0,s.reps||1)),0);
+        if (best<=0) return;
+        const topSet = done.slice().sort((a,b)=>ProgEngine.epley(b.weight||0,b.reps||1)-ProgEngine.epley(a.weight||0,a.reps||1))[0];
+        sessions.push({date:wo.date,e1rm:best,weight:topSet.weight||0,reps:topSet.reps||0});
+      });
+      if (!sessions.length) return null;
+      const current = sessions[sessions.length-1];
+      const oldSessions = sessions.filter(s=>daysAgo(s.date)>=28);
+      const oldBest = oldSessions.length ? oldSessions[oldSessions.length-1].e1rm : null;
+      const pctChange = (oldBest&&oldBest>0) ? Math.round(((current.e1rm-oldBest)/oldBest)*100) : null;
+      const last3 = sessions.slice(-3);
+      const plateau = last3.length>=3 && last3.every(s=>s.e1rm<=last3[0].e1rm);
+      const suggestedWeight = plateau ? current.weight : round2(current.weight+2.5);
+      return {name,currentE1RM:current.e1rm,currentWeight:current.weight,currentReps:current.reps,oldE1RM:oldBest,pctChange,plateau,sessions:sessions.length,suggestedWeight};
+    } catch(e) { return null; }
   }
 };
 window.CoachEngine = CoachEngine;
