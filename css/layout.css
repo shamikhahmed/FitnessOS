@@ -225,11 +225,12 @@
   padding:12px 16px;
   padding-top:calc(12px + var(--top-safe));
 }
-.wkt-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
-.wkt-name{font-size:15px;font-weight:700;color:var(--txt);}
-.wkt-timer{font-size:24px;font-weight:800;color:var(--c1);font-variant-numeric:tabular-nums;}
-.wkt-progress-bar-wrap{height:3px;background:var(--bg4);border-radius:2px;overflow:hidden;}
-.wkt-progress-bar{height:100%;background:var(--grad);border-radius:2px;transition:width 0.4s var(--ease);}
+.wkt-meta{display:flex;align-items:center;justify-content:space-between;margin-top:10px;margin-bottom:0;}
+.wkt-name{font-size:15px;font-weight:700;color:var(--txt);letter-spacing:-0.2px;}
+.wkt-sets-count{font-size:11px;color:var(--txt3);margin-top:3px;font-weight:600;}
+.wkt-timer{font-size:24px;font-weight:800;color:var(--c1);font-variant-numeric:tabular-nums;letter-spacing:-1px;}
+.wkt-progress-bar-wrap{height:3px;background:var(--bg4);border-radius:0;overflow:hidden;}
+.wkt-progress-bar{height:100%;background:var(--grad);border-radius:0;transition:width 0.4s var(--ease);}
 
 /* ── Coach screen hero ────────────────────────────── */
 .coach-hero{

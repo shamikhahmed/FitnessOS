@@ -160,7 +160,37 @@ select.field{padding-right:36px;cursor:pointer;}
   font-size:18px;color:var(--txt3);
 }
 .set-check.done{background:linear-gradient(135deg,#10B981,#059669);border-color:#10B981;color:#fff;box-shadow:0 2px 12px rgba(16,185,129,0.35);}
+.set-check.pr{background:linear-gradient(135deg,#ffd700,#f59e0b)!important;border-color:#ffd700!important;box-shadow:0 2px 14px rgba(255,215,0,0.45)!important;}
 .set-check:active{transform:scale(0.87);}
+.set-row.done{
+  background:rgba(16,185,129,0.06);
+  border-radius:10px;padding-left:4px;padding-right:4px;
+  animation:setDoneGlow 0.4s var(--spring) both;
+}
+@keyframes setDoneGlow{
+  0%{background:rgba(16,185,129,0.25);}
+  100%{background:rgba(16,185,129,0.06);}
+}
+.set-row.pr{
+  background:rgba(255,215,0,0.08);
+  border-radius:10px;padding-left:4px;padding-right:4px;
+  animation:prRowFlash 0.55s var(--spring) both;
+}
+@keyframes prRowFlash{
+  0%{background:rgba(255,215,0,0.38);}
+  60%{background:rgba(255,215,0,0.18);}
+  100%{background:rgba(255,215,0,0.08);}
+}
+
+/* ══ MUSCLE CHIP ══════════════════════════════════════════════════ */
+.muscle-chip{
+  display:inline-flex;align-items:center;
+  font-size:11px;font-weight:700;
+  color:var(--c1);
+  background:rgba(var(--c1-rgb),0.12);
+  border:1px solid rgba(var(--c1-rgb),0.2);
+  border-radius:20px;padding:3px 10px;
+}
 
 /* ══ EXERCISE CARDS ══════════════════════════════════════════════ */
 .ex-card{
@@ -179,10 +209,15 @@ select.field{padding-right:36px;cursor:pointer;}
 .ex-card-hdr:active{background:rgba(255,255,255,0.04);}
 .ex-card-body{padding:0 16px 16px;border-top:1px solid var(--border);}
 .ex-icon{
-  width:46px;height:46px;border-radius:14px;
+  width:46px;height:46px;border-radius:50%;
   background:linear-gradient(135deg,rgba(var(--c1-rgb),0.15),rgba(var(--c2-rgb),0.1));
   display:flex;align-items:center;justify-content:center;
   font-size:22px;flex-shrink:0;
+  transition:background 0.35s var(--ease),box-shadow 0.35s;
+}
+.ex-icon.done{
+  background:linear-gradient(135deg,#00d5ff,#6b5fff);
+  box-shadow:0 2px 14px rgba(0,213,255,0.35);
 }
 .ex-name{font-size:16px;font-weight:700;color:var(--txt);letter-spacing:-0.2px;}
 .ex-muscles{font-size:12px;color:var(--txt3);margin-top:2px;}
@@ -212,6 +247,10 @@ select.field{padding-right:36px;cursor:pointer;}
   font-size:12px;color:var(--txt3);font-style:italic;
   line-height:1.55;margin-bottom:10px;
   padding:8px 12px;background:var(--bg4);border-radius:var(--r8);
+}
+.ex-cue-inline{
+  font-size:12px;color:var(--txt3);font-style:italic;
+  line-height:1.5;margin-bottom:10px;padding:0 2px;
 }
 .ex-add-set{
   display:flex;align-items:center;justify-content:center;gap:7px;
@@ -244,6 +283,10 @@ select.field{padding-right:36px;cursor:pointer;}
 
 /* ══ REST TIMER ══════════════════════════════════════════════════ */
 .rest-inner{padding:24px;text-align:center;}
+.rest-title-label{
+  font-size:11px;font-weight:700;letter-spacing:0.12em;
+  text-transform:uppercase;color:var(--txt3);margin-bottom:16px;
+}
 .rest-handle{
   width:32px;height:4px;background:var(--bg4);
   border-radius:2px;margin:12px auto 22px;
@@ -707,12 +750,25 @@ input[type="range"]::-moz-range-thumb{
   display:flex;gap:0;
   border-top:1px solid var(--border);
   border-bottom:1px solid var(--border);
-  padding:20px 0;margin:18px 0;
+  padding:16px 0;margin:16px 0;
 }
 .finish-stat{flex:1;text-align:center;}
 .finish-stat+.finish-stat{border-left:1px solid var(--border);}
-.finish-stat-v{font-size:28px;font-weight:900;color:var(--c1);font-variant-numeric:tabular-nums;letter-spacing:-1px;}
-.finish-stat-l{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.09em;margin-top:5px;font-weight:700;}
+.finish-stat-icon{font-size:18px;margin-bottom:4px;}
+.finish-stat-v{font-size:22px;font-weight:900;color:var(--c1);font-variant-numeric:tabular-nums;letter-spacing:-0.5px;}
+.finish-stat-l{font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:0.09em;margin-top:4px;font-weight:700;}
+.finish-pr-list{
+  background:rgba(255,215,0,0.07);
+  border:1px solid rgba(255,215,0,0.22);
+  border-radius:var(--r12);
+  padding:10px 14px;margin:4px 0 10px;
+}
+.finish-pr-item{
+  font-size:13px;font-weight:700;color:#ffd700;
+  padding:4px 0;display:flex;align-items:center;gap:8px;
+  border-bottom:1px solid rgba(255,215,0,0.1);
+}
+.finish-pr-item:last-child{border-bottom:none;}
 
 /* ══ PROGRESS CHART ══════════════════════════════════════════════ */
 .chart-wrap{padding:0 16px;margin-bottom:16px;overflow:hidden;}
