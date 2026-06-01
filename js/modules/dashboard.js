@@ -50,23 +50,38 @@ reg('dashboard', function() {
 
     // ── Readiness hero
     const r = S.g('recovery') || {};
-    const readinessHTML = '<div class="readiness-card">' +
-      '<div style="display:flex;align-items:flex-start;gap:16px">' +
-      '<div>' +
-      '<div class="readiness-score">'+score+'</div>' +
-      '<div class="readiness-label '+rl.cls+'">'+rl.l+'</div>' +
+    const rdBorder = score >= 80 ? '#10B981' : score >= 60 ? '#00d5ff' : score >= 40 ? '#f59e0b' : '#ef4444';
+    const rdBg = score >= 80 ? 'rgba(16,185,129,0.08)' : score >= 60 ? 'rgba(0,213,255,0.08)' : score >= 40 ? 'rgba(245,158,11,0.08)' : 'rgba(239,68,68,0.08)';
+
+    const sleepV = r.sleep != null ? r.sleep : 7.5;
+    const sorenessV = r.soreness != null ? r.soreness : 3;
+    const stressV = r.stress != null ? r.stress : 4;
+    const energyV = r.energy != null ? r.energy : 7;
+
+    const sleepC = sleepV >= 7 ? '#10B981' : sleepV >= 6 ? '#f59e0b' : '#ef4444';
+    const sorenessC = sorenessV <= 3 ? '#10B981' : sorenessV <= 6 ? '#f59e0b' : '#ef4444';
+    const stressC = stressV <= 3 ? '#10B981' : stressV <= 6 ? '#f59e0b' : '#ef4444';
+    const energyC = energyV >= 7 ? '#10B981' : energyV >= 5 ? '#f59e0b' : '#ef4444';
+
+    const readinessHTML = '<style>' +
+      '@keyframes rdBreathe{0%,100%{transform:scale(1);opacity:0.13}50%{transform:scale(1.08);opacity:0.18}}' +
+      '</style>' +
+      '<div class="readiness-card" style="border-color:'+rdBorder+';background:'+rdBg+';position:relative;overflow:hidden">' +
+      '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:120px;height:120px;border-radius:50%;background:'+rdBorder+';animation:rdBreathe 3s ease-in-out infinite;pointer-events:none"></div>' +
+      '<div style="position:relative;z-index:1">' +
+      '<div style="text-align:center;margin-bottom:14px">' +
+      '<div style="font-size:64px;font-weight:900;background:linear-gradient(135deg,#00d5ff,#6b5fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1">'+score+'</div>' +
+      '<div class="readiness-label '+rl.cls+'" style="margin-top:2px">'+rl.l+'</div>' +
+      '<div class="readiness-msg" style="margin-top:8px;font-size:12px">'+esc(ReadinessEngine.coachQuote(score, user.coachPersonality))+'</div>' +
       '</div>' +
-      '<div style="flex:1;padding-top:4px">' +
-      '<div class="readiness-msg">'+esc(ReadinessEngine.coachQuote(score, user.coachPersonality))+'</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px">' +
+      _miniMetric('😴', sleepV, 'Sleep', sleepC) +
+      _miniMetric('💪', sorenessV, 'Soreness', sorenessC) +
+      _miniMetric('🧠', stressV, 'Stress', stressC) +
+      _miniMetric('⚡', energyV, 'Energy', energyC) +
+      '</div>' +
+      (!loggedToday ? '<button class="readiness-log-btn" style="margin-top:12px;width:100%" onclick="go(\'recovery\')">📊 Tap to log recovery →</button>' : '') +
       '</div></div>' +
-      '<div class="readiness-metrics">' +
-      _metricPill('😴', r.sleep||7.5, 'Sleep') +
-      _metricPill('💪', r.soreness||3, 'Soreness') +
-      _metricPill('🧠', r.stress||4, 'Stress') +
-      _metricPill('⚡', r.energy||7, 'Energy') +
-      '</div>' +
-      (!loggedToday ? '<button class="readiness-log-btn" onclick="go(\'recovery\')">📊 Log today\'s recovery</button>' : '') +
-      '</div>' +
       '<div class="readiness-quote">'+esc(CoachEngine.motivationalQuote())+'</div>';
 
     // ── Today's plan card
@@ -86,13 +101,38 @@ reg('dashboard', function() {
       '<button class="btn btn-secondary" style="width:auto;padding:16px 18px" onclick="showSubstitutes()">🔄</button>' +
       '</div></div></div>';
 
-    // ── Activity rings
-    const ringsHTML = '<div class="rings-section"><div class="sh-t" style="padding:20px 0 14px">This Week</div>' +
-      '<div class="rings-row">' +
-      buildRing(weekPct, '#10B981', 'Workouts', weekWkts.length+'/'+weekGoal) +
-      buildRing(calPct, 'var(--c1)', 'Calories', todayCals+'/'+calTarget) +
-      buildRing(waterPct, '#3B82F6', 'Water', todayWater+'/'+(user.waterTarget||8)) +
-      '</div></div>';
+    // ── Activity rings (animated SVG)
+    const calTarget2 = S.g('goals.dailyCalories') || calTarget;
+    const waterTarget2 = S.g('goals.dailyWater') || 2500;
+    const weekGoal2 = S.g('goals.weeklyWorkouts') || weekGoal;
+    const todayCalories2 = S.g('nutrition.todayCalories') || todayCals;
+    const todayWaterMl = S.g('nutrition.todayWater') || 0;
+
+    const ringsHTML = '<div class="rings-section">' + sh('Activity') +
+      '<div class="rings-row" id="rings-row-dash">' +
+      _animRing('ring-wkt', weekWkts.length, weekGoal2, '#00ff88', 'Workouts', weekWkts.length+'/'+weekGoal2) +
+      _animRing('ring-cal', todayCalories2, calTarget2, '#00d5ff', 'Calories', todayCalories2+'/'+calTarget2) +
+      _animRing('ring-h2o', todayWaterMl, waterTarget2, '#6b5fff', 'Water', todayWaterMl+'ml/'+(waterTarget2/1000).toFixed(1)+'L') +
+      '</div></div>' +
+      '<script>(function(){' +
+      'var rings=[' +
+      '{id:"ring-wkt",val:'+Math.min(weekWkts.length,weekGoal2)+',max:'+weekGoal2+',color:"#00ff88"},' +
+      '{id:"ring-cal",val:'+Math.min(todayCalories2,calTarget2)+',max:'+calTarget2+',color:"#00d5ff"},' +
+      '{id:"ring-h2o",val:'+Math.min(todayWaterMl,waterTarget2)+',max:'+waterTarget2+',color:"#6b5fff"}' +
+      '];' +
+      'var circ=188.5;' +
+      'rings.forEach(function(ring){' +
+      'var el=document.getElementById(ring.id+"-arc");' +
+      'if(!el)return;' +
+      'var start=Date.now(),dur=600,pct=ring.max>0?ring.val/ring.max:0,target=circ-(circ*Math.min(pct,1));' +
+      'el.style.strokeDashoffset=circ;' +
+      '(function tick(){' +
+      'var t=Math.min((Date.now()-start)/dur,1),ease=1-Math.pow(1-t,3);' +
+      'el.style.strokeDashoffset=circ+(target-circ)*ease;' +
+      'if(t<1)requestAnimationFrame(tick);' +
+      '})();' +
+      '});' +
+      '})();<\/script>';
 
     // ── Stats row
     const statsHTML = '<div class="stats-row">' +
@@ -165,12 +205,34 @@ reg('dashboard', function() {
       '</div>';
 
     // ── AI Insights
+    const _insightMeta = {
+      recovery:   { color:'#6b5fff', emoji:'💤' },
+      strength:   { color:'#00ff88', emoji:'💪' },
+      nutrition:  { color:'#ff6b35', emoji:'🥗' },
+      cardio:     { color:'#00d5ff', emoji:'🏃' },
+      warning:    { color:'#ffaa00', emoji:'⚠️' },
+      def:        { color:'#00d5ff', emoji:'✨' }
+    };
     const insightHTML = sh('Daily Insights') +
-      insights.map(ins =>
-        '<div class="insight-card"><div class="insight-icon">'+ins.i+'</div>' +
-        '<div class="insight-label" style="color:'+ins.c+'">'+esc(ins.t)+'</div>' +
-        '<div class="insight-text">'+esc(ins.m)+'</div></div>'
-      ).join('');
+      '<div style="padding:0 16px">' +
+      insights.map(ins => {
+        const meta = _insightMeta[ins.type] || _insightMeta[ins.t] || _insightMeta.def;
+        const col = ins.c || meta.color;
+        const emoji = meta.emoji;
+        const hexToRgba = function(hex, a) {
+          const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+          return 'rgba('+r+','+g+','+b+','+a+')';
+        };
+        const bg = col.startsWith('#') ? hexToRgba(col, 0.05) : 'rgba(0,213,255,0.05)';
+        return '<div style="border-left:3px solid '+col+';background:'+bg+';padding:12px;border-radius:10px;margin-bottom:8px">' +
+          '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">' +
+          '<span style="font-size:16px">'+emoji+'</span>' +
+          '<div style="font-size:13px;font-weight:500;color:'+col+'">'+esc(ins.t)+'</div>' +
+          '</div>' +
+          '<div style="font-size:12px;color:var(--txt3)">'+esc(ins.m)+'</div>' +
+          '</div>';
+      }).join('') +
+      '</div>';
 
     return topbarHTML +
       readinessHTML +
@@ -199,6 +261,32 @@ function _metricPill(icon, val, label) {
   return '<div class="readiness-metric">' +
     '<div class="readiness-metric-v">'+icon+' '+val+'</div>' +
     '<div class="readiness-metric-l">'+esc(label)+'</div></div>';
+}
+
+function _miniMetric(icon, val, label, color) {
+  return '<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:10px 6px;text-align:center">' +
+    '<div style="font-size:18px;margin-bottom:4px">'+icon+'</div>' +
+    '<div style="font-size:14px;font-weight:700;color:'+color+'">'+val+'</div>' +
+    '<div style="font-size:10px;color:var(--txt3);margin-top:2px">'+esc(label)+'</div>' +
+    '</div>';
+}
+
+function _animRing(id, val, max, color, label, sublabel) {
+  const pct = max > 0 ? Math.min(Math.round((val / max) * 100), 100) : 0;
+  return '<div class="ring-wrap">' +
+    '<div class="ring-outer">' +
+    '<svg width="72" height="72" viewBox="0 0 72 72" style="display:block">' +
+    '<circle cx="36" cy="36" r="30" fill="none" stroke="'+color+'" stroke-width="6" stroke-opacity="0.15"/>' +
+    '<circle id="'+id+'-arc" cx="36" cy="36" r="30" fill="none" stroke="'+color+'" stroke-width="6"' +
+    ' stroke-dasharray="188.5" stroke-dashoffset="188.5" stroke-linecap="round"' +
+    ' transform="rotate(-90 36 36)"/>' +
+    '</svg>' +
+    '<div class="ring-center">' +
+    '<div style="font-size:11px;font-weight:700;color:var(--txt)">'+pct+'%</div>' +
+    '</div></div>' +
+    '<div style="font-size:10px;color:var(--txt3);text-align:center;margin-top:4px">'+esc(sublabel)+'</div>' +
+    '<div style="font-size:9px;color:'+color+';text-align:center;margin-top:2px">'+esc(label)+'</div>' +
+    '</div>';
 }
 
 function _eCard(icon, title, sub, screen) {

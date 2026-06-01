@@ -11,6 +11,7 @@ reg('progress', function() {
 
   return '<div class="topbar"><div class="topbar-title">Progress</div></div>' +
     _heroStats(ws, prs, streak, totalVol) +
+    _strengthLineChart(ws) +
     _workoutCalendar(ws) +
     _volumeChart(ws) +
     _prBoard(prs) +
@@ -19,6 +20,131 @@ reg('progress', function() {
     _achievementWall(earned) +
     '<div style="height:20px"></div>';
 });
+
+function _strengthLineChart(ws) {
+  const exNames = [];
+  const seen = {};
+  ws.forEach(function(wo) {
+    (wo.exercises || []).forEach(function(ex) {
+      if (ex.name && !seen[ex.name]) { seen[ex.name] = true; exNames.push(ex.name); }
+    });
+  });
+
+  const selectOpts = exNames.map(function(n) {
+    return '<option value="'+esc(n)+'">'+esc(n)+'</option>';
+  }).join('');
+
+  const selectorHTML = '<div style="padding:0 16px 12px">' +
+    '<select id="strength-chart-select" onchange="changeExerciseChart(this.value)" ' +
+    'style="width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;color:var(--txt);font-size:14px;-webkit-appearance:none">' +
+    (exNames.length ? selectOpts : '<option value="">No exercises logged yet</option>') +
+    '</select></div>';
+
+  const firstEx = exNames[0] || '';
+  const chartHTML = '<div id="strength-chart-wrap" style="padding:0 16px">' +
+    _renderStrengthChart(ws, firstEx) +
+    '</div>';
+
+  return sh('Strength Curve') + selectorHTML + chartHTML;
+}
+
+function _getExerciseSessions(ws, exName) {
+  const sessionMap = {};
+  ws.forEach(function(wo) {
+    (wo.exercises || []).forEach(function(ex) {
+      if (ex.name !== exName) return;
+      var maxE1rm = 0;
+      (ex.sets || []).forEach(function(s) {
+        if (s.done && s.weight && s.reps) {
+          var e = ProgEngine.epley(s.weight, s.reps);
+          if (e > maxE1rm) maxE1rm = e;
+        }
+      });
+      if (maxE1rm > 0) {
+        var dateKey = (wo.date || '').slice(0, 10);
+        if (!sessionMap[dateKey] || sessionMap[dateKey] < maxE1rm) {
+          sessionMap[dateKey] = maxE1rm;
+        }
+      }
+    });
+  });
+  var pts = Object.keys(sessionMap).sort().map(function(d) {
+    return { date: d, e1rm: Math.round(sessionMap[d]) };
+  });
+  return pts.slice(-10);
+}
+
+function _renderStrengthChart(ws, exName) {
+  if (!exName) return '<div style="text-align:center;padding:40px 0;color:var(--txt3);font-size:14px">Select an exercise above</div>';
+  var pts = _getExerciseSessions(ws, exName);
+  if (pts.length < 1) {
+    return '<div style="text-align:center;padding:40px 20px;color:var(--txt3);font-size:13px">No data yet — log some '+esc(exName)+' sets to see your strength curve</div>';
+  }
+
+  var W = 320, H = 200, padL = 48, padB = 28, padT = 24, padR = 16;
+  var chartW = W - padL - padR, chartH = H - padT - padB;
+  var e1rms = pts.map(function(p) { return p.e1rm; });
+  var minE = Math.max(0, Math.min.apply(null, e1rms) - 5);
+  var maxE = Math.max.apply(null, e1rms) + 5;
+
+  var toX = function(i) { return padL + (pts.length > 1 ? i / (pts.length - 1) : 0.5) * chartW; };
+  var toY = function(v) { return padT + (1 - (v - minE) / (maxE - minE || 1)) * chartH; };
+
+  var polyPts = pts.map(function(p, i) { return toX(i) + ',' + toY(p.e1rm); }).join(' ');
+
+  var gradId = 'scg' + Date.now();
+  var fillPts = pts.map(function(p, i) { return toX(i) + ',' + toY(p.e1rm); }).join(' ') +
+    ' ' + toX(pts.length - 1) + ',' + (padT + chartH) + ' ' + padL + ',' + (padT + chartH);
+
+  var guides = [minE + (maxE - minE) * 0.8, minE + (maxE - minE) * 0.5, minE + (maxE - minE) * 0.2];
+  var guideLines = guides.map(function(v) {
+    var gy = toY(v);
+    return '<line x1="'+padL+'" y1="'+gy+'" x2="'+(W-padR)+'" y2="'+gy+'" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>' +
+      '<text x="'+(padL-4)+'" y="'+(gy+4)+'" font-size="9" fill="var(--txt3)" text-anchor="end">'+Math.round(v)+'</text>';
+  }).join('');
+
+  var dots = pts.map(function(p, i) {
+    var isLast = i === pts.length - 1;
+    var cx = toX(i), cy = toY(p.e1rm);
+    if (isLast) return '<circle cx="'+cx+'" cy="'+cy+'" r="8" fill="white" stroke="#00d5ff" stroke-width="2"/>';
+    return '<circle cx="'+cx+'" cy="'+cy+'" r="5" fill="#00d5ff"/>';
+  }).join('');
+
+  var xLabels = pts.map(function(p, i) {
+    var cx = toX(i);
+    var d = p.date.slice(5); // MM-DD
+    var mmdd = d.replace('-', '/');
+    return '<text x="'+cx+'" y="'+(H-6)+'" font-size="9" fill="var(--txt3)" text-anchor="middle">'+esc(mmdd)+'</text>';
+  }).join('');
+
+  var trendHTML = '';
+  if (pts.length >= 2) {
+    var first = pts[0].e1rm, last = pts[pts.length - 1].e1rm;
+    var pctChange = first > 0 ? Math.round(((last - first) / first) * 100) : 0;
+    var trendColor = pctChange >= 0 ? '#10B981' : '#ef4444';
+    var arrow = pctChange >= 0 ? '↑' : '↓';
+    trendHTML = '<div style="position:absolute;top:'+padT+'px;right:'+padR+'px;font-size:11px;font-weight:700;color:'+trendColor+'">' +
+      arrow + ' ' + Math.abs(pctChange) + '% this month</div>';
+  } else {
+    trendHTML = '<div style="position:absolute;top:'+padT+'px;right:'+padR+'px;font-size:11px;color:var(--txt3)">No trend yet</div>';
+  }
+
+  return '<div style="position:relative">' +
+    trendHTML +
+    '<svg width="100%" viewBox="0 0 '+W+' '+H+'" style="overflow:visible">' +
+    '<defs><linearGradient id="'+gradId+'" x1="0" y1="0" x2="0" y2="1">' +
+    '<stop offset="0%" stop-color="#00d5ff" stop-opacity="0.3"/>' +
+    '<stop offset="100%" stop-color="#00d5ff" stop-opacity="0"/>' +
+    '</linearGradient></defs>' +
+    guideLines +
+    '<polygon points="'+fillPts+'" fill="url(#'+gradId+')" />' +
+    '<polyline points="'+polyPts+'" fill="none" stroke="#00d5ff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+    dots +
+    xLabels +
+    '</svg>' +
+    '<div style="text-align:center;font-size:11px;color:var(--txt3);margin-top:4px">e1RM (kg)</div>' +
+    '</div>';
+}
 
 function _heroStats(ws, prs, streak, totalVol) {
   const volDisplay = totalVol > 1000 ? (Math.round(totalVol/100)/10) + 't' : totalVol + 'kg';
@@ -158,6 +284,13 @@ function _achievementWall(earned) {
         '<div class="achieve-desc">'+esc(a.d)+'</div></div>';
     }).join('') + '</div>';
 }
+
+window.changeExerciseChart = function(exName) {
+  var wrap = document.getElementById('strength-chart-wrap');
+  if (!wrap) return;
+  var ws = S.g('workouts') || [];
+  wrap.innerHTML = _renderStrengthChart(ws, exName);
+};
 
 window.showDayWorkouts = function(dateStr) {
   const ws = (S.g('workouts')||[]).filter(w=>w.date.slice(0,10)===dateStr);
