@@ -18,14 +18,15 @@ reg('settings', function(opts) {
     data: _tabData()
   };
 
-  const tabs = [
-    {id:'profile',l:'Profile'},{id:'training',l:'Training'},{id:'supplements',l:'Supplements'},
-    {id:'nutrition',l:'Nutrition'},{id:'appearance',l:'Look'},{id:'notifications',l:'Alerts'},{id:'data',l:'Data'}
-  ];
+  const tabList = ['profile','training','supplements','nutrition','appearance','notifications','data'];
 
-  const tabBar = '<div class="settings-tabs">' +
-    tabs.map(t => '<button class="settings-tab'+(t.id===_settingsTab?' on':'')+'" onclick="go(\'settings\',{tab:\''+t.id+'\'})">'+t.l+'</button>').join('') +
-    '</div>';
+  const tabBar = '<div style="display:flex;overflow-x:auto;gap:8px;padding:12px 16px 4px;-webkit-overflow-scrolling:touch;scrollbar-width:none">' +
+    tabList.map(function(t) {
+      const active = _settingsTab === t;
+      const labels = {profile:'👤 Profile',training:'🏋️ Training',supplements:'💊 Supps',nutrition:'🥗 Nutrition',appearance:'🎨 Style',notifications:'🔔 Alerts',data:'💾 Data'};
+      return '<button onclick="go(\'settings\',{tab:\''+t+'\'})" style="flex-shrink:0;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;touch-action:manipulation;white-space:nowrap;border:1px solid '+(active?'var(--c1)':'var(--border)')+';background:'+(active?'var(--c1)':'transparent')+';color:'+(active?'#fff':'var(--txt3)')+'">'+
+        (labels[t]||t) + '</button>';
+    }).join('') + '</div>';
 
   return '<div class="topbar"><div class="topbar-title">Settings</div></div>' +
     tabBar +

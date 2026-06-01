@@ -116,7 +116,13 @@ function _bodyMapSection(colors) {
 
   var isBack = _bodyView === 'back';
 
-  return sh('Body Map', isBack ? '← Front' : 'Back →', 'toggleBodyView()') +
+  return '<div style="padding:14px 16px 0">' +
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">' +
+    '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--txt3)">Body Map</div>' +
+    '<div style="display:flex;gap:6px">' +
+    '<button onclick="_bodyView=\'front\';go(\'bodymap\')" style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;touch-action:manipulation;border:1px solid '+(!isBack?'var(--c1)':'var(--border)')+';background:'+(!isBack?'var(--c1)':'transparent')+';color:'+(!isBack?'#fff':'var(--txt3)')+'">Front</button>' +
+    '<button onclick="_bodyView=\'back\';go(\'bodymap\')" style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;touch-action:manipulation;border:1px solid '+(isBack?'var(--c1)':'var(--border)')+';background:'+(isBack?'var(--c1)':'transparent')+';color:'+(isBack?'#fff':'var(--txt3)')+'">Back</button>' +
+    '</div></div></div>' +
     '<div style="background:var(--bg3);border-radius:20px;margin:0 16px 14px;padding:16px;border:1px solid var(--border)">' +
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
     '<div style="font-size:12px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:0.08em">' +
@@ -180,7 +186,7 @@ function _muscleStatusGrid(muscleStatus) {
   }).join('');
 
   return sh('Muscle Recovery') +
-    '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 16px 14px">' +
+    '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:0 16px 14px">' +
     chips + '</div>';
 }
 
