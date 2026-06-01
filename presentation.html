@@ -33,7 +33,6 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--txt);
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   padding:60px 40px 80px;overflow:hidden}
 .slide.active{opacity:1;transform:translateX(0);pointer-events:auto}
-.slide.prev{opacity:0;transform:translateX(-100%)}
 
 /* entrance animations */
 .slide.active .a1{animation:fadeUp 0.6s 0.1s both}
@@ -668,80 +667,88 @@ window.addEventListener('resize',function(){ resize(); initOrbs(); });
 /* ── slide engine ── */
 var current = 0;
 var total = 20;
-var slides = document.querySelectorAll('.slide');
+var slides = Array.from(document.querySelectorAll('.slide'));
 var progressEl = document.getElementById('progress');
 var counterEl = document.getElementById('counter');
+var isAnimating = false;
 
-function goTo(n, dir){
-  if(n<0||n>=total) return;
-  var prev = slides[current];
-  prev.classList.remove('active');
-  if(dir === 'back') {
-    prev.classList.add('');
-    // slide out to right
-    prev.style.transform = 'translateX(100%)';
-    prev.style.opacity = '0';
-    setTimeout(function(){ prev.style.transform=''; prev.style.opacity=''; prev.classList.remove('prev'); },600);
-  } else {
-    prev.classList.add('prev');
-    setTimeout(function(){ prev.classList.remove('prev'); },600);
-  }
+function goTo(n) {
+  if (isAnimating || n < 0 || n >= total || n === current) return;
+  isAnimating = true;
+
+  var outSlide = slides[current];
+  var inSlide = slides[n];
+  var goingForward = n > current;
+
+  inSlide.style.transition = 'none';
+  inSlide.style.transform = goingForward ? 'translateX(100%)' : 'translateX(-100%)';
+  inSlide.style.opacity = '0';
+  inSlide.classList.remove('active');
+
+  inSlide.getBoundingClientRect();
+
+  inSlide.style.transition = '';
+  outSlide.style.transition = '';
+
+  outSlide.style.transform = goingForward ? 'translateX(-100%)' : 'translateX(100%)';
+  outSlide.style.opacity = '0';
+
+  inSlide.style.transform = 'translateX(0)';
+  inSlide.style.opacity = '1';
+  inSlide.classList.add('active');
+
   current = n;
-  var next = slides[current];
-  if(dir === 'back'){
-    next.style.transform = 'translateX(-100%)';
-    next.style.opacity = '0';
-    next.classList.remove('active');
-    // force reflow
-    next.getBoundingClientRect();
-    next.style.transform = '';
-    next.style.opacity = '';
-    next.classList.add('active');
-  } else {
-    next.classList.add('active');
-  }
-  progressEl.style.width = ((current+1)/total*100) + '%';
-  counterEl.textContent = (current+1) + ' / ' + total;
+
+  setTimeout(function() {
+    outSlide.classList.remove('active');
+    outSlide.style.transform = '';
+    outSlide.style.opacity = '';
+    outSlide.style.transition = '';
+    isAnimating = false;
+  }, 520);
+
+  progressEl.style.width = ((current + 1) / total * 100) + '%';
+  counterEl.textContent = (current + 1) + ' / ' + total;
 }
 
-function next(){ if(current<total-1) goTo(current+1,'forward'); }
-function prev(){ if(current>0) goTo(current-1,'back'); }
+function next() { goTo(current + 1); }
+function prev() { goTo(current - 1); }
 window.next = next;
 window.prev = prev;
 
 /* ── keyboard ── */
-document.addEventListener('keydown',function(e){
-  if(e.key==='ArrowRight'||e.key===' ') { e.preventDefault(); next(); }
-  if(e.key==='ArrowLeft') { e.preventDefault(); prev(); }
-  if(e.key==='f'||e.key==='F') toggleFS();
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+  if (e.key === 'f' || e.key === 'F') toggleFS();
 });
 
 /* ── click navigation ── */
-document.getElementById('deck').addEventListener('click',function(e){
-  if(e.target.closest('a,button')) return;
-  if(e.clientX > window.innerWidth/2) next(); else prev();
+document.getElementById('deck').addEventListener('click', function(e) {
+  if (e.target.closest('a,button')) return;
+  if (e.clientX > window.innerWidth / 2) next(); else prev();
 });
 
 /* ── touch swipe ── */
 var touchX = 0;
-document.addEventListener('touchstart',function(e){ touchX=e.touches[0].clientX; },{passive:true});
-document.addEventListener('touchend',function(e){
+document.addEventListener('touchstart', function(e) { touchX = e.touches[0].clientX; }, {passive: true});
+document.addEventListener('touchend', function(e) {
   var dx = e.changedTouches[0].clientX - touchX;
-  if(Math.abs(dx)>50){ if(dx<0) next(); else prev(); }
-},{passive:true});
+  if (Math.abs(dx) > 50) { if (dx < 0) next(); else prev(); }
+}, {passive: true});
 
 /* ── fullscreen ── */
-function toggleFS(){
-  if(!document.fullscreenElement){
+function toggleFS() {
+  if (!document.fullscreenElement) {
     document.documentElement.requestFullscreen().catch(function(){});
   } else {
     document.exitFullscreen().catch(function(){});
   }
 }
-document.getElementById('fullscreen-btn').addEventListener('click',toggleFS);
+document.getElementById('fullscreen-btn').addEventListener('click', toggleFS);
 
 /* ── init progress ── */
-progressEl.style.width = (1/total*100) + '%';
+progressEl.style.width = (1 / total * 100) + '%';
 counterEl.textContent = '1 / ' + total;
 
 })();

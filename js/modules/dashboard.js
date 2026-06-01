@@ -61,8 +61,8 @@ reg('dashboard', function() {
       '</div></div></div>' +
       '<div class="topbar-right">' +
       '<button class="topbar-icon press" onclick="go(\'briefing\')" aria-label="Daily briefing">📋</button>' +
-      '<button class="topbar-icon press" onclick="applyMode(\''+nextMode+'\')" aria-label="Toggle mode">'+modeIcon+'</button>' +
-      '<button class="topbar-icon press" onclick="applyTheme(\''+_nextTheme(user.theme||'carbon')+'\')">🎨</button>' +
+      '<button class="topbar-icon press" onclick="applyMode(\''+nextMode+'\');go(\'dashboard\')" aria-label="Toggle mode">'+modeIcon+'</button>' +
+      '<button class="topbar-icon press" onclick="applyTheme(_nextTheme(S.g(\'user.theme\')||\'carbon\'));go(\'dashboard\')">🎨</button>' +
       '<button class="topbar-icon press" onclick="go(\'settings\')">⚙️</button>' +
       '</div></div>';
 

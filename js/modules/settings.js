@@ -1,10 +1,11 @@
 'use strict';
 /* ── FitnessOS v4 — Settings (7 sub-tabs) ── */
 
-let _settingsTab = 'profile';
+let _activeSettingsTab = 'profile';
 
 reg('settings', function(opts) {
-  if (opts && opts.tab) _settingsTab = opts.tab;
+  const _settingsTab = (opts && opts.tab) ? opts.tab : 'profile';
+  _activeSettingsTab = _settingsTab;
   const user = S.g('user') || {};
 
   const tabContent = {
@@ -351,7 +352,7 @@ window.toggleInjuryRecovered = function(idx) {
 window.toggleSetting = function(key) {
   const cur = S.g(key);
   S.set(key, !cur);
-  go('settings', { tab: _settingsTab });
+  go('settings', { tab: _activeSettingsTab });
 };
 
 window.toggleEquipment = function(val) {
@@ -359,7 +360,7 @@ window.toggleEquipment = function(val) {
   const idx = eq.indexOf(val);
   if (idx >= 0) eq.splice(idx, 1); else eq.push(val);
   S.set('user.equipment', eq);
-  go('settings', { tab: _settingsTab });
+  go('settings', { tab: _activeSettingsTab });
 };
 
 window.removeSupp = function(id) {
