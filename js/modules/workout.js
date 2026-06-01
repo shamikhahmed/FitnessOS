@@ -1,6 +1,63 @@
 'use strict';
 /* ── FitnessOS v4 — Workout Logger + Exercise Database ── */
 
+/* ── Guidance System ── */
+const GUIDANCE = {
+  setsReps(goal) {
+    const map = {
+      hypertrophy: { sets:'3-4', reps:'8-12', rest:'60-90s', tempo:'2-0-1-0', note:'Last 2 reps should be hard' },
+      fat_loss:    { sets:'3-4', reps:'12-15', rest:'45-60s', tempo:'2-0-1-0', note:'Keep rest short, heart rate up' },
+      strength:    { sets:'4-5', reps:'3-6',   rest:'2-4min', tempo:'1-0-X-0', note:'Focus on moving weight fast' },
+      recomp:      { sets:'3',   reps:'10-12', rest:'60-75s', tempo:'2-1-1-0', note:'Controlled throughout' },
+      athletic:    { sets:'3-4', reps:'6-10',  rest:'90-120s',tempo:'1-0-X-0', note:'Explosive concentric' },
+      maintenance: { sets:'3',   reps:'10-12', rest:'60s',    tempo:'2-0-1-0', note:'Consistent effort' }
+    };
+    return map[goal] || map.hypertrophy;
+  },
+  techniques(goal) {
+    const t = {
+      hypertrophy: ['Drop sets on last set','Rest-pause technique','Mechanical drop sets','2-3 forced reps with spotter'],
+      fat_loss:    ['Giant sets (4 exercises back to back)','Supersets with opposing muscles','AMRAP last set','No rest between supersets'],
+      strength:    ['Cluster sets (2-2-2 with 20s pause)','Heavy singles at 90-95%','Pause reps at bottom','Speed work at 60% 1RM'],
+      recomp:      ['Supersets','Time under tension sets (3s eccentric)','Slow eccentrics','Mind-muscle connection focus'],
+      athletic:    ['Contrast training (heavy + explosive)','Plyometric supersets','Velocity-based training'],
+      maintenance: ['Straight sets','Occasional drop sets','Deload every 6th week']
+    };
+    return t[goal] || t.hypertrophy;
+  },
+  supersets: {
+    chest:     ['Back — Barbell Row', 'Triceps — Tricep Pushdown'],
+    back:      ['Chest — Push-Ups', 'Biceps — Barbell Curl'],
+    shoulders: ['Core — Plank', 'Triceps — Overhead Tricep Extension'],
+    biceps:    ['Triceps — Tricep Pushdown', 'Back — Lat Pulldown'],
+    triceps:   ['Biceps — Barbell Curl', 'Chest — Cable Fly'],
+    quads:     ['Hamstrings — Leg Curl', 'Glutes — Hip Thrust'],
+    hamstrings:['Quads — Leg Extension', 'Glutes — Cable Glute Kickback'],
+    glutes:    ['Quads — Back Squat', 'Hamstrings — Romanian Deadlift'],
+    core:      ['Shoulders — Overhead Press', 'Back — Deadlift'],
+    calves:    ['Quads — Leg Press', 'Hamstrings — Romanian Deadlift']
+  },
+  warmupSets(workingWeight) {
+    const w = parseFloat(workingWeight) || 60;
+    return [
+      { pct:40, w:Math.round(w*0.4/2.5)*2.5, reps:10, label:'Activation' },
+      { pct:60, w:Math.round(w*0.6/2.5)*2.5, reps:6,  label:'Warm-Up' },
+      { pct:80, w:Math.round(w*0.8/2.5)*2.5, reps:3,  label:'Feeler' }
+    ];
+  },
+  needsSpotter(exerciseName) {
+    const spotted = ['Barbell Bench Press','Incline Barbell Bench Press','Decline Barbell Bench Press',
+      'Back Squat','Front Squat','Close-Grip Bench Press','Skull Crushers','JM Press'];
+    return spotted.includes(exerciseName);
+  },
+  diffLabel(diff) {
+    return diff >= 3 ? { l:'Advanced', c:'#ff453a' } :
+           diff === 2 ? { l:'Intermediate', c:'#ff9f0a' } :
+                        { l:'Beginner', c:'#30d158' };
+  }
+};
+window.GUIDANCE = GUIDANCE;
+
 /* ── Exercise Database ── */
 const ExDB = {
   db: [
@@ -153,7 +210,89 @@ const ExDB = {
     {n:'Thoracic Rotation',em:'🔀',grp:'warmup_drills',diff:1,bw:true,eq:[],pri:'Thoracic Spine',sec:'',cues:'Rotation comes from mid-back, not lumbar',setup:'Seated or in lunge, hands behind head',breathing:'Exhale rotate',mistakes:'Rotating lumbar instead',joint:{shoulder:0,elbow:0,knee:0,spine:1,hip:0},cns:1,muscles:{primary:['thoracic_spine'],secondary:[]},regressions:[],progressions:[],met:2.0,tempoRec:'controlled',warmup:true},
     {n:'Dead Hang',em:'🙌',grp:'warmup_drills',diff:1,bw:true,eq:['bar'],pri:'Lats',sec:'Shoulders',cues:'Relaxed hang, decompress spine',setup:'Hang from pull-up bar',breathing:'Deep and relaxed',mistakes:'Tense shoulders',joint:{shoulder:1,elbow:0,knee:0,spine:0,hip:0},cns:1,muscles:{primary:['lats'],secondary:['shoulders']},regressions:[],progressions:[],met:2.5,tempoRec:'hold',warmup:true},
     {n:'Glute Bridge BW',em:'🌉',grp:'warmup_drills',diff:1,bw:true,eq:[],pri:'Glutes',sec:'',cues:'Activate glutes, not just lifting hips',setup:'Lie on back, knees bent',breathing:'Exhale thrust',mistakes:'Hyperextending lumbar',joint:{shoulder:0,elbow:0,knee:1,spine:1,hip:2},cns:1,muscles:{primary:['glutes'],secondary:[]},regressions:[],progressions:[],met:3.0,tempoRec:'1-2-1-0',warmup:true},
-    {n:'Bodyweight Squat',em:'⬇️',grp:'warmup_drills',diff:1,bw:true,eq:[],pri:'Quads',sec:'Glutes',cues:'Full depth, arms out for balance',setup:'Shoulder-width stance',breathing:'Exhale up',mistakes:'Knee cave, heels rising',joint:{shoulder:0,elbow:0,knee:2,spine:1,hip:2},cns:1,muscles:{primary:['quads'],secondary:['glutes']},regressions:[],progressions:[],met:4.0,tempoRec:'2-1-1-0',warmup:true}
+    {n:'Bodyweight Squat',em:'⬇️',grp:'warmup_drills',diff:1,bw:true,eq:[],pri:'Quads',sec:'Glutes',cues:'Full depth, arms out for balance',setup:'Shoulder-width stance',breathing:'Exhale up',mistakes:'Knee cave, heels rising',joint:{shoulder:0,elbow:0,knee:2,spine:1,hip:2},cns:1,muscles:{primary:['quads'],secondary:['glutes']},regressions:[],progressions:[],met:4.0,tempoRec:'2-1-1-0',warmup:true},
+
+    // CHEST ADDITIONAL
+    {n:'Svend Press',em:'🤲',grp:'chest',diff:1,bw:false,eq:['machine'],pri:'Inner Chest',sec:'Front Delts',cues:'Press plates together throughout entire movement, squeeze hard',setup:'Hold two plates sandwiched, press forward at chest height',breathing:'Exhale press',mistakes:'Losing plate compression mid-rep',joint:{shoulder:2,elbow:1,knee:0,spine:0,hip:0},cns:1,muscles:{primary:['chest'],secondary:['front_delts']},regressions:['Cable Fly'],progressions:['Weighted Dip'],met:3.5,tempoRec:'2-1-2-0'},
+    {n:'Dumbbell Pullover',em:'🏊',grp:'chest',diff:1,bw:false,eq:['dumbbell'],pri:'Chest',sec:'Lats, Triceps',cues:'Keep slight elbow bend, stretch fully at top, feel chest and lat',setup:'Lie perpendicular on bench, shoulders on pad, hips dropped',breathing:'Inhale at stretch, exhale pull',mistakes:'Bending elbows too much, turning into tricep extension',joint:{shoulder:3,elbow:1,knee:0,spine:0,hip:0},cns:1,muscles:{primary:['chest'],secondary:['lats','triceps']},regressions:['Cable Pullover'],progressions:['Straight-Arm Pulldown'],met:4.0,tempoRec:'3-1-1-0'},
+    {n:'Guillotine Press',em:'⚔️',grp:'chest',diff:3,bw:false,eq:['barbell'],pri:'Upper Chest',sec:'Front Delts',cues:'Wide grip, lower to neck/upper chest, requires shoulder mobility',setup:'Wide grip, bar path to upper chest/neck — requires spotter',breathing:'Inhale down, exhale press',mistakes:'Narrow grip, unstable shoulder position — HIGH INJURY RISK',joint:{shoulder:3,elbow:1,knee:0,spine:1,hip:0},cns:2,muscles:{primary:['upper_chest'],secondary:['front_delts']},regressions:['Incline Barbell Bench Press'],progressions:[],met:5.0,tempoRec:'2-1-1-0',assistanceRequired:true},
+    {n:'Incline Cable Fly',em:'📐',grp:'chest',diff:1,bw:false,eq:['cables'],pri:'Upper Chest',sec:'Front Delts',cues:'Cables set low, press up and together, constant tension arc motion',setup:'Bench at 30-45° between cable towers, cables at floor level',breathing:'Exhale on fly',mistakes:'Too much elbow bend converting to press',joint:{shoulder:2,elbow:0,knee:0,spine:1,hip:0},cns:1,muscles:{primary:['upper_chest'],secondary:['front_delts']},regressions:['Incline DB Fly'],progressions:['Incline Barbell Bench Press'],met:4.0,tempoRec:'2-2-1-0'},
+    {n:'Push-Up to Renegade Row',em:'🔁',grp:'chest',diff:3,bw:false,eq:['dumbbell'],pri:'Chest',sec:'Lats, Core',cues:'Plank position on DBs, push-up then row each arm alternately',setup:'Hex DBs shoulder-width, plank position',breathing:'Exhale push, exhale row',mistakes:'Rotating hips during row, losing plank',joint:{shoulder:3,elbow:1,knee:0,spine:2,hip:0},cns:2,muscles:{primary:['chest'],secondary:['lats','core']},regressions:['Push-Ups','DB Row'],progressions:[],met:6.5,tempoRec:'1-0-1-0'},
+
+    // BACK ADDITIONAL
+    {n:'Meadows Row',em:'🌾',grp:'back',diff:2,bw:false,eq:['barbell'],pri:'Lats',sec:'Rear Delts, Biceps',cues:'Single arm, barbell in landmine or corner, elbow flares out',setup:'Barbell in corner, staggered stance, row to hip',breathing:'Exhale pull',mistakes:'Using lower back, not getting full ROM',joint:{shoulder:2,elbow:1,knee:1,spine:2,hip:2},cns:2,muscles:{primary:['lats'],secondary:['rear_delts','biceps']},regressions:['Dumbbell Row'],progressions:['Barbell Row'],met:5.0,tempoRec:'1-1-2-0'},
+    {n:'Chest-Supported Row',em:'🛋️',grp:'back',diff:1,bw:false,eq:['dumbbell'],pri:'Lats',sec:'Rhomboids, Rear Delts',cues:'Chest supported eliminates lower back, pure lat pull',setup:'Incline bench 30-45°, lie prone, DBs hanging',breathing:'Exhale pull',mistakes:'Shrugging instead of retracting',joint:{shoulder:2,elbow:1,knee:0,spine:0,hip:0},cns:1,muscles:{primary:['lats'],secondary:['rhomboids','rear_delts']},regressions:['Dumbbell Row'],progressions:['Barbell Row'],met:4.5,tempoRec:'2-1-2-0'},
+    {n:'Single-Arm Lat Pulldown',em:'↘️',grp:'back',diff:1,bw:false,eq:['cables'],pri:'Lats',sec:'Biceps',cues:'Full stretch at top, drive elbow to hip, lean away slightly',setup:'High cable, D-ring, single arm, slight lean away from cable',breathing:'Exhale pull',mistakes:'Cutting range short, shoulder elevation',joint:{shoulder:2,elbow:1,knee:0,spine:1,hip:0},cns:1,muscles:{primary:['lats'],secondary:['biceps']},regressions:['Lat Pulldown'],progressions:['Pull-Ups'],met:4.0,tempoRec:'2-1-2-0'},
+    {n:'Cable Pull-Apart',em:'↔️',grp:'back',diff:1,bw:false,eq:['cables'],pri:'Rear Delts',sec:'Rhomboids',cues:'Both cables at chest height, pull apart to T position',setup:'Stand between two cables set at chest height',breathing:'Exhale pull',mistakes:'Bending elbows, leaning forward',joint:{shoulder:1,elbow:0,knee:0,spine:0,hip:0},cns:1,muscles:{primary:['rear_delts'],secondary:['rhomboids']},regressions:['Band Pull-Aparts'],progressions:['Face Pulls'],met:3.5,tempoRec:'1-2-2-0'},
+    {n:'Inverted Row',em:'🔄',grp:'back',diff:1,bw:true,eq:['bar'],pri:'Lats',sec:'Biceps, Rear Delts',cues:'Body plank, pull chest to bar, squeeze shoulder blades',setup:'Bar set waist height in rack, hang below it face up',breathing:'Exhale pull',mistakes:'Hips sagging, partial range',joint:{shoulder:2,elbow:1,knee:0,spine:1,hip:0},cns:1,muscles:{primary:['lats'],secondary:['biceps','rear_delts']},regressions:['Assisted Pull-Ups'],progressions:['Pull-Ups'],met:4.5,tempoRec:'2-1-1-0'},
+    {n:'Rack Pull',em:'🏗️',grp:'back',diff:2,bw:false,eq:['barbell'],pri:'Traps',sec:'Lower Back, Glutes',cues:'Bar starts at knee height, focus on lockout, trap squeeze',setup:'Bar set in rack pins at knee level',breathing:'Big brace, exhale at top',mistakes:'Rounding upper back, no hip hinge',joint:{shoulder:1,elbow:1,knee:1,spine:2,hip:2},cns:2,muscles:{primary:['traps'],secondary:['lower_back','glutes']},regressions:['Deadlift'],progressions:['Deficit Deadlift'],met:6.0,tempoRec:'1-0-2-0'},
+
+    // LEGS ADDITIONAL
+    {n:'Sissy Squat',em:'🦵',grp:'legs',diff:3,bw:true,eq:[],pri:'Quads',sec:'',cues:'Lean back as knees go forward, hold support, full knee flexion',setup:'Hold support, lean back as you lower knees toward floor',breathing:'Exhale rise',mistakes:'Not leaning back, partial range',joint:{shoulder:0,elbow:0,knee:3,spine:1,hip:0},cns:2,muscles:{primary:['quads'],secondary:[]},regressions:['Leg Extension'],progressions:['Weighted Sissy Squat'],met:4.0,tempoRec:'3-1-1-0'},
+    {n:'Copenhagen Plank',em:'🗺️',grp:'legs',diff:2,bw:true,eq:[],pri:'Adductors',sec:'Core',cues:'Side plank with top foot on bench, lift bottom leg',setup:'Side plank position, top foot on bench edge',breathing:'Steady',mistakes:'Hip dropping, not lifting bottom leg',joint:{shoulder:1,elbow:0,knee:0,spine:1,hip:2},cns:2,muscles:{primary:['adductors'],secondary:['core']},regressions:['Side Plank'],progressions:['Weighted Copenhagen'],met:4.0,tempoRec:'hold'},
+    {n:'Leg Press — Wide Stance',em:'↔️',grp:'legs',diff:1,bw:false,eq:['machine'],pri:'Glutes',sec:'Adductors, Quads',cues:'Feet high and wide on platform, emphasizes glutes and adductors',setup:'Feet wider than shoulder-width, higher on platform',breathing:'Exhale press',mistakes:'Letting lower back round off pad at bottom',joint:{shoulder:0,elbow:0,knee:2,spine:1,hip:2},cns:1,muscles:{primary:['glutes'],secondary:['adductors','quads']},regressions:['Hip Thrust'],progressions:['Back Squat'],met:4.5,tempoRec:'2-1-1-0'},
+    {n:'Smith Machine Squat',em:'🔩',grp:'legs',diff:1,bw:false,eq:['smith'],pri:'Quads',sec:'Glutes',cues:'Place feet slightly forward, use machine for stability',setup:'Smith machine, bar on traps, feet slightly forward of body',breathing:'Brace, exhale up',mistakes:'Feet too far forward causing knee stress',joint:{shoulder:1,elbow:0,knee:2,spine:1,hip:2},cns:1,muscles:{primary:['quads'],secondary:['glutes']},regressions:['Goblet Squat'],progressions:['Back Squat'],met:5.0,tempoRec:'2-1-1-0'},
+    {n:'Jefferson Curl',em:'🌀',grp:'legs',diff:2,bw:false,eq:['dumbbell'],pri:'Hamstrings',sec:'Lower Back, Calves',cues:'Stand on platform, slowly curl spine down vertebra by vertebra',setup:'Stand elevated, DB in hands, slowly round down',breathing:'Exhale down, inhale up',mistakes:'Going too heavy, rushing the curl',joint:{shoulder:0,elbow:0,knee:1,spine:3,hip:3},cns:2,muscles:{primary:['hamstrings'],secondary:['lower_back','calves']},regressions:['Romanian Deadlift'],progressions:[],met:4.0,tempoRec:'4-2-4-0'},
+    {n:'Pendulum Squat',em:'⏱️',grp:'legs',diff:1,bw:false,eq:['machine'],pri:'Quads',sec:'Glutes',cues:'Machine guides arc path, very quad dominant, go full depth',setup:'Stand in pendulum squat machine, pads on shoulders',breathing:'Exhale press',mistakes:'Partial depth',joint:{shoulder:0,elbow:0,knee:2,spine:0,hip:2},cns:1,muscles:{primary:['quads'],secondary:['glutes']},regressions:['Leg Press'],progressions:['Back Squat'],met:5.0,tempoRec:'2-1-1-0'},
+
+    // SHOULDERS ADDITIONAL
+    {n:'Pike Push-Up',em:'⛰️',grp:'shoulders',diff:2,bw:true,eq:[],pri:'Front Delts',sec:'Triceps',cues:'Hips high in inverted V, lower head toward floor',setup:'Push-up position, walk feet in, hips high',breathing:'Exhale press',mistakes:'Hips dropping to standard push-up',joint:{shoulder:2,elbow:1,knee:0,spine:1,hip:0},cns:1,muscles:{primary:['front_delts'],secondary:['triceps']},regressions:['Decline Push-Up'],progressions:['Handstand Push-Up'],met:4.5,tempoRec:'2-0-1-0'},
+    {n:'Lateral Raise — Cable from Behind',em:'🔌',grp:'shoulders',diff:1,bw:false,eq:['cables'],pri:'Side Delts',sec:'',cues:'Cable behind back, cross-body lateral raise, better tension curve',setup:'Low cable behind body, reach across for D-ring',breathing:'Exhale raise',mistakes:'Torso rotation',joint:{shoulder:2,elbow:0,knee:0,spine:0,hip:0},cns:1,muscles:{primary:['side_delts'],secondary:[]},regressions:['DB Lateral Raise'],progressions:['Machine Lateral Raise'],met:3.5,tempoRec:'2-1-2-0'},
+    {n:'Z Press',em:'🧘',grp:'shoulders',diff:3,bw:false,eq:['barbell'],pri:'Front Delts',sec:'Core, Triceps',cues:'Seated on floor, legs straight out, strict overhead press',setup:'Sit on floor legs extended, barbell at shoulder height',breathing:'Exhale press',mistakes:'Leaning back, core not braced',joint:{shoulder:2,elbow:1,knee:0,spine:2,hip:0},cns:2,muscles:{primary:['front_delts'],secondary:['core','triceps']},regressions:['Seated DB Press'],progressions:['Overhead Press'],met:5.0,tempoRec:'2-0-1-0'},
+    {n:'Cuban Press',em:'🇨🇺',grp:'shoulders',diff:2,bw:false,eq:['dumbbell'],pri:'Rear Delts',sec:'Front Delts, Side Delts',cues:'Upright row to chin, external rotate, press overhead in one motion',setup:'DBs in front, upright row to chin, rotate, press',breathing:'Exhale through full movement',mistakes:'Using too heavy — this is a mobility/health exercise',joint:{shoulder:2,elbow:1,knee:0,spine:0,hip:0},cns:1,muscles:{primary:['rear_delts'],secondary:['front_delts','side_delts']},regressions:['Face Pulls'],progressions:['Barbell OHP'],met:4.0,tempoRec:'1-1-1-0'},
+
+    // BICEPS ADDITIONAL
+    {n:'Bayesian Curl',em:'📐',grp:'biceps',diff:1,bw:false,eq:['cables'],pri:'Biceps',sec:'',cues:'Cable behind you, constant stretch on bicep, lean forward slightly',setup:'Low cable behind body, curl forward',breathing:'Exhale curl',mistakes:'Not maintaining cable tension at bottom',joint:{shoulder:1,elbow:1,knee:0,spine:0,hip:0},cns:1,muscles:{primary:['biceps'],secondary:[]},regressions:['Cable Curl'],progressions:['Incline Dumbbell Curl'],met:3.5,tempoRec:'3-1-1-0'},
+    {n:'21s Curl',em:'🔢',grp:'biceps',diff:1,bw:false,eq:['barbell'],pri:'Biceps',sec:'',cues:'7 lower half reps, 7 upper half reps, 7 full reps — burns!',setup:'Standard curl position with barbell or DBs',breathing:'Steady throughout',mistakes:'Going too heavy, compromising form in upper reps',joint:{shoulder:0,elbow:2,knee:0,spine:1,hip:0},cns:1,muscles:{primary:['biceps'],secondary:[]},regressions:['DB Curl'],progressions:['Barbell Curl'],met:4.5,tempoRec:'1-0-1-0'},
+    {n:'Zottman Curl',em:'🔄',grp:'biceps',diff:1,bw:false,eq:['dumbbell'],pri:'Biceps',sec:'Brachialis, Brachioradialis',cues:'Curl up supinated, rotate to pronated at top, lower pronated',setup:'Standard curl start position',breathing:'Exhale curl up',mistakes:'Rushing the rotation',joint:{shoulder:0,elbow:1,knee:0,spine:0,hip:0},cns:1,muscles:{primary:['biceps'],secondary:['brachialis','brachioradialis']},regressions:['Hammer Curl'],progressions:['Barbell Curl'],met:4.0,tempoRec:'2-1-2-0'},
+
+    // TRICEPS ADDITIONAL
+    {n:'Board Press',em:'📋',grp:'triceps',diff:2,bw:false,eq:['barbell'],pri:'Triceps',sec:'Chest',cues:'Board on chest reduces ROM, loads lockout — powerlifting accessory',setup:'1-3 boards on chest, spotter holds, press to lockout',breathing:'Exhale press',mistakes:'Bouncing off board',joint:{shoulder:2,elbow:2,knee:0,spine:1,hip:0},cns:2,muscles:{primary:['triceps'],secondary:['chest']},regressions:['Close-Grip Bench Press'],progressions:['Barbell Bench Press'],met:5.0,tempoRec:'1-1-1-0',assistanceRequired:true},
+    {n:'Tate Press',em:'🦋',grp:'triceps',diff:2,bw:false,eq:['dumbbell'],pri:'Triceps',sec:'',cues:'DBs point toward ceiling, lower to chest by hinging at elbow',setup:'Lie flat, DBs pointing up, elbows flare wide as you lower',breathing:'Exhale extend',mistakes:'Elbow position collapsing',joint:{shoulder:1,elbow:2,knee:0,spine:0,hip:0},cns:1,muscles:{primary:['triceps'],secondary:[]},regressions:['Skull Crushers'],progressions:['Close-Grip Bench Press'],met:4.0,tempoRec:'2-1-1-0'},
+    {n:'Band Tricep Pushdown',em:'🎗️',grp:'triceps',diff:1,bw:false,eq:['bands'],pri:'Triceps',sec:'',cues:'Band overhead, full extension, great pump and activation',setup:'Band attached high, face away or toward anchor',breathing:'Exhale extend',mistakes:'Partial extension',joint:{shoulder:0,elbow:2,knee:0,spine:0,hip:0},cns:1,muscles:{primary:['triceps'],secondary:[]},regressions:[],progressions:['Cable Overhead Extension'],met:3.0,tempoRec:'2-1-1-0'},
+
+    // CORE ADDITIONAL
+    {n:'Dragon Flag',em:'🐉',grp:'core',diff:3,bw:true,eq:[],pri:'Core',sec:'Lats, Glutes',cues:'Hold bench above head, raise body in plank, lower slowly',setup:'Lie on bench, grip behind head, full body raise',breathing:'Inhale lower, exhale raise',mistakes:'Pike at hips, not maintaining plank',joint:{shoulder:2,elbow:0,knee:0,spine:2,hip:2},cns:3,muscles:{primary:['core'],secondary:['lats','glutes']},regressions:['Hollow Hold'],progressions:[],met:6.0,tempoRec:'3-1-3-0'},
+    {n:'L-Sit Hold',em:'🪑',grp:'core',diff:3,bw:true,eq:[],pri:'Core',sec:'Quads, Hip Flexors',cues:'On parallettes or dip bars, lift legs to parallel, hold',setup:'Parallel bars or handles, arms locked, lift legs',breathing:'Steady',mistakes:'Bent knees taking pressure off core',joint:{shoulder:2,elbow:1,knee:0,spine:1,hip:2},cns:2,muscles:{primary:['core'],secondary:['quads','hip_flexors']},regressions:['Hanging Knee Raise'],progressions:['V-Sit Hold'],met:5.0,tempoRec:'hold'},
+    {n:'Cable Woodchop',em:'🪓',grp:'core',diff:1,bw:false,eq:['cables'],pri:'Obliques',sec:'Core, Shoulders',cues:'Rotate from hips and torso, arms stay relatively straight',setup:'High cable, rope or handle, pull diagonally across body',breathing:'Exhale chop',mistakes:'Pulling with arms only, not rotating',joint:{shoulder:2,elbow:0,knee:0,spine:1,hip:1},cns:1,muscles:{primary:['obliques'],secondary:['core','shoulders']},regressions:['Russian Twist'],progressions:[],met:4.0,tempoRec:'1-1-1-0'},
+    {n:'Stir The Pot',em:'🥘',grp:'core',diff:2,bw:true,eq:[],pri:'Core',sec:'Shoulders',cues:'Plank on stability ball, make circles with forearms',setup:'Forearms on stability ball, body plank position',breathing:'Steady',mistakes:'Hips swaying, circles too large',joint:{shoulder:2,elbow:0,knee:0,spine:1,hip:0},cns:1,muscles:{primary:['core'],secondary:['shoulders']},regressions:['Plank'],progressions:['Ab Wheel Rollout'],met:4.0,tempoRec:'controlled'},
+
+    // CARDIO MACHINES
+    {n:'Treadmill Run',em:'🏃',grp:'cardio',diff:1,bw:true,eq:['treadmill'],pri:'Cardiovascular',sec:'Quads, Calves',cues:'Land midfoot, slight forward lean, arms relaxed',setup:'Speed 8-12 km/h, incline 0-1%',breathing:'Rhythmic, in through nose out through mouth',mistakes:'Heel striking, looking down',joint:{shoulder:0,elbow:0,knee:2,spine:1,hip:2},cns:1,muscles:{primary:['quads'],secondary:['calves','hamstrings']},regressions:['Brisk Walk'],progressions:['Interval Sprints'],met:9.0,tempoRec:'steady'},
+    {n:'Treadmill Incline Walk',em:'⛰️',grp:'cardio',diff:1,bw:true,eq:['treadmill'],pri:'Cardiovascular',sec:'Glutes, Calves',cues:'Do not hold handrails, lean slightly forward',setup:'Speed 5-6 km/h, incline 10-15%',breathing:'Steady deep breaths',mistakes:'Holding rails reduces calorie burn significantly',joint:{shoulder:0,elbow:0,knee:1,spine:1,hip:2},cns:1,muscles:{primary:['glutes'],secondary:['calves','hamstrings']},regressions:['Flat Walk'],progressions:['Treadmill Run'],met:6.0,tempoRec:'steady'},
+    {n:'Rowing Machine',em:'🚣',grp:'cardio',diff:2,bw:true,eq:['rower'],pri:'Cardiovascular',sec:'Back, Legs, Arms',cues:'Legs push first, then lean back, then arms pull — legs drive 60%',setup:'Damper 4-6, target 2:00/500m pace',breathing:'Exhale drive, inhale recovery',mistakes:'Pulling with arms first, hunching back',joint:{shoulder:2,elbow:1,knee:2,spine:1,hip:2},cns:2,muscles:{primary:['back'],secondary:['quads','biceps','core']},regressions:['Seated Cable Row'],progressions:[],met:8.0,tempoRec:'1-1-1-1'},
+    {n:'Stationary Bike',em:'🚴',grp:'cardio',diff:1,bw:true,eq:['bike'],pri:'Cardiovascular',sec:'Quads, Calves',cues:'Seat at hip height, pedal with ball of foot, 80-100 RPM',setup:'Seat height: slight knee bend at bottom, resistance 8-12',breathing:'Steady controlled',mistakes:'Seat too low, too much upper body involvement',joint:{shoulder:0,elbow:0,knee:1,spine:0,hip:1},cns:1,muscles:{primary:['quads'],secondary:['calves','glutes']},regressions:[],progressions:['Sprint Intervals'],met:7.0,tempoRec:'steady'},
+    {n:'Ski Erg',em:'⛷️',grp:'cardio',diff:2,bw:true,eq:['ski_erg'],pri:'Cardiovascular',sec:'Lats, Core, Shoulders',cues:'Pull ropes down explosively, hinge hips, core tight',setup:'Stand facing machine, grip both handles overhead',breathing:'Exhale pull',mistakes:'Pulling with arms only, no hip hinge',joint:{shoulder:2,elbow:1,knee:1,spine:1,hip:2},cns:2,muscles:{primary:['lats'],secondary:['core','shoulders','glutes']},regressions:['Lat Pulldown'],progressions:[],met:8.5,tempoRec:'explosive'},
+    {n:'Stair Climber',em:'🪜',grp:'cardio',diff:1,bw:true,eq:['stairclimber'],pri:'Cardiovascular',sec:'Glutes, Quads',cues:'Do not lean on rails, full step, drive through heel',setup:'Speed 60-80 steps/min',breathing:'Steady',mistakes:'Leaning on handrails, short steps',joint:{shoulder:0,elbow:0,knee:2,spine:1,hip:2},cns:1,muscles:{primary:['glutes'],secondary:['quads','calves']},regressions:['Step-Ups'],progressions:[],met:8.0,tempoRec:'steady'},
+    {n:'Assault Bike',em:'💥',grp:'cardio',diff:2,bw:true,eq:['assault_bike'],pri:'Cardiovascular',sec:'Full Body',cues:'Push AND pull handles, drive legs, keep upright posture',setup:'Seat at hip height, arms and legs work together',breathing:'Controlled despite intensity',mistakes:'Arms only or legs only, not coordinating',joint:{shoulder:1,elbow:1,knee:2,spine:0,hip:2},cns:2,muscles:{primary:['full_body'],secondary:[]},regressions:['Stationary Bike'],progressions:[],met:11.0,tempoRec:'explosive'},
+    {n:'Elliptical',em:'🔄',grp:'cardio',diff:1,bw:true,eq:['elliptical'],pri:'Cardiovascular',sec:'Quads, Glutes',cues:'Zero-impact, push and pull handles, maintain upright posture',setup:'Resistance 8-12, 60-80 RPM',breathing:'Steady',mistakes:'Hunching, relying on momentum',joint:{shoulder:0,elbow:0,knee:0,spine:0,hip:1},cns:1,muscles:{primary:['quads'],secondary:['glutes','calves']},regressions:[],progressions:['Stair Climber'],met:6.5,tempoRec:'steady'},
+
+    // SPORTS / SWIMMING
+    {n:'Swimming — Freestyle',em:'🏊',grp:'sports',diff:2,bw:true,eq:[],pri:'Cardiovascular',sec:'Back, Shoulders, Core',cues:'Bilateral breathing, hip rotation, long strokes',setup:'Pool, bilateral breathing every 3 strokes',breathing:'Every 3 strokes bilateral',mistakes:'No hip rotation, crossing midline with hands',joint:{shoulder:2,elbow:0,knee:0,spine:1,hip:1},cns:1,muscles:{primary:['lats'],secondary:['shoulders','core','triceps']},regressions:[],progressions:['Open Water Swim'],met:8.0,tempoRec:'steady'},
+    {n:'Swimming — Breaststroke',em:'🐸',grp:'sports',diff:2,bw:true,eq:[],pri:'Cardiovascular',sec:'Inner Chest, Legs',cues:'Pullout, glide phase, frog kick — timing is everything',setup:'Pool, streamline off wall',breathing:'Breathe every stroke',mistakes:'No glide phase, excessive drag',joint:{shoulder:2,elbow:0,knee:2,spine:1,hip:2},cns:1,muscles:{primary:['chest'],secondary:['adductors','core']},regressions:[],progressions:['Competitive Breaststroke'],met:7.0,tempoRec:'steady'},
+    {n:'Padel',em:'🎾',grp:'sports',diff:2,bw:true,eq:[],pri:'Cardiovascular',sec:'Shoulders, Core, Legs',cues:'Short backswing, wrist snap, use walls strategically',setup:'Padel court, partner/opponent',breathing:'Natural game pace',mistakes:'Tennis swing (too big), ignoring walls',joint:{shoulder:2,elbow:1,knee:2,spine:1,hip:2},cns:1,muscles:{primary:['full_body'],secondary:[]},regressions:[],progressions:[],met:7.5,tempoRec:'reactive'},
+    {n:'Basketball',em:'🏀',grp:'sports',diff:2,bw:true,eq:[],pri:'Cardiovascular',sec:'Full Body',cues:'Stay low on defence, bent knees, explosive cuts',setup:'Court, ball',breathing:'Natural',mistakes:'Standing straight up defensively',joint:{shoulder:1,elbow:0,knee:3,spine:1,hip:2},cns:1,muscles:{primary:['full_body'],secondary:[]},regressions:[],progressions:[],met:8.5,tempoRec:'reactive'},
+    {n:'Football / Soccer',em:'⚽',grp:'sports',diff:2,bw:true,eq:[],pri:'Cardiovascular',sec:'Full Body',cues:'First touch, positioning, explosive bursts',setup:'Pitch, ball',breathing:'Natural',mistakes:'Ball watching, not moving off ball',joint:{shoulder:0,elbow:0,knee:2,spine:1,hip:2},cns:1,muscles:{primary:['full_body'],secondary:[]},regressions:[],progressions:[],met:9.0,tempoRec:'reactive'},
+
+    // OLYMPIC LIFTING
+    {n:'Snatch',em:'🏅',grp:'fullbody',diff:3,bw:false,eq:['barbell'],pri:'Full Body',sec:'Traps, Legs, Shoulders',cues:'Wide grip, bar path close, explosive pull, receive in overhead squat',setup:'Wide grip, bar over mid-foot, hips above knees',breathing:'Brace, explosive exhale',mistakes:'Bar drifting forward, slow elbows',joint:{shoulder:3,elbow:1,knee:3,spine:2,hip:3},cns:3,muscles:{primary:['full_body'],secondary:['traps','shoulders','quads']},regressions:['Power Snatch','DB Power Snatch'],progressions:[],met:10.0,tempoRec:'explosive',assistanceRequired:true},
+    {n:'Clean and Jerk',em:'🥇',grp:'fullbody',diff:3,bw:false,eq:['barbell'],pri:'Full Body',sec:'Everything',cues:'Clean to rack, split jerk or push jerk, full lockout overhead',setup:'Hip-width stance, aggressive pull',breathing:'Brace clean, exhale jerk',mistakes:'Soft lockout, poor rack position',joint:{shoulder:3,elbow:1,knee:3,spine:2,hip:3},cns:3,muscles:{primary:['full_body'],secondary:[]},regressions:['Power Clean','Push Press'],progressions:[],met:10.0,tempoRec:'explosive',assistanceRequired:true},
+    {n:'Hang Power Clean',em:'⚡',grp:'fullbody',diff:2,bw:false,eq:['barbell'],pri:'Full Body',sec:'Traps, Quads',cues:'Start from hang at mid-thigh, explosive hip extension, high pull',setup:'Hip-width stance, bar at mid-thigh',breathing:'Exhale explosive',mistakes:'Pulling with arms too early',joint:{shoulder:2,elbow:1,knee:2,spine:2,hip:3},cns:2,muscles:{primary:['full_body'],secondary:['traps','quads']},regressions:['KB Swing'],progressions:['Power Clean'],met:9.0,tempoRec:'explosive'},
+
+    // GLUTES ADDITIONAL
+    {n:'Smith Machine Hip Thrust',em:'🔩',grp:'glutes',diff:1,bw:false,eq:['smith'],pri:'Glutes',sec:'Hamstrings',cues:'Smith bar for stability, full hip extension, squeeze at top',setup:'Upper back on bench, smith bar across hips with pad',breathing:'Exhale thrust',mistakes:'Hyperextending lumbar, not squeezing peak',joint:{shoulder:0,elbow:0,knee:1,spine:2,hip:2},cns:1,muscles:{primary:['glutes'],secondary:['hamstrings']},regressions:['Hip Thrust BW'],progressions:['Hip Thrust'],met:4.5,tempoRec:'1-2-1-0'},
+    {n:'Frog Pump',em:'🐸',grp:'glutes',diff:1,bw:true,eq:[],pri:'Glutes',sec:'',cues:'Soles of feet together, pump hips up rapidly, high reps',setup:'Lie on back, soles of feet together, butterfly position',breathing:'Rapid rhythmic',mistakes:'Not getting full hip extension',joint:{shoulder:0,elbow:0,knee:0,spine:0,hip:2},cns:1,muscles:{primary:['glutes'],secondary:[]},regressions:['Glute Bridge'],progressions:['Hip Thrust BW'],met:3.0,tempoRec:'1-1-1-0'},
+    {n:'Curtsy Lunge',em:'👸',grp:'glutes',diff:1,bw:false,eq:['dumbbell'],pri:'Glutes',sec:'Adductors, Quads',cues:'Step back and across, lower knee behind lead foot',setup:'Standing, step diagonally behind and across body',breathing:'Exhale return to start',mistakes:'Torso leaning too far forward',joint:{shoulder:0,elbow:0,knee:2,spine:1,hip:2},cns:1,muscles:{primary:['glutes'],secondary:['adductors','quads']},regressions:['Reverse Lunge'],progressions:['Bulgarian Split Squat'],met:4.5,tempoRec:'2-1-1-0'},
+
+    // FOREARMS/GRIP
+    {n:'Wrist Curl',em:'✊',grp:'forearms',diff:1,bw:false,eq:['barbell'],pri:'Forearms',sec:'',cues:'Full range, seated with wrists over knees, squeeze at top',setup:'Seated, forearms on thighs, wrists hanging over knees',breathing:'Exhale curl',mistakes:'Too heavy, wrist deviation',joint:{shoulder:0,elbow:0,knee:0,spine:0,hip:0},cns:1,muscles:{primary:['forearms'],secondary:[]},regressions:['DB Wrist Curl'],progressions:[],met:2.5,tempoRec:'2-2-1-0'},
+    {n:'Reverse Wrist Curl',em:'🤜',grp:'forearms',diff:1,bw:false,eq:['barbell'],pri:'Forearms',sec:'',cues:'Overhand grip, full extension and contraction',setup:'Same as wrist curl but overhand grip',breathing:'Exhale extend',mistakes:'Wrist deviation, too heavy',joint:{shoulder:0,elbow:0,knee:0,spine:0,hip:0},cns:1,muscles:{primary:['forearms'],secondary:[]},regressions:['DB Reverse Curl'],progressions:[],met:2.5,tempoRec:'2-2-1-0'},
+    {n:'Plate Pinch',em:'🤌',grp:'forearms',diff:1,bw:false,eq:['machine'],pri:'Forearms',sec:'',cues:'Pinch two plates smooth side out, hold as long as possible',setup:'Two plates (10kg each), smooth sides out, finger pinch',breathing:'Steady',mistakes:'Using palm instead of fingertips',joint:{shoulder:0,elbow:0,knee:0,spine:0,hip:0},cns:1,muscles:{primary:['forearms'],secondary:[]},regressions:[],progressions:['Thicker plates'],met:2.0,tempoRec:'hold'},
+    {n:'Dead Hang — Active',em:'🙌',grp:'forearms',diff:1,bw:true,eq:['bar'],pri:'Forearms',sec:'Lats, Shoulders',cues:'Grip bar, depress scapulae (pull shoulders down), hang',setup:'Pull-up bar, full hang, activate scapulae',breathing:'Deep relaxed',mistakes:'Passive hang without scapular depression',joint:{shoulder:2,elbow:0,knee:0,spine:0,hip:0},cns:1,muscles:{primary:['forearms'],secondary:['lats','shoulders']},regressions:['Dead Hang'],progressions:['Pull-Ups'],met:2.5,tempoRec:'hold'},
+
+    // NECK
+    {n:'Neck Flexion',em:'🦒',grp:'neck',diff:1,bw:true,eq:[],pri:'Neck',sec:'',cues:'Slow controlled movement, no jerking, small range',setup:'Seated, chin tucks and forward flexion',breathing:'Natural',mistakes:'Fast jerky movement',joint:{shoulder:0,elbow:0,knee:0,spine:1,hip:0},cns:1,muscles:{primary:['neck'],secondary:[]},regressions:[],progressions:['Plate Neck Flexion'],met:2.0,tempoRec:'2-2-2-0'},
+    {n:'Neck Extension',em:'🦒',grp:'neck',diff:1,bw:true,eq:[],pri:'Neck',sec:'Traps',cues:'Controlled extension, do not hyperextend, protect cervical spine',setup:'Seated or using neck harness',breathing:'Natural',mistakes:'Hyperextension, fast movement',joint:{shoulder:0,elbow:0,knee:0,spine:2,hip:0},cns:1,muscles:{primary:['neck'],secondary:['traps']},regressions:[],progressions:['Plate Neck Extension'],met:2.0,tempoRec:'2-2-2-0'}
   ],
   byName(name) { return this.db.find(e => e.n === name) || null; },
   byGroup(grp) { return this.db.filter(e => e.grp === grp); },
@@ -185,12 +324,23 @@ reg('workout', function() {
   const exPreviews = (splitDay.exercises || []).slice(0,5).map(name => {
     const ex = ExDB.byName(name);
     const prev = ProgEngine.prevString(name);
-    return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">' +
-      '<div style="font-size:22px;width:36px;text-align:center">'+(ex?ex.em:'💪')+'</div>' +
-      '<div style="flex:1"><div style="font-size:14px;font-weight:600;color:var(--txt)">'+esc(name)+'</div>' +
-      (ex?'<div style="font-size:12px;color:var(--txt3)">'+esc(ex.pri)+(ex.sec?', '+ex.sec:'')+'</div>':'') +
+    const diff = ex ? GUIDANCE.diffLabel(ex.diff) : null;
+    const needsSpot = GUIDANCE.needsSpotter(name);
+    return '<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">' +
+      '<div style="font-size:24px;width:36px;text-align:center">'+(ex?ex.em:'💪')+'</div>' +
+      '<div style="flex:1">' +
+      '<div style="display:flex;align-items:center;gap:8px">' +
+      '<div style="font-size:14px;font-weight:700;color:var(--txt)">'+esc(name)+'</div>' +
+      (diff ? '<span style="font-size:10px;font-weight:700;color:'+diff.c+';text-transform:uppercase;letter-spacing:0.06em">'+diff.l+'</span>' : '') +
+      (needsSpot ? '<span style="font-size:10px;color:#ff453a;font-weight:700">⚠️ SPOTTER</span>' : '') +
+      '</div>' +
+      (ex?'<div style="font-size:12px;color:var(--txt3);margin-top:2px">'+esc(ex.pri)+(ex.sec?', '+ex.sec:'')+'</div>':'') +
       (prev?'<div style="font-size:12px;color:var(--c1);margin-top:2px">'+esc(prev)+'</div>':'') +
-      '</div></div>';
+      '</div>' +
+      '<button onclick="showExerciseDetail(\''+esc(name)+'\')" ' +
+      'style="width:32px;height:32px;border-radius:50%;background:var(--bg4);border:1px solid var(--border);' +
+      'font-size:14px;cursor:pointer;touch-action:manipulation;flex-shrink:0">ℹ️</button>' +
+      '</div>';
   }).join('');
 
   return '<div class="topbar">' +
@@ -221,7 +371,8 @@ reg('workout', function() {
 
     '<div style="padding:16px 16px 0">' +
     '<button class="btn btn-primary" onclick="startWorkout()">Start Workout 💪</button>' +
-    '<button class="btn btn-secondary" style="margin-top:10px" onclick="showExercisePicker()">Browse Exercises</button>' +
+    '<button class="btn btn-secondary" style="margin-top:10px" onclick="showBrowseExercises()">🔍 Browse All Exercises</button>' +
+    '<button class="btn" style="margin-top:10px;background:rgba(var(--c1-rgb),0.1);border:1px solid rgba(var(--c1-rgb),0.2);color:var(--c1)" onclick="showAddCustomExercise()">+ Add Custom Exercise</button>' +
     '</div>' +
     '<div style="height:20px"></div>';
 });
@@ -595,3 +746,255 @@ window.addExerciseToWorkout = function(name) {
 window.svgCheck = function() {
   return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
 };
+
+/* ── Exercise Detail Modal ── */
+function showExerciseDetail(name) {
+  const ex = ExDB.byName(name);
+  if (!ex) return;
+  const goal = S.g('user.goal') || 'hypertrophy';
+  const rec = GUIDANCE.setsReps(goal);
+  const diff = GUIDANCE.diffLabel(ex.diff);
+  const needsSpotter = GUIDANCE.needsSpotter(name);
+  const supersetWith = GUIDANCE.supersets[ex.grp] || [];
+  const techs = GUIDANCE.techniques(goal);
+
+  const html =
+    '<div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">' +
+    '<div style="font-size:48px">'+ex.em+'</div>' +
+    '<div>' +
+    '<div style="font-size:19px;font-weight:800;color:var(--txt)">'+esc(ex.n)+'</div>' +
+    '<div style="font-size:12px;color:'+diff.c+';font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-top:4px">'+diff.l+'</div>' +
+    '<div style="font-size:12px;color:var(--txt3);margin-top:2px">'+esc(ex.pri)+(ex.sec?' · '+ex.sec:'')+'</div>' +
+    '</div></div>' +
+
+    (needsSpotter || ex.assistanceRequired ?
+      '<div style="background:rgba(255,69,58,0.1);border:1px solid rgba(255,69,58,0.25);border-radius:12px;padding:12px;margin-bottom:14px;display:flex;gap:10px">' +
+      '<span style="font-size:18px">⚠️</span>' +
+      '<div style="font-size:13px;color:#ff453a;line-height:1.5">' +
+      (needsSpotter ? '<strong>Spotter recommended</strong> for this exercise. Do not attempt heavy sets alone.' :
+        '<strong>Assistance required.</strong> Ensure proper coaching before loading.') +
+      '</div></div>' : '') +
+
+    '<div style="background:rgba(var(--c1-rgb),0.06);border:1px solid rgba(var(--c1-rgb),0.15);border-radius:14px;padding:14px;margin-bottom:14px">' +
+    '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--c1);margin-bottom:10px">AI Recommendation for '+esc(goal.replace('_',' '))+'</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
+    _recStat2('📦','Sets',rec.sets) +
+    _recStat2('🔁','Reps',rec.reps) +
+    _recStat2('⏱️','Rest',rec.rest) +
+    _recStat2('🎵','Tempo',rec.tempo) +
+    '</div>' +
+    '<div style="font-size:12px;color:var(--txt2);margin-top:10px;font-style:italic">💡 '+esc(rec.note)+'</div>' +
+    '</div>' +
+
+    '<div style="margin-bottom:14px">' +
+    '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--txt3);margin-bottom:6px">Setup</div>' +
+    '<div style="font-size:14px;color:var(--txt2);line-height:1.6">'+esc(ex.setup)+'</div>' +
+    '</div>' +
+
+    '<div style="margin-bottom:14px">' +
+    '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--txt3);margin-bottom:6px">Coaching Cues</div>' +
+    '<div style="font-size:14px;color:var(--txt2);line-height:1.6">'+esc(ex.cues)+'</div>' +
+    '</div>' +
+
+    '<div style="margin-bottom:14px">' +
+    '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#ff9f0a;margin-bottom:6px">Common Mistakes</div>' +
+    '<div style="font-size:14px;color:var(--txt2);line-height:1.6">⚠️ '+esc(ex.mistakes)+'</div>' +
+    '</div>' +
+
+    '<div style="margin-bottom:14px">' +
+    '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--txt3);margin-bottom:6px">Breathing</div>' +
+    '<div style="font-size:14px;color:var(--txt2)">'+esc(ex.breathing)+'</div>' +
+    '</div>' +
+
+    '<div style="margin-bottom:14px">' +
+    '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--txt3);margin-bottom:6px">Intensity Techniques</div>' +
+    techs.slice(0,2).map(function(t) {
+      return '<div style="font-size:13px;color:var(--txt2);padding:6px 0;border-bottom:1px solid var(--border)">⚡ '+esc(t)+'</div>';
+    }).join('') +
+    '</div>' +
+
+    (supersetWith.length ?
+      '<div style="margin-bottom:14px">' +
+      '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--txt3);margin-bottom:6px">Superset With</div>' +
+      supersetWith.slice(0,2).map(function(s) {
+        return '<div style="font-size:13px;color:var(--c1);padding:6px 0;border-bottom:1px solid var(--border)">🔗 '+esc(s)+'</div>';
+      }).join('') +
+      '</div>' : '') +
+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">' +
+    '<div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#30d158;margin-bottom:6px">Progressions</div>' +
+    (ex.progressions||[]).map(function(p){return '<div style="font-size:12px;color:var(--txt2);padding:3px 0">↑ '+esc(p)+'</div>';}).join('') +
+    '</div>' +
+    '<div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#ff9f0a;margin-bottom:6px">Regressions</div>' +
+    (ex.regressions||[]).map(function(r){return '<div style="font-size:12px;color:var(--txt2);padding:3px 0">↓ '+esc(r)+'</div>';}).join('') +
+    '</div></div>' +
+
+    '<div style="margin-bottom:4px">' +
+    '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--txt3);margin-bottom:8px">Joint Stress</div>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:6px">' +
+    Object.entries(ex.joint||{}).filter(function(e){return e[1]>0;}).map(function(e){
+      const j = e[0], v = e[1];
+      const c = v >= 3 ? '#ff453a' : v >= 2 ? '#ff9f0a' : '#30d158';
+      return '<div style="background:rgba(0,0,0,0.2);border:1px solid '+c+';border-radius:8px;padding:4px 10px;font-size:11px;font-weight:600;color:'+c+'">' +
+        j.charAt(0).toUpperCase()+j.slice(1)+' ●'.repeat(v)+'</div>';
+    }).join('') +
+    '</div></div>';
+
+  modal(ex.n, html,
+    '<div style="display:flex;gap:10px;margin-top:16px">' +
+    '<button class="btn btn-primary" onclick="closeModal()" style="flex:1">Got it</button>' +
+    '</div>'
+  );
+}
+window.showExerciseDetail = showExerciseDetail;
+
+function _recStat2(icon, label, val) {
+  return '<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:10px;text-align:center">' +
+    '<div style="font-size:18px">'+icon+'</div>' +
+    '<div style="font-size:14px;font-weight:700;color:var(--c1);margin-top:4px">'+esc(val)+'</div>' +
+    '<div style="font-size:10px;color:var(--txt3);margin-top:2px;text-transform:uppercase;letter-spacing:0.06em">'+esc(label)+'</div>' +
+    '</div>';
+}
+
+/* ── Custom Exercise Adding ── */
+function showAddCustomExercise() {
+  const groups = ['chest','back','legs','shoulders','biceps','triceps','core','glutes','forearms','cardio','fullbody'];
+  modal('Add Custom Exercise',
+    '<div class="field-wrap"><label class="field-label">Exercise Name *</label>' +
+    '<input id="cx-name" class="field" type="text" placeholder="e.g. Smith Machine Row"></div>' +
+
+    '<div class="field-wrap"><label class="field-label">Muscle Group *</label>' +
+    '<div class="select-wrap"><select id="cx-grp" class="field">' +
+    groups.map(function(g){return '<option value="'+g+'">'+g.charAt(0).toUpperCase()+g.slice(1)+'</option>';}).join('') +
+    '</select></div></div>' +
+
+    '<div class="field-wrap"><label class="field-label">Primary Muscle</label>' +
+    '<input id="cx-pri" class="field" type="text" placeholder="e.g. Lats"></div>' +
+
+    '<div class="field-wrap"><label class="field-label">Coaching Cues</label>' +
+    '<input id="cx-cues" class="field" type="text" placeholder="Key technique points"></div>' +
+
+    '<div class="field-wrap"><label class="field-label">Equipment</label>' +
+    '<div class="select-wrap"><select id="cx-eq" class="field">' +
+    '<option value="barbell">Barbell</option><option value="dumbbell">Dumbbell</option>' +
+    '<option value="cables">Cables</option><option value="machine">Machine</option>' +
+    '<option value="bands">Bands</option><option value="">Bodyweight</option>' +
+    '</select></div></div>' +
+
+    '<div class="field-wrap"><label class="field-label">Difficulty</label>' +
+    '<div style="display:flex;gap:8px">' +
+    '<button class="btn btn-secondary btn-sm cx-diff-btn" onclick="setCxDiff(1,this)">Beginner</button>' +
+    '<button class="btn btn-secondary btn-sm cx-diff-btn" onclick="setCxDiff(2,this)">Intermediate</button>' +
+    '<button class="btn btn-secondary btn-sm cx-diff-btn" onclick="setCxDiff(3,this)">Advanced</button>' +
+    '</div></div>',
+
+    '<button class="btn btn-primary" onclick="saveCustomExercise()" style="margin-top:14px">Add Exercise</button>'
+  );
+  window._cxDiff = 1;
+}
+window.showAddCustomExercise = showAddCustomExercise;
+
+window.setCxDiff = function(d, btn) {
+  window._cxDiff = d;
+  document.querySelectorAll('.cx-diff-btn').forEach(function(b){b.style.background='var(--bg4)';b.style.color='var(--txt)';});
+  if (btn) { btn.style.background='var(--grad)'; btn.style.color='#fff'; }
+};
+
+window.saveCustomExercise = function() {
+  const name = (document.getElementById('cx-name')||{}).value||'';
+  const grp  = (document.getElementById('cx-grp')||{}).value||'chest';
+  const pri  = (document.getElementById('cx-pri')||{}).value||'Custom';
+  const cues = (document.getElementById('cx-cues')||{}).value||'Focus on form';
+  const eq   = (document.getElementById('cx-eq')||{}).value||'';
+  if (!name.trim()) { toast('Enter exercise name','warn'); return; }
+  if (ExDB.byName(name.trim())) { toast('Exercise already exists','warn'); return; }
+  const custom = {
+    n:name.trim(), em:'⭐', grp:grp, diff:window._cxDiff||1,
+    bw:!eq, eq:eq?[eq]:[],
+    pri:pri||'Custom', sec:'',
+    cues:cues, setup:'Set up as needed', breathing:'Exhale exertion',
+    mistakes:'Maintain form', joint:{shoulder:0,elbow:0,knee:0,spine:0,hip:0},
+    cns:1, muscles:{primary:[grp],secondary:[]},
+    regressions:[], progressions:[], met:4.0, tempoRec:'2-0-1-0',
+    custom:true
+  };
+  ExDB.db.push(custom);
+  const saved = S.g('customExercises') || [];
+  saved.push(custom);
+  S.set('customExercises', saved);
+  closeModal();
+  toast('✅ '+name.trim()+' added!', 'ok');
+};
+
+function loadCustomExercises() {
+  const saved = S.g('customExercises') || [];
+  saved.forEach(function(ex) {
+    if (!ExDB.byName(ex.n)) ExDB.db.push(ex);
+  });
+}
+window.loadCustomExercises = loadCustomExercises;
+
+/* ── Browse Exercises Screen ── */
+function showBrowseExercises(filterGrp, filterQuery) {
+  const grp = filterGrp || '';
+  const query = filterQuery || '';
+  const groups = ['all','chest','back','legs','shoulders','biceps','triceps','core','glutes','cardio','sports','fullbody','forearms'];
+
+  let exercises = ExDB.db;
+  if (grp && grp !== 'all') exercises = exercises.filter(function(e){return e.grp===grp;});
+  if (query) exercises = exercises.filter(function(e){
+    return e.n.toLowerCase().includes(query.toLowerCase()) || (e.pri||'').toLowerCase().includes(query.toLowerCase());
+  });
+
+  const filterTabs = '<div style="display:flex;overflow-x:auto;gap:8px;padding:0 16px 14px;-webkit-overflow-scrolling:touch">' +
+    groups.map(function(g) {
+      const active = (grp||'all') === g;
+      return '<button onclick="showBrowseExercises(\''+g+'\',\''+esc(query)+'\')" style="flex-shrink:0;padding:7px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;touch-action:manipulation;white-space:nowrap;' +
+        (active ? 'background:var(--grad);color:#fff;border:none' : 'background:var(--bg3);border:1px solid var(--border);color:var(--txt3)') + '">' +
+        g.charAt(0).toUpperCase()+g.slice(1)+'</button>';
+    }).join('') + '</div>';
+
+  const searchBar = '<div style="padding:0 16px 12px">' +
+    '<input class="field" type="text" placeholder="Search exercises..." value="'+esc(query)+'" ' +
+    'oninput="showBrowseExercises(\''+esc(grp||'all')+'\',this.value)" ' +
+    'style="padding:12px 16px"></div>';
+
+  const exList = exercises.slice(0,80).map(function(ex) {
+    const diff = GUIDANCE.diffLabel(ex.diff);
+    const needsSpot = GUIDANCE.needsSpotter(ex.n);
+    return '<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;touch-action:manipulation" onclick="showExerciseDetail(\''+esc(ex.n)+'\')">' +
+      '<div style="font-size:24px;width:36px;text-align:center">'+ex.em+'</div>' +
+      '<div style="flex:1">' +
+      '<div style="display:flex;align-items:center;gap:6px">' +
+      '<div style="font-size:14px;font-weight:700;color:var(--txt)">'+esc(ex.n)+'</div>' +
+      (ex.custom ? '<span style="font-size:10px;background:rgba(var(--c1-rgb),0.15);color:var(--c1);border-radius:4px;padding:2px 6px;font-weight:700">CUSTOM</span>' : '') +
+      '</div>' +
+      '<div style="font-size:12px;margin-top:2px">' +
+      '<span style="color:'+diff.c+';font-weight:600">'+diff.l+'</span>' +
+      '<span style="color:var(--txt3)"> · '+esc(ex.pri)+'</span>' +
+      (needsSpot ? '<span style="color:#ff453a;font-weight:700"> · ⚠️ Spotter</span>' : '') +
+      '</div></div>' +
+      '<div style="color:var(--txt3);font-size:16px">›</div>' +
+      '</div>';
+  }).join('');
+
+  const v = document.getElementById('view');
+  if (!v) return;
+  v.scrollTop = 0;
+  const div = document.createElement('div');
+  div.className = 'screen';
+  div.innerHTML =
+    '<div class="topbar"><div class="topbar-title">Exercise Library</div>' +
+    '<div class="topbar-right"><button class="topbar-icon press" onclick="go(\'workout\')">✕</button></div></div>' +
+    filterTabs + searchBar +
+    '<div style="font-size:12px;color:var(--txt3);padding:0 16px 8px">'+exercises.length+' exercises</div>' +
+    exList +
+    '<div style="padding:16px"><button class="btn btn-secondary" onclick="showAddCustomExercise()">+ Add Custom Exercise</button></div>' +
+    '<div style="height:20px"></div>';
+  v.innerHTML = '';
+  v.appendChild(div);
+
+  const nav = document.getElementById('nav');
+  if (nav) nav.style.display = 'flex';
+}
+window.showBrowseExercises = showBrowseExercises;

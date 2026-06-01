@@ -60,6 +60,7 @@
       applyTheme(S.g('user.theme') || 'carbon');
     }
     buildNav();
+    if (typeof loadCustomExercises === 'function') loadCustomExercises();
     initCanvas();
     if (!S.g('onboarded')) { go('intro'); } else { go('dashboard'); }
     if ('serviceWorker' in navigator) {
