@@ -226,6 +226,8 @@ reg('dashboard', function() {
       eCard('💪','Muscle Atlas','80+ muscles','anatomy') +
       eCard('🤸','Skills','Calisthenics progressions','calisthenics') +
       eCard('📊','Physique','Scores & growth projections','physique') +
+      eCard('🦴','Joint Health','Injury risk monitor','injury-risk') +
+      eCard('🧠','Training Intel','Age, volume & specialization','training-intel') +
       '</div></div>';
 
     return demoBanner + topbar + hero + dailyDecisionCard + todayWorkout + statsRow +

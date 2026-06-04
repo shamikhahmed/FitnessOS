@@ -138,6 +138,7 @@ reg('coach', function() {
       '<div style="font-size:14px;color:var(--txt2);line-height:1.65;font-style:italic">'+esc(quote)+'</div></div>' : '') +
     _suppTimingBlock(userSupps, user) +
     _deloadBlock(user) +
+    '<div style="padding:0 16px 16px"><button class="btn btn-secondary" onclick="go(\'training-intel\')" style="width:100%">🧠 Training Intelligence →</button><button class="btn btn-secondary" onclick="go(\'injury-risk\')" style="margin-top:8px;width:100%">🦴 Joint Health Monitor →</button></div>' +
     '<div style="height:20px"></div>';
 });
 
