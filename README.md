@@ -148,7 +148,8 @@ No install, no build step, no dependencies.
 
 **Shamikh Ahmed**  
 Director, NEWS Logistics · Founder, TheSolution360  
-MSc Logistics (Cardiff) · MSc Accounting & Finance (BPP/ACCA)  
+MSc Logistics & Operations Management, Cardiff University
+MSc Accounting & Finance, BPP University London  
 Karachi, Pakistan
 
 ---

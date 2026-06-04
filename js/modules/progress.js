@@ -10,6 +10,7 @@ reg('progress', function() {
   const totalVol = StreakEngine.totalVolume();
 
   return '<div class="topbar"><div class="topbar-title">Progress</div></div>' +
+    _weeklySummary(ws, prs) +
     _heroStats(ws, prs, streak, totalVol) +
     _strengthLineChart(ws) +
     _workoutCalendar(ws) +
@@ -20,6 +21,32 @@ reg('progress', function() {
     _achievementWall(earned) +
     '<div style="height:20px"></div>';
 });
+
+function _weeklySummary(ws, prs) {
+  const thisWeek = ws.filter(w => daysAgo(w.date) < 7);
+  const lastWeek = ws.filter(w => daysAgo(w.date) >= 7 && daysAgo(w.date) < 14);
+  const thisVol = thisWeek.reduce((a,w) => a+(w.totalVol||0), 0);
+  const lastVol = lastWeek.reduce((a,w) => a+(w.totalVol||0), 0);
+  const volChange = lastVol > 0 ? Math.round(((thisVol-lastVol)/lastVol)*100) : 0;
+  const thisCount = thisWeek.length;
+  const newPRs = prs.filter(p => daysAgo(p.date) < 7).length;
+  return '<div style="margin:0 16px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:16px">' +
+    '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--txt3);margin-bottom:12px">This Week</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">' +
+    _pStat(thisCount, 'Sessions', '📅') +
+    _pStat(Math.round(thisVol)+'kg', 'Volume', '🏋️') +
+    _pStat(newPRs, 'New PRs', '🏆') +
+    '</div>' +
+    (lastVol > 0 ? '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;color:var(--txt3)">vs last week: <span style="color:'+(volChange>=0?'var(--c3)':'var(--c4)')+';font-weight:700">'+(volChange>=0?'+':'')+volChange+'% volume</span></div>' : '') +
+    '</div>';
+}
+function _pStat(val, label, icon) {
+  return '<div style="text-align:center;background:var(--bg4);border-radius:12px;padding:10px">' +
+    '<div style="font-size:16px;margin-bottom:4px">'+icon+'</div>' +
+    '<div style="font-size:16px;font-weight:800;color:var(--txt)">'+esc(String(val))+'</div>' +
+    '<div style="font-size:10px;color:var(--txt3);margin-top:2px">'+esc(label)+'</div>' +
+    '</div>';
+}
 
 function _strengthLineChart(ws) {
   const exNames = [];

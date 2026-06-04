@@ -11,6 +11,7 @@ reg('recovery', function() {
   return '<div class="topbar"><div class="topbar-title">Recovery</div></div>' +
     _readinessSummary(score, rl) +
     (loggedToday ? _loggedView(rec) : _checkInForm(rec)) +
+    _recoveryHistoryChart() +
     _sleepInsights() +
     _recoveryRecs(score) +
     '<div style="height:20px"></div>';
@@ -65,11 +66,8 @@ function _checkInForm(rec) {
       '</div></div>';
   }).join('');
 
+  window._recTmp = { sleep: rec.sleep||7.5, soreness: rec.soreness||3, stress: rec.stress||4, energy: rec.energy||7, hydration: rec.hydration||2.5 };
   return sh('Daily Check-In') +
-    '<script>window._recTmp=' + JSON.stringify({
-      sleep: rec.sleep||7.5, soreness: rec.soreness||3,
-      stress: rec.stress||4, energy: rec.energy||7, hydration: rec.hydration||2.5
-    }) + '</script>' +
     '<div style="padding:0 16px">' +
     slidersHTML +
     '<button class="btn btn-primary" onclick="saveRecovery()">Log Recovery</button>' +
@@ -150,16 +148,51 @@ function _recoveryRecs(score) {
     ).join('') + '</div>';
 }
 
+function _recoveryHistoryChart() {
+  const hist = S.g('recoveryHistory') || [];
+  if (hist.length < 2) return '';
+  const last7 = hist.slice(-7);
+  const scores = last7.map(h => {
+    const sleepScore = Math.min(100, ((h.sleep||7.5)/9)*100);
+    const energyScore = ((h.energy||7)/10)*100;
+    const soreness = 100 - ((h.soreness||3)/10)*100;
+    return Math.round((sleepScore + energyScore + soreness) / 3);
+  });
+  const maxS = Math.max(...scores, 1);
+  const days = last7.map(h => {
+    const d = new Date(h.date);
+    return ['S','M','T','W','T','F','S'][d.getDay()];
+  });
+  return sh('Last 7 Days') +
+    '<div style="padding:0 16px 14px">' +
+    '<div style="display:flex;align-items:flex-end;gap:8px;height:60px;margin-bottom:8px">' +
+    scores.map((s,i) => {
+      const h = Math.max(4, Math.round((s/maxS)*56));
+      const color = s >= 70 ? 'var(--c3)' : s >= 50 ? 'var(--c5)' : 'var(--c4)';
+      return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">' +
+        '<div style="width:100%;height:'+h+'px;background:'+color+';border-radius:4px 4px 0 0"></div>' +
+        '<div style="font-size:9px;color:var(--txt3)">'+days[i]+'</div>' +
+        '</div>';
+    }).join('') +
+    '</div>' +
+    '<div style="font-size:12px;color:var(--txt3)">Average readiness: <span style="color:var(--txt);font-weight:700">'+Math.round(scores.reduce((a,s)=>a+s,0)/scores.length)+'</span></div>' +
+    '</div>';
+}
+
 window.saveRecovery = function() {
   const tmp = window._recTmp || {};
-  S.set('recovery', {
+  const recData = {
     sleep: tmp.sleep || 7.5,
     soreness: tmp.soreness || 3,
     stress: tmp.stress || 4,
     energy: tmp.energy || 7,
     hydration: tmp.hydration || 2.5,
     date: today()
-  });
+  };
+  S.set('recovery', recData);
+  S.push('recoveryHistory', { ...recData, time: isoNow() });
+  const hist = S.g('recoveryHistory') || [];
+  S.set('recoveryHistory', hist.filter(h => daysAgo(h.date) <= 30));
   toast('Recovery logged!', 'ok');
   go('recovery');
 };

@@ -139,6 +139,43 @@ reg('dashboard', function() {
       '<div style="color:var(--txt3);font-size:18px">›</div>' +
       '</div></div>' : '';
 
+    /* ── WEEKLY VOLUME CHART ── */
+    const ws7 = S.g('workouts') || [];
+    const days7 = Array.from({length:7}, function(_,i) {
+      const d = new Date(); d.setDate(d.getDate() - (6-i));
+      return d.toISOString().slice(0,10);
+    });
+    const vols = days7.map(function(d) {
+      const wkts = ws7.filter(function(x) { return (x.date||'').slice(0,10) === d; });
+      return wkts.reduce(function(a,x) { return a + (x.totalVol||0); }, 0);
+    });
+    const maxVol = Math.max.apply(null, vols.concat([1]));
+    const dayLabels = ['M','T','W','T','F','S','S'];
+    const todayIdx = (new Date().getDay() + 6) % 7;
+    const weeklyVolumeChart = '<div style="margin:0 16px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:16px">' +
+      '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--txt3);margin-bottom:12px">Weekly Volume</div>' +
+      '<div style="display:flex;align-items:flex-end;gap:6px;height:60px">' +
+      vols.map(function(v,i) {
+        const h = Math.max(4, Math.round((v/maxVol)*56));
+        const isToday = i === todayIdx;
+        const hasWkt = v > 0;
+        return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">' +
+          '<div style="width:100%;height:'+h+'px;background:'+(hasWkt?'var(--c1)':'var(--bg4)')+';border-radius:4px 4px 0 0;transition:height 0.5s ease;opacity:'+(isToday?'1':'0.7')+'"'+(isToday?' title="Today"':'')+' ></div>' +
+          '<div style="font-size:9px;color:'+(isToday?'var(--c1)':'var(--txt3)')+';font-weight:'+(isToday?'800':'500')+'">'+dayLabels[i]+'</div>' +
+          '</div>';
+      }).join('') +
+      '</div>' +
+      '<div style="margin-top:10px;font-size:12px;color:var(--txt3)">Total: <span style="color:var(--txt);font-weight:700">'+Math.round(vols.reduce(function(a,v){return a+v;},0))+'kg</span> this week</div>' +
+      '</div>';
+
+    /* ── QUICK ACTIONS ── */
+    const quickActions = '<div style="display:flex;gap:8px;padding:0 16px;margin-bottom:14px">' +
+      '<button onclick="logWater&&logWater((S.g(\'water\')||[]).filter(function(w){return w.date===today();}).length+1);go(\'dashboard\')" style="flex:1;padding:12px 8px;border-radius:14px;background:var(--bg3);border:1px solid var(--border);color:var(--txt);font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation;text-align:center">💧<br><span style="font-size:10px;color:var(--txt3);font-weight:500">+Water</span></button>' +
+      '<button onclick="showQuickWeight&&showQuickWeight()" style="flex:1;padding:12px 8px;border-radius:14px;background:var(--bg3);border:1px solid var(--border);color:var(--txt);font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation;text-align:center">⚖️<br><span style="font-size:10px;color:var(--txt3);font-weight:500">Weight</span></button>' +
+      '<button onclick="go(\'recovery\')" style="flex:1;padding:12px 8px;border-radius:14px;background:var(--bg3);border:1px solid var(--border);color:var(--txt);font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation;text-align:center">❤️<br><span style="font-size:10px;color:var(--txt3);font-weight:500">Recovery</span></button>' +
+      '<button onclick="go(\'briefing\')" style="flex:1;padding:12px 8px;border-radius:14px;background:var(--bg3);border:1px solid var(--border);color:var(--txt);font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation;text-align:center">📋<br><span style="font-size:10px;color:var(--txt3);font-weight:500">Briefing</span></button>' +
+      '</div>';
+
     /* ── EXPLORE GRID ── */
     function eCard(icon, title, sub, screen) {
       return '<div onclick="go(\''+screen+'\')" style="background:var(--bg3);border:1px solid var(--border);border-radius:16px;padding:16px;cursor:pointer;touch-action:manipulation;position:relative;overflow:hidden">' +
@@ -158,7 +195,7 @@ reg('dashboard', function() {
       '</div></div>';
 
     return demoBanner + topbar + hero + todayWorkout + statsRow +
-      muscleChips + insightCard + suppRow + lastWktCard + exploreGrid +
+      quickActions + weeklyVolumeChart + muscleChips + insightCard + suppRow + lastWktCard + exploreGrid +
       '<div style="height:20px"></div>';
 
   } catch(e) {
@@ -169,3 +206,22 @@ reg('dashboard', function() {
 
 window._nextTheme = _nextTheme;
 window._eCard = function(i,t,s,sc){ return ''; };
+
+window.showQuickWeight = function() {
+  const user = S.g('user') || {};
+  modal('⚖️ Log Weight',
+    '<div class="field-wrap"><label class="field-label">Weight ('+(user.units==='imperial'?'lbs':'kg')+')</label>' +
+    '<input id="qw-val" class="field" type="number" step="0.1" placeholder="'+(user.weight||70)+'" style="font-size:24px;text-align:center;font-weight:800"></div>',
+    '<button class="btn btn-primary" onclick="saveQuickWeight()">Save</button>'
+  );
+};
+window.saveQuickWeight = function() {
+  const val = parseFloat(document.getElementById('qw-val')?.value);
+  if (!val || val < 20 || val > 300) { toast('Enter a valid weight', 'warn'); return; }
+  const user = S.g('user') || {};
+  S.set('user', {...user, weight: val});
+  S.push('bodyStats', { weight: val, date: today(), time: isoNow() });
+  closeModal();
+  toast('Weight logged: '+val+(user.units==='imperial'?'lbs':'kg'), 'ok');
+  go('dashboard');
+};

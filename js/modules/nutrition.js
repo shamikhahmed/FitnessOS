@@ -19,7 +19,9 @@ reg('nutrition', function() {
 
   return '<div class="topbar"><div class="topbar-title">Nutrition & Supplements</div></div>' +
     _calSection(todayCals, calTarget, todayP, todayC, todayF, user) +
+    _nutritionStreak(meals) +
     _waterSection(todayWater, waterTarget) +
+    _mealHistory(meals) +
     _dueSuppsSection(dueSupps) +
     _mySuppsSection(userSupps, logs) +
     _stackSuggestions(user) +
@@ -132,6 +134,41 @@ function _stackSuggestions(user) {
       '<button class="supp-mark" onclick="addSuppToStack(\''+s.id+'\')">+ Add</button>' +
       '</div>'
     ).join('');
+}
+
+function _mealHistory(meals) {
+  const todayMeals = meals.filter(m => m.date === today());
+  if (!todayMeals.length) return '';
+  return sh('Today\'s Meals', 'Clear', 'if(confirm(\'Clear today\\\'s meals?\'))' +
+    '{S.set(\'meals\',(S.g(\'meals\')||[]).filter(function(m){return m.date!==today();}));go(\'nutrition\')}') +
+    '<div style="padding:0 16px">' +
+    todayMeals.map(m =>
+      '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">' +
+      '<div><div style="font-size:14px;font-weight:600;color:var(--txt)">'+esc(m.name||'Meal')+'</div>' +
+      '<div style="font-size:12px;color:var(--txt3)">'+esc(m.time?new Date(m.time).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'')+'</div></div>' +
+      '<div style="text-align:right">' +
+      '<div style="font-size:14px;font-weight:700;color:var(--c1)">'+m.calories+'kcal</div>' +
+      '<div style="font-size:11px;color:var(--txt3)">P:'+m.protein+'g C:'+m.carbs+'g F:'+m.fat+'g</div>' +
+      '</div></div>'
+    ).join('') +
+    '</div>';
+}
+
+function _nutritionStreak(meals) {
+  let streak = 0;
+  const d = new Date();
+  while (true) {
+    const ds = d.toISOString().slice(0,10);
+    if (!(meals||[]).some(m => m.date === ds)) break;
+    streak++;
+    d.setDate(d.getDate() - 1);
+  }
+  if (streak < 2) return '';
+  return '<div style="margin:0 16px 14px;padding:10px 14px;background:rgba(var(--c5-rgb,255,152,0),0.1);border:1px solid rgba(var(--c5-rgb,255,152,0),0.2);border-radius:12px;display:flex;align-items:center;gap:10px">' +
+    '<div style="font-size:20px">🔥</div>' +
+    '<div><div style="font-size:13px;font-weight:700;color:var(--txt)">'+streak+' day nutrition streak</div>' +
+    '<div style="font-size:11px;color:var(--txt3)">Keep logging meals daily</div></div>' +
+    '</div>';
 }
 
 window.logWater = function(n) {
