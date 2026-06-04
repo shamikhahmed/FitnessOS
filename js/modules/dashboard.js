@@ -229,6 +229,8 @@ reg('dashboard', function() {
       eCard('🦴','Joint Health','Injury risk monitor','injury-risk') +
       eCard('🧠','Training Intel','Age, volume & specialization','training-intel') +
       eCard('📖','Encyclopedia','Mobility · Stretching · Sports','encyclopedia') +
+      eCard('📡','Visualizations','Heatmaps & radar charts','visualizations') +
+      eCard('🔍','Search','Find anything instantly','search') +
       '</div></div>';
 
     return demoBanner + topbar + hero + dailyDecisionCard + todayWorkout + statsRow +
