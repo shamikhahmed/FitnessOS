@@ -231,9 +231,17 @@ reg('dashboard', function() {
       eCard('📖','Encyclopedia','Mobility · Stretching · Sports','encyclopedia') +
       eCard('📡','Visualizations','Heatmaps & radar charts','visualizations') +
       eCard('🔍','Search','Find anything instantly','search') +
+      eCard('🧬','Body Intel','Recovery · Joints · DNA','body-intelligence') +
       '</div></div>';
 
-    return demoBanner + topbar + hero + dailyDecisionCard + todayWorkout + statsRow +
+    const biCard = '<div onclick="go(\'body-intelligence\')" style="margin:0 16px 14px;background:linear-gradient(135deg,rgba(48,209,88,0.1),rgba(0,199,255,0.08));border:1px solid rgba(48,209,88,0.2);border-radius:16px;padding:14px 16px;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;gap:14px">' +
+      '<div style="font-size:32px">🧬</div>' +
+      '<div style="flex:1"><div style="font-size:13px;font-weight:700;color:#30d158">Body Intelligence</div>' +
+      '<div style="font-size:11px;color:var(--txt3);margin-top:2px">Recovery · Joint Health · Response Model</div></div>' +
+      '<div style="font-size:12px;color:var(--txt3)">›</div>' +
+      '</div>';
+
+    return demoBanner + topbar + hero + dailyDecisionCard + biCard + todayWorkout + statsRow +
       goalBar + quickActions + weeklyVolumeChart + muscleChips + insightCard + suppRow + lastWktCard + exploreGrid +
       '<div style="height:20px"></div>';
 
