@@ -66,6 +66,11 @@ reg('briefing', function() {
 
     injuryAlert +
 
+    (function() {
+      const lastWkt = (S.g('workouts')||[]).slice(-1)[0];
+      return lastWkt ? '<div style="margin:0 16px 14px;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;font-size:13px;color:var(--txt3)">Last session: <strong style="color:var(--txt)">'+esc(lastWkt.name||'Workout')+'</strong> · '+fmtDate(lastWkt.date)+' · '+Math.round(lastWkt.totalVol||0)+'kg volume</div>' : '';
+    })() +
+
     sh('Today') +
     '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;padding:0 16px 14px">' +
     '<div style="background:var(--bg3);border-radius:14px;padding:12px;text-align:center;border:1px solid var(--border)">' +
@@ -118,6 +123,7 @@ reg('coach', function() {
   const rec = ReadinessEngine.recommendation(score);
   const coachQuote = ReadinessEngine.coachQuote(score, personality);
 
+  const quote = CoachEngine.motivationalQuote();
   return '<div class="coach-hero">' +
     '<div class="coach-avatar">'+cm.emoji+'</div>' +
     '<div class="coach-name-text">'+esc(cm.name)+' — '+esc(cm.title)+'</div>' +
@@ -128,6 +134,8 @@ reg('coach', function() {
     _progressionAnalysisBlock() +
     _weeklySummaryBlock(weekReport) +
     _weeklyInsightsBlock(insights) +
+    (quote ? sh('Daily Inspiration') + '<div style="margin:0 16px 14px;padding:16px;background:var(--bg3);border:1px solid var(--border);border-radius:16px;border-left:3px solid var(--c1)">' +
+      '<div style="font-size:14px;color:var(--txt2);line-height:1.65;font-style:italic">'+esc(quote)+'</div></div>' : '') +
     _suppTimingBlock(userSupps, user) +
     _deloadBlock(user) +
     '<div style="height:20px"></div>';
@@ -236,7 +244,8 @@ function _splitSuggestionBlock(splitDay, cardioRec, score, user) {
     '<div class="warmup-title">Cardio Recommendation</div>' +
     '<div style="font-size:16px;font-weight:700;color:var(--c1);margin-bottom:4px">'+esc(cardioRec.machine)+'</div>' +
     '<div style="font-size:13px;color:var(--txt2);margin-bottom:4px">'+esc(cardioRec.duration)+'</div>' +
-    '<div style="font-size:13px;color:var(--txt3)">'+esc(cardioRec.details)+'</div>' +
+    '<div style="font-size:13px;color:var(--txt3);margin-bottom:12px">'+esc(cardioRec.details)+'</div>' +
+    '<button class="btn btn-secondary" onclick="showLogCardio()" style="width:100%">🏃 Log Cardio</button>' +
     '</div>' +
     '<div class="warmup-card"><div class="warmup-title">Cooldown Stretches</div>'+cooldownItems+'</div>' +
     '<div style="padding:0 16px 14px"><button class="btn btn-primary" onclick="go(\'workout\')">Start Workout 💪</button></div>';
@@ -395,3 +404,27 @@ function _deloadBlock(user) {
     '<div class="ai-msg-header"><span>⚠️</span><span class="ai-msg-label" style="color:#f5c842">Deload Recommended</span></div>' +
     '<div class="ai-msg-text">5+ weeks of progressive training detected. A deload week (50% volume, same frequency) will prevent overtraining and drive adaptation.</div></div>';
 }
+
+window.showLogCardio = function() {
+  const rec = CoachEngine.cardioRec(SplitEngine.getSplitDay());
+  modal('🏃 Log Cardio',
+    '<div class="field-wrap"><label class="field-label">Type</label>' +
+    '<input id="cardio-type" class="field" type="text" value="'+esc(rec.machine||'')+'"></div>' +
+    '<div class="field-row">' +
+    '<div class="field-wrap"><label class="field-label">Duration (min)</label><input id="cardio-dur" class="field" type="number" value="20"></div>' +
+    '<div class="field-wrap"><label class="field-label">Calories</label><input id="cardio-cal" class="field" type="number" placeholder="200"></div>' +
+    '</div>' +
+    '<div class="field-wrap"><label class="field-label">Notes</label><input id="cardio-notes" class="field" type="text" placeholder="e.g. Zone 2, felt good"></div>',
+    '<button class="btn btn-primary" onclick="saveCardioLog()">Save</button>'
+  );
+};
+
+window.saveCardioLog = function() {
+  const type = document.getElementById('cardio-type')?.value || 'Cardio';
+  const dur = parseInt(document.getElementById('cardio-dur')?.value) || 0;
+  const cal = parseInt(document.getElementById('cardio-cal')?.value) || 0;
+  const notes = document.getElementById('cardio-notes')?.value || '';
+  S.push('cardioLogs', { type, duration: dur, calories: cal, notes, date: today(), time: isoNow() });
+  closeModal();
+  toast('Cardio logged! 🏃', 'ok');
+};

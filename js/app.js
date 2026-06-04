@@ -239,8 +239,11 @@ const ReadinessEngine = {
       if (recentTraining >= 3) score -= 15;
       else if (recentTraining >= 2) score -= 5;
       const streak = StreakEngine.get();
-      if (streak >= 7) score -= 15;
-      else if (streak >= 5) score -= 8;
+      const r_check = S.g('recovery') || {};
+      const recentSoreness = r_check.soreness || 3;
+      if (streak >= 7 && recentSoreness >= 5) score -= 15;
+      else if (streak >= 7) score -= 8;
+      else if (streak >= 5 && recentSoreness >= 6) score -= 8;
       const injuries = S.g('user.injuries') || [];
       const activeInjuries = injuries.filter(function(i) {
         return typeof i === 'string' ? true : !i.recovered;
@@ -579,7 +582,6 @@ const WeightEngine = {
     const ws = workouts || S.g('workouts') || [];
     if (ws.length < 5) return false;
     const last5 = ws.slice(-5);
-    const monday = new Date(); monday.setDate(monday.getDate() - monday.getDay() + 1);
     const weeksTraining = Math.floor(daysAgo(ws[0].date) / 7);
     return weeksTraining >= 5 && last5.every(w => (w.totalVol||0) < (ws[0].totalVol||0));
   }
@@ -1012,6 +1014,7 @@ const AchEngine = {
         if (!earned.includes(a.id) && checks[a.id]) {
           earned.push(a.id);
           setTimeout(() => toast('🎖️ Achievement: '+a.n+'!', 'achieve', 5000), 800);
+          setTimeout(() => haptic([50,30,50,30,100]), 800);
         }
       });
       S.set('achievements', earned);

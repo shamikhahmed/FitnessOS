@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE = 'fos-v6';
+const CACHE = 'fos-v7';
 const ASSETS = [
   './',
   './index.html',

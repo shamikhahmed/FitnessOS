@@ -14,6 +14,7 @@ reg('progress', function() {
     _heroStats(ws, prs, streak, totalVol) +
     _strengthLineChart(ws) +
     _workoutCalendar(ws) +
+    _workoutHistory(ws) +
     _volumeChart(ws) +
     _prBoard(prs) +
     _strengthCharts(ws, prs) +
@@ -208,6 +209,35 @@ function _workoutCalendar(ws) {
     '</div>';
 }
 
+function _workoutHistory(ws) {
+  if (!ws.length) return '';
+  const recent = ws.slice().reverse().slice(0, 20);
+  return sh('Workout History') +
+    '<div style="padding:0 16px">' +
+    recent.map(function(w) {
+      const exNames = (w.exercises||[]).slice(0,3).map(function(e){return e.name;}).join(', ');
+      const more = (w.exercises||[]).length > 3 ? ' +'+((w.exercises||[]).length-3)+' more' : '';
+      const vol = w.totalVol ? Math.round(w.totalVol)+'kg' : '';
+      const dur = w.duration ? fmtMins(w.duration) : '';
+      const prs = (w.exercises||[]).reduce(function(a,ex) {
+        const prSets = (ex.sets||[]).filter(function(s){return s.isPR;});
+        return a + prSets.length;
+      }, 0);
+      return '<div onclick="showDayWorkouts(\''+w.date.slice(0,10)+'\')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;touch-action:manipulation">' +
+        '<div style="flex:1">' +
+        '<div style="font-size:14px;font-weight:700;color:var(--txt)">'+esc(w.name||'Workout')+'</div>' +
+        '<div style="font-size:12px;color:var(--txt3);margin-top:2px">'+esc(exNames+more)+'</div>' +
+        '</div>' +
+        '<div style="text-align:right;flex-shrink:0">' +
+        '<div style="font-size:12px;color:var(--txt3)">'+esc(fmtDate(w.date))+'</div>' +
+        '<div style="font-size:11px;color:var(--txt3);margin-top:2px">'+[vol,dur].filter(Boolean).join(' · ')+(prs?' · 🏆'+prs+' PR':'')+'</div>' +
+        '</div>' +
+        '<div style="color:var(--txt3);font-size:16px;margin-left:8px">›</div>' +
+        '</div>';
+    }).join('') +
+    '</div>';
+}
+
 function _volumeChart(ws) {
   if (!ws.length) return '';
   const weeks = [];
@@ -338,14 +368,24 @@ window.changeExerciseChart = function(exName) {
 };
 
 window.showDayWorkouts = function(dateStr) {
-  const ws = (S.g('workouts')||[]).filter(w=>w.date.slice(0,10)===dateStr);
+  const ws = (S.g('workouts')||[]).filter(function(w){return w.date.slice(0,10)===dateStr;});
   if (!ws.length) { toast('No workout on '+fmtDate(dateStr),'info'); return; }
-  const body = ws.map(w =>
-    '<div style="padding:12px 0;border-bottom:1px solid var(--border)">' +
-    '<div style="font-size:15px;font-weight:700;color:var(--txt)">'+esc(w.name||'Workout')+'</div>' +
-    '<div style="font-size:13px;color:var(--txt3)">'+fmtMins(w.duration||0)+' · '+(w.totalVol||0)+'kg</div>' +
-    '<div style="font-size:13px;color:var(--txt2);margin-top:4px">'+esc((w.exercises||[]).map(e=>e.name).join(', '))+'</div>' +
-    '</div>'
-  ).join('');
+  const body = ws.map(function(w) {
+    return '<div style="padding:12px 0;border-bottom:1px solid var(--border)">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
+      '<div style="font-size:15px;font-weight:700;color:var(--txt)">'+esc(w.name||'Workout')+'</div>' +
+      '<div style="font-size:12px;color:var(--txt3)">'+fmtMins(w.duration||0)+' · '+Math.round(w.totalVol||0)+'kg</div>' +
+      '</div>' +
+      (w.exercises||[]).map(function(ex) {
+        const doneSets = (ex.sets||[]).filter(function(s){return s.done;});
+        if (!doneSets.length) return '';
+        const bestSet = doneSets.slice().sort(function(a,b){return ProgEngine.epley(b.weight||0,b.reps||1)-ProgEngine.epley(a.weight||0,a.reps||1);})[0];
+        return '<div style="padding:6px 0;display:flex;justify-content:space-between;align-items:center">' +
+          '<div style="font-size:13px;color:var(--txt2)">'+esc(ex.name)+'</div>' +
+          '<div style="font-size:12px;color:var(--txt3)">'+doneSets.length+' sets · Best: '+(bestSet.weight||0)+'kg×'+(bestSet.reps||0)+(bestSet.isPR?'  🏆':'')+'</div>' +
+          '</div>';
+      }).join('') +
+      '</div>';
+  }).join('');
   modal(fmtDate(dateStr), body, '<button class="btn btn-ghost" onclick="closeModal()" style="margin-top:12px">Close</button>');
 };

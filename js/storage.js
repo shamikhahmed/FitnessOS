@@ -153,7 +153,36 @@ const S = {
         { id:'creatine', name:'Creatine Monohydrate', timing:'anytime', dose:'5g', active:true },
         { id:'whey', name:'Whey Protein', timing:'post', dose:'1 scoop', active:true }
       ],
-      achievements: ['first_workout','streak_3','workouts_10','pr_first']
+      achievements: ['first_workout','streak_3','workouts_10','pr_first'],
+      recoveryHistory: (function() {
+        var rh = [];
+        for (var i=6; i>=0; i--) {
+          var d = new Date(); d.setDate(d.getDate()-i);
+          rh.push({ sleep:6.5+Math.random()*2, soreness:Math.floor(Math.random()*5)+1, stress:Math.floor(Math.random()*4)+2, energy:Math.floor(Math.random()*4)+5, hydration:1.5+Math.random()*2, date:d.toISOString().slice(0,10), time:d.toISOString() });
+        }
+        return rh;
+      })(),
+      bodyStats: (function() {
+        var bs = []; var sw = 85;
+        for (var i=29; i>=0; i--) {
+          if (i%3===0) { var d2=new Date(); d2.setDate(d2.getDate()-i); sw=Math.round((sw-0.1+(Math.random()*0.4-0.2))*10)/10; bs.push({weight:sw,date:d2.toISOString().slice(0,10),time:d2.toISOString()}); }
+        }
+        return bs;
+      })(),
+      mealLogs: (function() {
+        var ml = [];
+        for (var i=4; i>=0; i--) {
+          var d3=new Date(); d3.setDate(d3.getDate()-i); var ds=d3.toISOString().slice(0,10);
+          ml.push({name:'Oats & Eggs',calories:450,protein:35,carbs:45,fat:12,date:ds,time:d3.toISOString()});
+          ml.push({name:'Chicken Rice',calories:600,protein:50,carbs:60,fat:10,date:ds,time:d3.toISOString()});
+          ml.push({name:'Protein Shake',calories:200,protein:40,carbs:8,fat:3,date:ds,time:d3.toISOString()});
+        }
+        return ml;
+      })(),
+      supplementLogs: [
+        { suppId:'creatine', date:new Date().toISOString().slice(0,10), time:new Date().toISOString() },
+        { suppId:'whey', date:new Date().toISOString().slice(0,10), time:new Date().toISOString() }
+      ]
     };
     localStorage.setItem(this._key + '_demo', JSON.stringify(demoData));
     meta.activeId = 'demo';

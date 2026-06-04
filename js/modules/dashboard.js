@@ -168,6 +168,25 @@ reg('dashboard', function() {
       '<div style="margin-top:10px;font-size:12px;color:var(--txt3)">Total: <span style="color:var(--txt);font-weight:700">'+Math.round(vols.reduce(function(a,v){return a+v;},0))+'kg</span> this week</div>' +
       '</div>';
 
+    /* ── GOAL PROGRESS BAR ── */
+    const goalBar = (function() {
+      const w = user.weight, gw = user.goalWeight;
+      if (!w || !gw || Math.abs(w-gw) < 0.5) return '';
+      const startW = Math.max(w, gw) + 5;
+      const pct = Math.min(100, Math.max(0, Math.round(((startW-w)/(startW-gw))*100)));
+      const losing = gw < w;
+      return '<div style="margin:0 16px 14px;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:16px">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
+        '<div style="font-size:11px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:0.08em">Goal Progress</div>' +
+        '<div style="font-size:12px;color:var(--txt2)">'+w+'kg → '+gw+'kg</div>' +
+        '</div>' +
+        '<div style="height:6px;background:var(--bg4);border-radius:3px;overflow:hidden">' +
+        '<div style="width:'+pct+'%;height:100%;background:var(--grad);border-radius:3px;transition:width 0.8s ease"></div>' +
+        '</div>' +
+        '<div style="font-size:11px;color:var(--txt3);margin-top:6px">'+Math.abs(Math.round((w-gw)*10)/10)+'kg to go · '+(losing?'Fat loss':'Muscle gain')+' mode</div>' +
+        '</div>';
+    })();
+
     /* ── QUICK ACTIONS ── */
     const quickActions = '<div style="display:flex;gap:8px;padding:0 16px;margin-bottom:14px">' +
       '<button onclick="logWater&&logWater((S.g(\'water\')||[]).filter(function(w){return w.date===today();}).length+1);go(\'dashboard\')" style="flex:1;padding:12px 8px;border-radius:14px;background:var(--bg3);border:1px solid var(--border);color:var(--txt);font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation;text-align:center">💧<br><span style="font-size:10px;color:var(--txt3);font-weight:500">+Water</span></button>' +
@@ -195,7 +214,7 @@ reg('dashboard', function() {
       '</div></div>';
 
     return demoBanner + topbar + hero + todayWorkout + statsRow +
-      quickActions + weeklyVolumeChart + muscleChips + insightCard + suppRow + lastWktCard + exploreGrid +
+      goalBar + quickActions + weeklyVolumeChart + muscleChips + insightCard + suppRow + lastWktCard + exploreGrid +
       '<div style="height:20px"></div>';
 
   } catch(e) {
