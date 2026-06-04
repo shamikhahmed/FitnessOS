@@ -20,6 +20,7 @@ reg('progress', function() {
     _strengthCharts(ws, prs) +
     _bodyStatsChart(bodyStats, S.g('user')) +
     _achievementWall(earned) +
+    '<div style="padding:0 16px 16px"><button class="btn btn-secondary" onclick="go(\'physique\')" style="width:100%">📊 Physique Analysis & Growth Simulator →</button></div>' +
     '<div style="height:20px"></div>';
 });
 
