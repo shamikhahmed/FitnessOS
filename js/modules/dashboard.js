@@ -36,7 +36,7 @@ reg('dashboard', function() {
       '<div style="font-size:11px;color:var(--txt3)">' + esc(todayStr) + '</div></div>' +
       '</div>' +
       '<div class="topbar-right">' +
-      '<button class="topbar-icon press" onclick="go(\'briefing\')" aria-label="Notifications">🔔</button>' +
+      '<button class="topbar-icon press" onclick="go(\'hub\')" aria-label="Explore">🔍</button>' +
       '<div onclick="go(\'profiles\')" style="width:32px;height:32px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;cursor:pointer;touch-action:manipulation;flex-shrink:0">' + avatarLetter + '</div>' +
       '</div></div>';
 

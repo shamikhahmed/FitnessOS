@@ -239,9 +239,9 @@ function _tabAppearance(u) {
     _sectionTitle('Navigation Tabs') +
     '<div style="font-size:13px;color:var(--txt2);margin-bottom:10px;line-height:1.5">Tap to toggle which tabs appear in the bottom nav (minimum 3).</div>' +
     (function() {
-      const allTabs = ['dashboard','workout','bodymap','coach','progress','rehab','anatomy','calisthenics','settings'];
-      const tabIcons = {dashboard:'🏠',workout:'💪',bodymap:'🫀',coach:'🤖',progress:'📈',rehab:'🩹',anatomy:'🫀',calisthenics:'🤸',settings:'⚙️'};
-      const cur = S.g('nav.tabs') || ['dashboard','workout','bodymap','coach','settings'];
+      const allTabs = ['dashboard','workout','hub','recovery','settings','bodymap','coach','progress','rehab','anatomy','calisthenics'];
+      const tabIcons = {dashboard:'🏠',workout:'💪',hub:'🔍',recovery:'😴',settings:'⚙️',bodymap:'🫀',coach:'🤖',progress:'📈',rehab:'🩹',anatomy:'🫀',calisthenics:'🤸'};
+      const cur = S.g('nav.tabs') || ['dashboard','workout','hub','recovery','settings'];
       return allTabs.map(function(t) {
         const active = cur.includes(t);
         return '<div onclick="toggleNavTab(\''+t+'\')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;touch-action:manipulation">' +
@@ -437,7 +437,7 @@ window.confirmClearData = function() {
 };
 
 window.toggleNavTab = function(tab) {
-  const cur = S.g('nav.tabs') || ['dashboard','workout','bodymap','coach','settings'];
+  const cur = S.g('nav.tabs') || ['dashboard','workout','hub','recovery','settings'];
   const idx = cur.indexOf(tab);
   if (idx >= 0) {
     if (cur.length <= 3) { toast('Minimum 3 tabs required', 'warn'); return; }

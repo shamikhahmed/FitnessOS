@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE = 'fos-v9';
+const CACHE = 'fos-v10';
 const ASSETS = [
   './',
   './index.html',
@@ -31,6 +31,7 @@ const ASSETS = [
   './js/modules/encyclopedia.js',
   './js/modules/advanced-search.js',
   './js/modules/visualizations.js',
+  './js/modules/hub.js',
   './manifest.json',
   './icon.svg'
 ];
