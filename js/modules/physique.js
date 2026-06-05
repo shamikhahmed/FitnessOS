@@ -338,7 +338,7 @@ reg('physique', function() {
 
   const noDataMsg = !m ? '<div style="margin:0 16px 14px;background:rgba(255,159,10,0.08);border:1px solid rgba(255,159,10,0.2);border-radius:14px;padding:14px;font-size:13px;color:var(--txt2);line-height:1.6">📊 Add body measurements in <button onclick="go(\'settings\',{tab:\'measurements\'})" style="background:none;border:none;color:var(--c1);font-weight:700;cursor:pointer;font-size:13px;padding:0">Settings → Measurements</button> to unlock physique scoring.</div>' : '';
 
-  return '<div class="topbar"><div class="topbar-title">Physique Analysis</div></div>' +
+  return '<div class="topbar"><button onclick="history.length>1?history.back():go(\'hub\')" style="background:none;border:none;color:var(--txt3);cursor:pointer;font-size:14px;padding:0 16px;touch-action:manipulation" aria-label="Back">←</button><div class="topbar-title">Physique Analysis</div></div>' +
 
     noDataMsg +
 

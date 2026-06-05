@@ -587,7 +587,7 @@ reg('quests', function() {
 
   AchievementEngine2.checkAll();
 
-  return '<div class="topbar"><div class="topbar-title">⚔️ Quests & Missions</div></div>' +
+  return '<div class="topbar"><button onclick="history.length>1?history.back():go(\'hub\')" style="background:none;border:none;color:var(--txt3);cursor:pointer;font-size:14px;padding:0 16px;touch-action:manipulation" aria-label="Back">←</button><div class="topbar-title">⚔️ Quests & Missions</div></div>' +
 
     '<div style="margin:0 16px 14px;background:linear-gradient(135deg,rgba(245,200,66,0.1),rgba(175,82,222,0.08));border:1px solid rgba(245,200,66,0.2);border-radius:16px;padding:14px">' +
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">' +
@@ -740,7 +740,7 @@ reg('physique-timeline', function() {
   const points = PhysiqueTimeline.getPoints();
   const changes = PhysiqueTimeline.changes();
 
-  return '<div class="topbar"><div class="topbar-title">📸 Physique Timeline</div></div>' +
+  return '<div class="topbar"><button onclick="history.length>1?history.back():go(\'hub\')" style="background:none;border:none;color:var(--txt3);cursor:pointer;font-size:14px;padding:0 16px;touch-action:manipulation" aria-label="Back">←</button><div class="topbar-title">📸 Physique Timeline</div></div>' +
 
     (points.length === 0 ?
       '<div style="padding:60px 20px;text-align:center"><div style="font-size:56px;margin-bottom:14px">📸</div>' +

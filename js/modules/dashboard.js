@@ -43,7 +43,7 @@ reg('dashboard', function() {
     /* ── HERO CARD ── */
     const dd = typeof DailyDecision !== 'undefined' ? DailyDecision.decide() : null;
     const debtVal = (function() {
-      try { return typeof RecoveryDebtEngine !== 'undefined' ? RecoveryDebtEngine.getDebt() : 0; } catch(e) { return 0; }
+      try { return typeof RecoveryDebtEngine !== 'undefined' ? RecoveryDebtEngine.calculate() : 0; } catch(e) { return 0; }
     })();
     const heroGrad = (function() {
       if (!dd) return 'linear-gradient(135deg,rgba(123,95,255,0.15),rgba(0,213,255,0.08))';
@@ -144,7 +144,7 @@ reg('dashboard', function() {
 
     /* ── MUSCLE RECOVERY MINI ── */
     const trainedMuscles = muscles
-      .filter(function(m) { return m.hoursSince !== null && m.hoursSince !== undefined; })
+      .filter(function(m) { return m.hrs !== null && m.hrs !== undefined && m.pct < 100; })
       .sort(function(a, b) { return a.pct - b.pct; })
       .slice(0, 5);
     const muscleRecoveryMini = trainedMuscles.length ?

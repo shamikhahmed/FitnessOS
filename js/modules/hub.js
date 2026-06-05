@@ -16,7 +16,7 @@ reg('hub', function() {
   }
 
   function hubRow(icon, title, sub, screen, badge) {
-    return '<div onclick="go(\'' + screen + '\')" style="display:flex;align-items:center;gap:14px;padding:13px 16px;cursor:pointer;touch-action:manipulation;border-bottom:1px solid var(--border)">' +
+    return '<div role="button" tabindex="0" onclick="go(\'' + screen + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \')go(\'' + screen + '\')" aria-label="' + title + '" style="display:flex;align-items:center;gap:14px;padding:13px 16px;cursor:pointer;touch-action:manipulation;border-bottom:1px solid var(--border)">' +
       '<div style="width:40px;height:40px;border-radius:12px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">' + icon + '</div>' +
       '<div style="flex:1;min-width:0">' +
       '<div style="font-size:14px;font-weight:700;color:var(--txt)">' + esc(title) + '</div>' +

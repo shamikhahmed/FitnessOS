@@ -370,7 +370,7 @@ reg('training-intel', function() {
     return f ? Object.assign({ name: ex }, f) : null;
   }).filter(Boolean);
 
-  return '<div class="topbar"><div class="topbar-title">Training Intelligence</div></div>' +
+  return '<div class="topbar"><button onclick="history.length>1?history.back():go(\'hub\')" style="background:none;border:none;color:var(--txt3);cursor:pointer;font-size:14px;padding:0 16px;touch-action:manipulation" aria-label="Back">←</button><div class="topbar-title">Training Intelligence</div></div>' +
 
     '<div style="padding:20px 16px 14px">' +
     '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:18px">' +
