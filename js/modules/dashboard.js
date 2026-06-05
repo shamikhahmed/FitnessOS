@@ -235,6 +235,9 @@ reg('dashboard', function() {
       eCard('🎯','My Archetype','Physique goals & proportions','physique-archetype') +
       eCard('🔄','Style & Rotation','Training style + exercise swaps','training-style') +
       eCard('🤖','AI Coach','Chat with your fitness coach','assistant') +
+      eCard('⚔️','Quests','Missions & rewards','quests') +
+      eCard('🎓','Academy','Learn & earn XP','academy') +
+      eCard('📸','Timeline','Physique transformation','physique-timeline') +
       '</div></div>';
 
     const biCard = '<div onclick="go(\'body-intelligence\')" style="margin:0 16px 14px;background:linear-gradient(135deg,rgba(48,209,88,0.1),rgba(0,199,255,0.08));border:1px solid rgba(48,209,88,0.2);border-radius:16px;padding:14px 16px;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;gap:14px">' +
@@ -244,7 +247,26 @@ reg('dashboard', function() {
       '<div style="font-size:12px;color:var(--txt3)">›</div>' +
       '</div>';
 
-    return demoBanner + topbar + hero + dailyDecisionCard + biCard + todayWorkout + statsRow +
+    if (typeof AchievementEngine2 !== 'undefined') { try { AchievementEngine2.checkAll(); } catch(e) {} }
+
+    const questCard = (function() {
+      try {
+        if (typeof QuestEngine === 'undefined') return '';
+        QuestEngine.updateProgress();
+        const active = QuestEngine.getActive();
+        if (!active.length) return '';
+        const q = active[0];
+        const pct = QuestEngine.questProgress(q);
+        return '<div onclick="go(\'quests\')" style="margin:0 16px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:16px;padding:14px 16px;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;gap:12px">' +
+          '<div style="font-size:28px">' + q.icon + '</div>' +
+          '<div style="flex:1"><div style="font-size:13px;font-weight:700;color:var(--txt)">' + esc(q.title) + '</div>' +
+          '<div style="width:100%;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;margin-top:6px"><div style="width:' + pct + '%;height:4px;border-radius:2px;background:var(--c1)"></div></div>' +
+          '<div style="font-size:10px;color:var(--txt3);margin-top:3px">' + pct + '% complete</div>' +
+          '</div><div style="font-size:12px;color:var(--txt3)">›</div></div>';
+      } catch(e) { return ''; }
+    })();
+
+    return demoBanner + topbar + hero + dailyDecisionCard + biCard + questCard + todayWorkout + statsRow +
       goalBar + quickActions + weeklyVolumeChart + muscleChips + insightCard + suppRow + lastWktCard + exploreGrid +
       '<div style="height:20px"></div>';
 
