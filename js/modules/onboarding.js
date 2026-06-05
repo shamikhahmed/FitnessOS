@@ -136,7 +136,7 @@ reg('intro', function() {
 
 let _obData = {};
 let _obStep = 1;
-const OB_TOTAL = 12;
+const OB_TOTAL = 16;
 
 const SPLIT_WEEKLY = { ppl:6, ul:4, fb:3, bro:5, str:4, home:4, custom:4 };
 
@@ -196,6 +196,10 @@ function _finishOnboarding() {
     gymBrands: _obData.gymBrands || [],
     gymDays: _obData.gymDays || [],
     injuries: _obData.injuries || [],
+    trainingPersonality: _obData.trainingPersonality || 'balanced',
+    physiqueArchetype: _obData.physiqueArchetype || 'classic',
+    trainingEnvironments: _obData.trainingEnvironments || ['gym'],
+    sessionLength: parseInt(_obData.sessionLength) || 60,
     coachPersonality: _obData.personality || 'maya',
     joinDate: today()
   });
@@ -223,6 +227,15 @@ function _footer(step) {
     '</button>' +
     (step > 1 ? '<button class="btn btn-ghost" onclick="obBack()">← Back</button>' : '') +
     '</div>';
+}
+
+function _gridCard(field, val, icon, title, sub) {
+  const isOn = _obData[field] === val;
+  return '<button class="ob-opt'+(isOn?' sel':'')+'" data-field="'+field+'" data-val="'+val+'" onclick="obSelect(\''+field+'\',\''+val+'\')" style="flex-direction:column;align-items:center;text-align:center;padding:18px 10px;gap:8px;min-height:100px">' +
+    '<div style="font-size:28px;line-height:1">'+icon+'</div>' +
+    '<div class="ob-opt-title" style="font-size:13px;font-weight:700">'+esc(title)+'</div>' +
+    '<div class="ob-opt-sub" style="font-size:11px;line-height:1.3">'+esc(sub)+'</div>' +
+    '</button>';
 }
 
 function _opt(field, val, icon, title, sub, multi) {
@@ -406,25 +419,10 @@ const OB_STEPS = {
       '</div>' + _footer(9) + '</div>';
   },
   10() {
-    const coaches = [
-      {v:'alex',e:'🔥',n:'Alex — Drill Sergeant',d:'"No excuses. Maximum effort. Every rep or nothing."'},
-      {v:'maya',e:'🧪',n:'Maya — Sports Scientist',d:'"Data-driven precision training. Optimise every variable."'},
-      {v:'sam',e:'⚡',n:'Sam — The Motivator',d:'"You\'ve got this! Every single rep counts. Let\'s go!"'},
-      {v:'zen',e:'🧘',n:'Zen — Mindful Coach',d:'"Listen to your body. Train smart, recover harder."'},
-      {v:'rex',e:'💪',n:'Rex — The Powerlifter',d:'"Strength above all. Add weight, repeat forever."'}
-    ];
-    return '<div class="ob-screen">' + _dots(10) +
-      '<div class="ob-title">Pick your coach</div>' +
-      '<div class="ob-sub">Their personality shapes all coaching messages and motivation.</div>' +
-      '<div class="ob-body">' +
-      coaches.map(c => _opt('personality', c.v, c.e, c.n, c.d)) .join('') +
-      '</div>' + _footer(10) + '</div>';
-  },
-  11() {
     const sel = _obData.supplements || [];
     const timingOptions = ['pre','post','morning','night','anytime','with_meal'];
     const timingLabels = { pre:'Pre-Workout', post:'Post-Workout', morning:'Morning', night:'Before Bed', anytime:'Any Time', with_meal:'With Meal' };
-    return '<div class="ob-screen">' + _dots(11) +
+    return '<div class="ob-screen">' + _dots(10) +
       '<div class="ob-title">Supplement stack</div>' +
       '<div class="ob-sub">Select what you take. We\'ll build a timing schedule.</div>' +
       '<div class="ob-body">' +
@@ -445,17 +443,89 @@ const OB_STEPS = {
             '</div></div>' : '') +
           '</div>';
       }).join('') +
-      '</div>' + _footer(11) + '</div>';
+      '</div>' + _footer(10) + '</div>';
+  },
+  11() {
+    return '<div class="ob-screen">' + _dots(11) +
+      '<div class="ob-title">How do you like to train?</div>' +
+      '<div class="ob-sub">Your AI coach will tailor every workout to your style.</div>' +
+      '<div class="ob-body"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
+      _gridCard('trainingPersonality','strength','🏋️','Strength','Heavy lifting, low reps, big compounds') +
+      _gridCard('trainingPersonality','hypertrophy','💪','Hypertrophy','Volume training, muscle building') +
+      _gridCard('trainingPersonality','athletic','⚡','Athletic','Performance, explosive, functional') +
+      _gridCard('trainingPersonality','fat_loss','🔥','Fat Loss','High intensity, conditioning focus') +
+      _gridCard('trainingPersonality','balanced','⚖️','Balanced','Mix of everything') +
+      _gridCard('trainingPersonality','mindful','🧘','Mindful','Controlled, technique-focused') +
+      '</div></div>' + _footer(11) + '</div>';
   },
   12() {
+    return '<div class="ob-screen">' + _dots(12) +
+      '<div class="ob-title">What\'s your physique goal?</div>' +
+      '<div class="ob-sub">Your program will be sculpted around this archetype.</div>' +
+      '<div class="ob-body"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
+      _gridCard('physiqueArchetype','v_taper','🔱','V-Taper','Wide shoulders, narrow waist') +
+      _gridCard('physiqueArchetype','classic','🏆','Classic','Balanced and proportional') +
+      _gridCard('physiqueArchetype','physique','🌊','Physique','Upper body dominant, lean') +
+      _gridCard('physiqueArchetype','athletic','⚡','Athletic','Functional, capable body') +
+      _gridCard('physiqueArchetype','mass','🏋️','Mass','Maximum muscle size') +
+      _gridCard('physiqueArchetype','lean','🎯','Lean','Low body fat, visible abs') +
+      '</div></div>' + _footer(12) + '</div>';
+  },
+  13() {
+    return '<div class="ob-screen">' + _dots(13) +
+      '<div class="ob-title">Where do you train?</div>' +
+      '<div class="ob-sub">Select all environments. We\'ll adapt plans for each.</div>' +
+      '<div class="ob-body">' +
+      _opt('trainingEnvironments','gym','🏢','Commercial Gym','Full equipment access', true) +
+      _opt('trainingEnvironments','home','🏠','Home Gym','Limited equipment', true) +
+      _opt('trainingEnvironments','travel','🌍','Travel','Minimal equipment, hotels', true) +
+      _opt('trainingEnvironments','outdoor','🌲','Outdoors','Parks, bodyweight', true) +
+      '</div>' + _footer(13) + '</div>';
+  },
+  14() {
+    const durations = [
+      {v:'20',l:'⚡ 20 min'},{v:'30',l:'🏃 30 min'},{v:'45',l:'💪 45 min'},
+      {v:'60',l:'🔥 60 min'},{v:'90',l:'🏆 90 min+'}
+    ];
+    return '<div class="ob-screen">' + _dots(14) +
+      '<div class="ob-title">How long are your sessions?</div>' +
+      '<div class="ob-sub">We\'ll compress or expand your workouts to fit.</div>' +
+      '<div class="ob-body">' +
+      '<div style="display:flex;flex-wrap:wrap;gap:10px">' +
+      durations.map(function(o) {
+        const on = _obData.sessionLength === o.v;
+        return '<button class="ob-opt'+(on?' sel':'')+'" data-field="sessionLength" data-val="'+o.v+'" onclick="obSelect(\'sessionLength\',\''+o.v+'\')" style="flex:1;min-width:120px;justify-content:center;padding:16px 8px">' +
+          '<div class="ob-opt-title" style="text-align:center">'+o.l+'</div></button>';
+      }).join('') +
+      '</div></div>' + _footer(14) + '</div>';
+  },
+  15() {
+    const coaches = [
+      {v:'maya',e:'🧪',n:'Maya',role:'Sports Scientist',d:'Evidence-based, analytical'},
+      {v:'alex',e:'🔥',n:'Alex',role:'Drill Sergeant',d:'Intense, no excuses'},
+      {v:'sam',e:'⚡',n:'Sam',role:'Motivator',d:'Energetic, encouraging'},
+      {v:'zen',e:'🧘',n:'Zen',role:'Mindful Coach',d:'Calm, technique-focused'},
+      {v:'rex',e:'💪',n:'Rex',role:'Powerlifter',d:'Strength-focused, raw'}
+    ];
+    return '<div class="ob-screen">' + _dots(15) +
+      '<div class="ob-title">Choose your coach</div>' +
+      '<div class="ob-sub">Their personality shapes all coaching messages and motivation.</div>' +
+      '<div class="ob-body">' +
+      coaches.map(function(c) { return _opt('personality', c.v, c.e, c.n + ' · ' + c.role, c.d); }).join('') +
+      '</div>' + _footer(15) + '</div>';
+  },
+  16() {
     const u = _obData;
     const name = (u.name || 'Athlete').trim();
     const coaches = { alex:'Alex', maya:'Maya', sam:'Sam', zen:'Zen', rex:'Rex' };
     const splits = { ppl:'Push Pull Legs', ul:'Upper Lower', fb:'Full Body', bro:'Bro Split', str:'Strength', home:'Home Warrior' };
     const goals = { hypertrophy:'Build Muscle', fat_loss:'Lose Fat', recomp:'Recomposition', athletic:'Athletic', strength:'Strength', maintenance:'Maintain' };
+    const personalities = { strength:'Strength', hypertrophy:'Hypertrophy', athletic:'Athletic', fat_loss:'Fat Loss', balanced:'Balanced', mindful:'Mindful' };
+    const physiques = { v_taper:'V-Taper', classic:'Classic', physique:'Physique', athletic:'Athletic', mass:'Mass', lean:'Lean' };
     const cName = coaches[u.personality||'maya'] || 'Maya';
     const cEmoji = { alex:'🔥', maya:'🧪', sam:'⚡', zen:'🧘', rex:'💪' }[u.personality||'maya'] || '🧪';
-    return '<div class="ob-screen">' + _dots(12) +
+    const sessionLen = u.sessionLength ? u.sessionLength + (u.sessionLength === '90' ? '+' : '') + ' min' : '60 min';
+    return '<div class="ob-screen">' + _dots(16) +
       '<div style="text-align:center;padding:24px 0 20px">' +
       '<div style="font-size:64px;margin-bottom:16px">'+cEmoji+'</div>' +
       '<div style="font-size:28px;font-weight:900;color:#fff;letter-spacing:-1px">Ready, '+esc(name)+'!</div>' +
@@ -464,7 +534,9 @@ const OB_STEPS = {
       '<div class="card card-solid" style="margin:0 0 14px">' +
       _summaryRow('🎯','Goal', goals[u.goal||'hypertrophy'] || u.goal || '—') +
       _summaryRow('📅','Split', splits[u.split||'ppl'] || u.split || '—') +
-      _summaryRow('🏋️','Experience', u.exp ? u.exp.charAt(0).toUpperCase()+u.exp.slice(1) : '—') +
+      _summaryRow('🏋️','Style', personalities[u.trainingPersonality||'balanced'] || '—') +
+      _summaryRow('🔱','Physique', physiques[u.physiqueArchetype||'classic'] || '—') +
+      _summaryRow('⏱️','Sessions', sessionLen) +
       _summaryRow('⚡','Coach', cName) +
       _summaryRow('💊','Supplements', (u.supplements||[]).length + ' selected') +
       (u.injuries && u.injuries.length && !u.injuries.includes('none') ? _summaryRow('⚠️','Injuries', u.injuries.length + ' flagged') : '') +
@@ -473,7 +545,7 @@ const OB_STEPS = {
       '<div class="ai-msg"><div class="ai-msg-header"><span>'+cEmoji+'</span><span class="ai-msg-label">'+cName+' says</span></div>' +
       '<div class="ai-msg-text">Your program is personalised and ready. Log every workout, track your recovery, and trust the process. FitnessOS will adapt as you grow.</div></div>' +
       '</div>' +
-      _footer(12) + '</div>';
+      _footer(16) + '</div>';
   }
 };
 

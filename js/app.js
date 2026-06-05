@@ -79,6 +79,18 @@ function haptic(p) { if (navigator.vibrate) navigator.vibrate(p||25); }
 window.haptic = haptic;
 
 /* ══════════════════════════════════════════════════════
+   PERFORMANCE CACHE
+══════════════════════════════════════════════════════ */
+window._cache = {};
+window.cached = function(key, fn, ttlMs) {
+  const now = Date.now();
+  const ttl = ttlMs || 30000;
+  if (_cache[key] && (now - _cache[key].t) < ttl) return _cache[key].v;
+  try { _cache[key] = { v: fn(), t: now }; } catch(e) { return null; }
+  return _cache[key].v;
+};
+
+/* ══════════════════════════════════════════════════════
    UI BUILDERS
 ══════════════════════════════════════════════════════ */
 function sh(title, action, onclick) {
