@@ -232,6 +232,9 @@ reg('dashboard', function() {
       eCard('📡','Visualizations','Heatmaps & radar charts','visualizations') +
       eCard('🔍','Search','Find anything instantly','search') +
       eCard('🧬','Body Intel','Recovery · Joints · DNA','body-intelligence') +
+      eCard('🎯','My Archetype','Physique goals & proportions','physique-archetype') +
+      eCard('🔄','Style & Rotation','Training style + exercise swaps','training-style') +
+      eCard('🤖','AI Coach','Chat with your fitness coach','assistant') +
       '</div></div>';
 
     const biCard = '<div onclick="go(\'body-intelligence\')" style="margin:0 16px 14px;background:linear-gradient(135deg,rgba(48,209,88,0.1),rgba(0,199,255,0.08));border:1px solid rgba(48,209,88,0.2);border-radius:16px;padding:14px 16px;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;gap:14px">' +
