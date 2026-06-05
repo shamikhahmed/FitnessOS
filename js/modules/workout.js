@@ -722,6 +722,7 @@ let _restInterval = null;
 let _wktNotes = {};
 let _supersetMode = false;
 let _quickMode = false;
+let _focusMode = false;
 
 /* ── WORKOUT HOME SCREEN ── */
 reg('workout', function() {
@@ -868,6 +869,7 @@ reg('active', function() {
     '</div>' +
     '<div style="display:flex;gap:8px">' +
     '<button onclick="toggleSupersetMode()" style="padding:8px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;touch-action:manipulation;border:1px solid var(--border);background:'+(_supersetMode?'var(--grad)':'var(--bg3)')+';color:'+(_supersetMode?'#fff':'var(--txt3)')+'">SS</button>' +
+    '<button onclick="toggleFocusMode()" style="padding:8px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;touch-action:manipulation;border:1px solid var(--border);background:'+(_focusMode?'var(--c1)':'var(--bg3)')+';color:'+(_focusMode?'#fff':'var(--txt3)')+'">'+(_focusMode?'← Exit':'🎯')+'</button>' +
     '<button onclick="confirmFinishWorkout()" style="padding:8px 16px;border-radius:20px;background:var(--grad);color:#fff;font-size:13px;font-weight:700;cursor:pointer;touch-action:manipulation;border:none">Finish</button>' +
     '</div></div></div>';
 
@@ -919,10 +921,14 @@ reg('active', function() {
       (needsSpot ? '<span style="font-size:9px;color:#ff453a;font-weight:700">⚠️SPOT</span>' : '') +
       '</div>' +
       (prev ? '<div style="font-size:12px;color:var(--c1);margin-top:2px">'+esc(prev)+'</div>' : '') +
-      (exData ? '<div style="font-size:11px;color:var(--txt3);margin-top:1px">'+esc(exData.cues.slice(0,60))+'...</div>' : '') +
+      (exData && !_focusMode ? '<div style="font-size:11px;color:var(--txt3);margin-top:1px">'+esc(exData.cues.slice(0,60))+'...</div>' : '') +
       '</div>' +
-      '<button onclick="showExerciseDetail(\''+esc(ex.name)+'\')" style="width:30px;height:30px;border-radius:50%;background:var(--bg4);border:1px solid var(--border);font-size:12px;cursor:pointer;touch-action:manipulation;flex-shrink:0">ℹ️</button>' +
+      '<div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;align-items:flex-end">' +
+      '<button onclick="showExerciseDetail(\''+esc(ex.name)+'\')" style="width:30px;height:30px;border-radius:50%;background:var(--bg4);border:1px solid var(--border);font-size:12px;cursor:pointer;touch-action:manipulation">ℹ️</button>' +
+      (!_focusMode ? '<button onclick="swapExercise('+exIdx+')" style="padding:4px 7px;border-radius:8px;background:var(--bg4);border:1px solid var(--border);font-size:10px;font-weight:700;color:var(--txt3);cursor:pointer;touch-action:manipulation;white-space:nowrap">⇄ Swap</button>' : '') +
       '</div>' +
+      '</div>' +
+      (suggest && !_focusMode ? '<div style="padding:2px 16px 8px"><span style="font-size:11px;font-weight:700;background:rgba(48,209,88,0.12);color:#30d158;padding:4px 10px;border-radius:10px">Try '+suggest+'kg ↑</span></div>' : '') +
       '<div style="display:grid;grid-template-columns:28px 1fr 36px;gap:8px;padding:8px 16px 4px;border-bottom:1px solid var(--border)">' +
       '<div style="font-size:10px;color:var(--txt3);font-weight:700;text-align:center">SET</div>' +
       '<div style="font-size:10px;color:var(--txt3);font-weight:700;text-align:center">WEIGHT × REPS</div>' +
@@ -931,9 +937,9 @@ reg('active', function() {
       '<div class="sets-list">'+setsHTML+'</div>' +
       '<div style="padding:10px 16px;display:flex;gap:8px;border-top:1px solid var(--border)">' +
       '<button onclick="_addSet('+exIdx+')" style="flex:1;padding:10px;border-radius:10px;background:var(--bg4);border:1px solid var(--border);color:var(--txt2);font-size:13px;font-weight:600;cursor:pointer;touch-action:manipulation">+ Set</button>' +
-      '<button onclick="_toggleNote('+exIdx+')" style="padding:10px 14px;border-radius:10px;background:var(--bg4);border:1px solid var(--border);color:var(--txt2);font-size:13px;cursor:pointer;touch-action:manipulation">📝</button>' +
+      (!_focusMode ? '<button onclick="_toggleNote('+exIdx+')" style="padding:10px 14px;border-radius:10px;background:var(--bg4);border:1px solid var(--border);color:var(--txt2);font-size:13px;cursor:pointer;touch-action:manipulation">📝</button>' : '') +
       '</div>' +
-      '<div id="note-'+exIdx+'" style="display:'+(noteVal?'block':'none')+';padding:0 16px 12px">' +
+      '<div id="note-'+exIdx+'" style="display:'+(_focusMode?'none':(noteVal?'block':'none'))+';padding:0 16px 12px">' +
       '<textarea class="field" placeholder="How did this feel? Form notes, energy level..." ' +
       'style="height:72px;resize:none;font-size:13px" ' +
       'oninput="_wktNotes[\''+esc(ex.name)+'\'] = this.value">'+esc(noteVal)+'</textarea>' +
@@ -1069,6 +1075,12 @@ window.toggleSupersetMode = function() {
   }
 };
 
+window.toggleFocusMode = function() {
+  _focusMode = !_focusMode;
+  go('active');
+  toast(_focusMode ? '🎯 Focus Mode — distractions hidden' : 'Focus Mode off', 'info');
+};
+
 window.swapExercise = function(exIdx) {
   if (!_wkt || !_wkt.exercises[exIdx]) return;
   const name = _wkt.exercises[exIdx].name;
@@ -1139,6 +1151,7 @@ window.saveWorkout = function() {
   _wkt = null;
   _wktElapsed = 0;
   _wktNotes = {};
+  _focusMode = false;
   closeModal();
   const prCount = workout.exercises.reduce(function(a,ex){
     return a + (ex.sets||[]).filter(function(s){return s._isPR;}).length;
@@ -1178,6 +1191,7 @@ window.startWorkout = function(templateName) {
   _wktNotes = {};
   _supersetMode = false;
   _quickMode = false;
+  _focusMode = false;
   _startWktTimer();
   go('active');
 };

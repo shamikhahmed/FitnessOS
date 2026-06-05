@@ -181,62 +181,144 @@ window.FitnessSearch = FitnessSearch;
 ══════════════════════════════════════════════════════ */
 reg('search', function(data) {
   const query = (data && data.q) || '';
-  const results = query.length >= 2 ? FitnessSearch.search(query) : [];
+  const filter = (data && data.filter) || 'all';
+  const allResults = query.length >= 2 ? FitnessSearch.search(query) : [];
+
+  const FILTER_MAP = {
+    exercises: ['exercise'],
+    muscles: ['muscle'],
+    injuries: ['rehab'],
+    mobility: ['mobility', 'stretch'],
+    sports: ['sport'],
+    academy: ['skill'],
+    history: ['history']
+  };
+
+  const results = filter === 'all' ? allResults :
+    allResults.filter(function(r) { return (FILTER_MAP[filter] || []).indexOf(r.type) !== -1; });
+
+  window._srItems = results;
 
   const TYPE_COLORS = {
-    exercise: 'var(--c1)', muscle: '#af52de', rehab: '#ff453a',
+    exercise: '#007aff', muscle: '#af52de', rehab: '#ff453a',
     mobility: '#30d158', stretch: '#30d158', sport: '#f5c842',
     history: '#00c7ff', skill: '#ff9f0a'
   };
-
-  const TYPE_LABELS = {
-    exercise: '💪 Exercises', muscle: '🔬 Muscles', rehab: '🩹 Injury Rehab',
-    mobility: '🦶 Mobility', stretch: '🧘 Stretching', sport: '⚽ Sports',
-    history: '📋 Your History', skill: '🤸 Skills'
+  const TYPE_BADGE = {
+    exercise: 'Exercise', muscle: 'Muscle', rehab: 'Rehab',
+    mobility: 'Mobility', stretch: 'Stretch', sport: 'Sport',
+    history: 'History', skill: 'Skill'
   };
+  const CHIPS = [
+    { id: 'all', label: 'All' }, { id: 'exercises', label: 'Exercises' },
+    { id: 'muscles', label: 'Muscles' }, { id: 'injuries', label: 'Injuries' },
+    { id: 'mobility', label: 'Mobility' }, { id: 'sports', label: 'Sports' },
+    { id: 'academy', label: 'Academy' }, { id: 'history', label: 'My History' }
+  ];
 
-  const grouped = {};
-  results.forEach(r => {
-    if (!grouped[r.type]) grouped[r.type] = [];
-    grouped[r.type].push(r);
-  });
+  const recents = S.g('recentSearches') || [];
+  const qEsc = esc(query);
+  const fEsc = esc(filter);
 
-  return '<div class="topbar"><div class="topbar-title">Search</div></div>' +
+  const topbar =
+    '<div style="display:flex;align-items:center;gap:10px;padding:10px 16px 0;background:var(--bg);position:sticky;top:0;z-index:20">' +
+    '<button onclick="history.length>1?history.back():go(\'dashboard\')" style="width:34px;height:34px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);color:var(--txt);font-size:18px;cursor:pointer;touch-action:manipulation;flex-shrink:0">←</button>' +
+    '<input id="fit-search" type="search" placeholder="Exercises, muscles, injuries, sports..." ' +
+    'value="' + qEsc + '" ' +
+    'oninput="clearTimeout(window._st);window._st=setTimeout(function(){go(\'search\',{q:document.getElementById(\'fit-search\').value,filter:\'' + fEsc + '\'})},280)" ' +
+    'autofocus style="flex:1;background:var(--bg3);border:1.5px solid var(--border);border-radius:12px;color:var(--txt);padding:11px 14px;font-size:16px;outline:none;min-width:0;-webkit-appearance:none">' +
+    '</div>';
 
-    '<div style="padding:14px 16px 8px;position:sticky;top:0;background:var(--bg);z-index:10">' +
-    '<input id="fit-search" class="field" placeholder="🔍 Exercises, muscles, injuries, sports..." ' +
-    'value="' + esc(query) + '" ' +
-    'oninput="clearTimeout(window._st);window._st=setTimeout(()=>go(\'search\',{q:this.value}),300)" ' +
-    'autofocus style="width:100%;box-sizing:border-box;font-size:15px">' +
-    '</div>' +
+  const chips =
+    '<div style="display:flex;gap:7px;padding:10px 16px 8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch">' +
+    CHIPS.map(function(chip) {
+      const active = filter === chip.id;
+      return '<button onclick="go(\'search\',{q:\'' + qEsc + '\',filter:\'' + chip.id + '\'})" ' +
+        'style="flex-shrink:0;padding:7px 13px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;touch-action:manipulation;white-space:nowrap;border:1px solid ' +
+        (active ? 'var(--c1)' : 'var(--border)') + ';background:' +
+        (active ? 'var(--c1)' : 'var(--bg3)') + ';color:' +
+        (active ? '#fff' : 'var(--txt3)') + '">' + chip.label + '</button>';
+    }).join('') +
+    '</div>';
 
-    '<div style="display:flex;gap:8px;padding:0 16px 10px;overflow-x:auto;scrollbar-width:none">' +
-    ['Chest','Shoulder','Legs','Back','Arms','Rehab','Mobility','Cricket','MMA'].map(tag =>
-      '<button onclick="go(\'search\',{q:\'' + tag + '\'})" style="flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;touch-action:manipulation;border:1px solid var(--border);background:' + (query === tag ? 'var(--c1)' : 'var(--bg3)') + ';color:' + (query === tag ? '#fff' : 'var(--txt3)') + '">' + tag + '</button>'
-    ).join('') +
-    '</div>' +
+  let content = '';
 
-    (query.length < 2
-      ? '<div style="padding:40px 20px;text-align:center;color:var(--txt3)"><div style="font-size:48px;margin-bottom:12px">🔍</div><div style="font-size:15px;font-weight:700;color:var(--txt);margin-bottom:8px">Search Everything</div><div style="font-size:13px;line-height:1.7">Exercises · Muscles · Injuries<br>Mobility · Stretching · Sports</div></div>'
+  if (query.length < 2) {
+    if (recents.length > 0) {
+      window._srRecents = recents;
+      content =
+        '<div style="padding:12px 16px 6px;display:flex;align-items:center;justify-content:space-between">' +
+        '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--txt3)">Recent</div>' +
+        '<button onclick="S.s(\'recentSearches\',[]);go(\'search\')" style="font-size:12px;color:var(--txt3);background:none;border:none;cursor:pointer;touch-action:manipulation;padding:4px 8px">Clear</button>' +
+        '</div>' +
+        recents.slice(0, 5).map(function(r, i) {
+          return '<div onclick="_searchRun(_srRecents[' + i + '])" style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--border);cursor:pointer;touch-action:manipulation">' +
+            '<div style="font-size:16px;color:var(--txt3)">🕐</div>' +
+            '<div style="flex:1;font-size:14px;color:var(--txt)">' + esc(r) + '</div>' +
+            '<div style="font-size:16px;color:var(--txt3)">›</div>' +
+            '</div>';
+        }).join('');
+    } else {
+      content =
+        '<div style="padding:48px 20px 20px;text-align:center">' +
+        '<div style="font-size:52px;margin-bottom:16px">🔍</div>' +
+        '<div style="font-size:17px;font-weight:800;color:var(--txt);margin-bottom:8px">Search Everything</div>' +
+        '<div style="font-size:13px;color:var(--txt3);line-height:1.8;margin-bottom:24px">Exercises · Muscles · Injuries<br>Mobility · Sports · Your History</div>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center">' +
+        ['Bench Press', 'Shoulder', 'Hamstring', 'Cricket', 'Lower Back', 'Hip Flexor', 'Squat', 'Push-Ups'].map(function(s) {
+          return '<button onclick="_searchRun(\'' + s + '\')" style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;touch-action:manipulation;border:1px solid var(--border);background:var(--bg3);color:var(--txt2)">' + s + '</button>';
+        }).join('') +
+        '</div></div>';
+    }
+  } else if (results.length === 0) {
+    content =
+      '<div style="padding:48px 20px;text-align:center">' +
+      '<div style="font-size:48px;margin-bottom:14px">😕</div>' +
+      '<div style="font-size:16px;font-weight:700;color:var(--txt);margin-bottom:6px">No results for "' + qEsc + '"</div>' +
+      '<div style="font-size:13px;color:var(--txt3);margin-bottom:20px">Try a different word or filter</div>' +
+      '<div style="display:flex;flex-direction:column;gap:8px;max-width:280px;margin:0 auto">' +
+      ['Bench Press', 'Shoulder pain', 'Hamstring stretch', 'Cricket training', 'Lower back'].map(function(s) {
+        return '<button onclick="_searchRun(\'' + s + '\')" style="padding:11px 16px;border-radius:14px;font-size:13px;font-weight:600;cursor:pointer;touch-action:manipulation;border:1px solid var(--border);background:var(--bg3);color:var(--txt2);text-align:left">🔍 ' + s + '</button>';
+      }).join('') +
+      '</div></div>';
+  } else {
+    content =
+      '<div style="font-size:12px;color:var(--txt3);padding:8px 16px 10px">' +
+      results.length + ' result' + (results.length !== 1 ? 's' : '') + ' for "' + qEsc + '"</div>' +
+      results.map(function(r, idx) {
+        const badgeColor = TYPE_COLORS[r.type] || 'var(--txt3)';
+        const badgeLabel = TYPE_BADGE[r.type] || r.type;
+        return '<div onclick="_doSearchResult(' + idx + ')" style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--border);cursor:pointer;touch-action:manipulation">' +
+          '<div style="font-size:26px;flex-shrink:0;width:36px;text-align:center">' + r.icon + '</div>' +
+          '<div style="flex:1;min-width:0">' +
+          '<div style="font-size:14px;font-weight:700;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(r.title) + '</div>' +
+          '<div style="font-size:11px;color:var(--txt3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(r.sub) + '</div>' +
+          '</div>' +
+          '<span style="flex-shrink:0;font-size:10px;font-weight:700;color:' + badgeColor + ';background:' + badgeColor + '22;padding:3px 8px;border-radius:10px;white-space:nowrap">' + badgeLabel + '</span>' +
+          '<div style="font-size:16px;color:var(--txt3);flex-shrink:0;margin-left:4px">›</div>' +
+          '</div>';
+      }).join('');
+  }
 
-      : results.length === 0
-        ? '<div style="padding:40px 20px;text-align:center;color:var(--txt3)"><div style="font-size:40px;margin-bottom:12px">😕</div><div style="font-size:15px">No results for "' + esc(query) + '"</div><div style="font-size:12px;margin-top:8px">Try: "shoulder pain", "chest", "cricket", "hamstring"</div></div>'
-
-        : '<div style="font-size:12px;color:var(--txt3);padding:0 16px 10px">' + results.length + ' results for "' + esc(query) + '"</div>' +
-          Object.entries(grouped).map(([type, items]) =>
-            '<div style="margin-bottom:6px">' +
-            '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:' + (TYPE_COLORS[type] || 'var(--txt3)') + ';padding:8px 16px 6px">' + (TYPE_LABELS[type] || type) + '</div>' +
-            items.map(r =>
-              '<div onclick="' + r.action + '" style="margin:0 16px 8px;background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:14px;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;gap:12px">' +
-              '<div style="font-size:26px;flex-shrink:0">' + r.icon + '</div>' +
-              '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(r.title) + '</div>' +
-              '<div style="font-size:11px;color:var(--txt3);margin-top:2px">' + esc(r.sub) + '</div></div>' +
-              '<div style="font-size:16px;color:var(--txt3);flex-shrink:0">›</div>' +
-              '</div>'
-            ).join('') +
-            '</div>'
-          ).join('')
-    ) +
-
-    '<div style="height:20px"></div>';
+  return topbar + chips + content + '<div style="height:32px"></div>';
 });
+
+window._saveSearch = function(q) {
+  if (!q || q.trim().length < 2) return;
+  var recents = S.g('recentSearches') || [];
+  q = q.trim();
+  recents = [q].concat(recents.filter(function(r) { return r !== q; })).slice(0, 8);
+  S.s('recentSearches', recents);
+};
+
+window._searchRun = function(q) {
+  if (q) go('search', { q: q, filter: 'all' });
+};
+
+window._doSearchResult = function(idx) {
+  var r = (window._srItems || [])[idx];
+  if (!r) return;
+  var inp = document.getElementById('fit-search');
+  if (inp) _saveSearch(inp.value);
+  eval(r.action);
+};
