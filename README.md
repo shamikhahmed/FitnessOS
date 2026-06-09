@@ -136,6 +136,31 @@ High-value features that fit FitnessOS’s workout-first, offline-first, Apple-n
 
 ---
 
+## Install on iPhone
+
+1. Open the live URL in **Safari**
+2. **Share → Add to Home Screen**
+3. Launch from home screen for full-screen PWA mode
+
+## iPhone test checklist
+
+- [ ] Intro slides and 12-step onboarding complete
+- [ ] Bottom nav switches all enabled tabs
+- [ ] Active workout logger: sets, rest timer, PR badge
+- [ ] Body map taps show muscle recovery detail
+- [ ] Coach daily briefing renders with selected personality
+- [ ] Import/export JSON works in Settings
+- [ ] App works offline after first load
+- [ ] Safe area: nav and topbar clear notch / home indicator
+
+## Documentation
+
+| Resource | Path |
+|----------|------|
+| User guide | [docs/GUIDE.md](docs/GUIDE.md) |
+| Presentation | [docs/PRESENTATION.md](docs/PRESENTATION.md) |
+| Landing page | [landing.html](landing.html) |
+
 ## Running Locally
 
 ```bash
