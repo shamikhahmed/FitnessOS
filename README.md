@@ -1,4 +1,4 @@
-# FitnessOS Pro
+# FitnessOS
 
 **Your AI-powered fitness operating system — built as a single offline-first PWA.**
 

@@ -217,7 +217,7 @@ window.addEventListener('offline', function(){ document.getElementById('offline-
       });
     };
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').catch(() => {});
+      navigator.serviceWorker.register('sw.js?v=13').then(function(r){ r.update(); }).catch(function(){});
     }
   </script>
 </body>

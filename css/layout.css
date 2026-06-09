@@ -16,9 +16,10 @@
 
 /* ── View ───────────────────────────────────── */
 #view {
-  flex: 1; overflow-y: auto; overflow-x: hidden;
+  flex: 1; min-height: 0;
+  overflow-y: auto; overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: calc(var(--nav-h) + max(var(--safe), 16px) + 24px);
+  padding-bottom: 20px;
   scroll-behavior: smooth;
   overscroll-behavior: contain;
 }
@@ -26,11 +27,11 @@
 
 /* ── Bottom nav ─────────────────────────────── */
 #nav {
-  position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
-  height: calc(var(--nav-h) + max(var(--safe), 16px));
+  position: relative; flex-shrink: 0; z-index: 200;
+  height: calc(var(--nav-h) + var(--safe));
   display: flex; align-items: flex-start;
   padding-top: 8px;
-  padding-bottom: max(var(--safe), 16px);
+  padding-bottom: var(--safe);
   background: color-mix(in srgb, var(--bg2) 88%, transparent);
   backdrop-filter: blur(32px) saturate(200%);
   -webkit-backdrop-filter: blur(32px) saturate(200%);
