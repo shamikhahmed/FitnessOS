@@ -359,7 +359,10 @@ function _bodyStatsChart(bodyStats, user) {
   var dots = pts.map(function(p,i){
     var cx=toX(i), cy=toY(p.weight), isLast=i===pts.length-1;
     var w = isImperial ? Math.round(p.weight*2.205*10)/10 : p.weight;
-    return '<circle cx="'+cx+'" cy="'+cy+'" r="'+(isLast?7:4)+'" fill="'+(isLast?'white':'var(--c2)')+'" stroke="var(--c2)" stroke-width="2"/>' +
+    var fasted = p.fasted !== false;
+    var dotFill = isLast ? 'white' : (fasted ? '#ffd60a' : '#bf5af2');
+    var dotStroke = fasted ? '#ffd60a' : '#bf5af2';
+    return '<circle cx="'+cx+'" cy="'+cy+'" r="'+(isLast?7:4)+'" fill="'+dotFill+'" stroke="'+dotStroke+'" stroke-width="2"/>' +
       (isLast?'<text x="'+cx+'" y="'+(cy-12)+'" font-size="10" fill="var(--txt)" text-anchor="middle" font-weight="700">'+w+(isImperial?'lb':'kg')+'</text>':'');
   }).join('');
 
@@ -378,7 +381,11 @@ function _bodyStatsChart(bodyStats, user) {
     '<polygon points="'+fillPts+'" fill="url(#'+gradId+')" />' +
     '<polyline points="'+polyPts+'" fill="none" stroke="var(--c2)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>' +
     dots +
-    '</svg></div>';
+    '</svg>' +
+    '<div style="display:flex;gap:14px;justify-content:center;margin-top:8px;font-size:10px;color:var(--txt3)">' +
+    '<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ffd60a;margin-right:4px;vertical-align:middle"></span>Fasted</span>' +
+    '<span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#bf5af2;margin-right:4px;vertical-align:middle"></span>Fed</span>' +
+    '</div></div>';
 }
 
 function _achievementWall(earned) {

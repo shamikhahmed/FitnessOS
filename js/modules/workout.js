@@ -737,16 +737,21 @@ reg('workout', function() {
     '<div class="warmup-item"><span class="warmup-item-icon">🔥</span>'+esc(w)+'</div>'
   ).join('');
 
+  const swapMap = {};
+  (splitDay._swaps || []).forEach(function(s) { swapMap[s.name] = s; });
+
   const exPreviews = (splitDay.exercises || []).slice(0,5).map(name => {
     const ex = ExDB.byName(name);
     const prev = ProgEngine.prevString(name);
     const diff = ex ? GUIDANCE.diffLabel(ex.diff) : null;
     const needsSpot = GUIDANCE.needsSpotter(name);
+    const swap = swapMap[name];
     return '<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">' +
       '<div style="font-size:24px;width:36px;text-align:center">'+(ex?ex.em:'💪')+'</div>' +
       '<div style="flex:1">' +
-      '<div style="display:flex;align-items:center;gap:8px">' +
+      '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">' +
       '<div style="font-size:14px;font-weight:700;color:var(--txt)">'+esc(name)+'</div>' +
+      (swap ? '<span style="font-size:10px;font-weight:700;color:var(--c5);background:rgba(255,159,10,0.12);border-radius:4px;padding:2px 6px">↔ '+esc(swap.original)+'</span>' : '') +
       (diff ? '<span style="font-size:10px;font-weight:700;color:'+diff.c+';text-transform:uppercase;letter-spacing:0.06em">'+diff.l+'</span>' : '') +
       (needsSpot ? '<span style="font-size:10px;color:#ff453a;font-weight:700">⚠️ SPOTTER</span>' : '') +
       '</div>' +
@@ -1129,6 +1134,7 @@ window.confirmFinishWorkout = function() {
 };
 
 window.saveWorkout = function() {
+  haptic([50, 50, 100]);
   clearInterval(_wktTimer);
   clearInterval(_restInterval);
   const finalNote = (document.getElementById('wkt-final-note')||{}).value || '';
@@ -1172,6 +1178,7 @@ function _startWktTimer() {
 }
 
 window.startWorkout = function(templateName) {
+  haptic(50);
   const splitDay = SplitEngine.getSplitDay();
   const user = S.g('user') || {};
   const goal = user.goal || 'hypertrophy';
@@ -1198,6 +1205,7 @@ window.startWorkout = function(templateName) {
 };
 
 window.startQuickWorkout = function() {
+  haptic(50);
   const splitDay = SplitEngine.getSplitDay();
   const user = S.g('user') || {};
   const goal = user.goal || 'hypertrophy';
@@ -1501,6 +1509,9 @@ function showBrowseExercises(filterGrp, filterQuery) {
   if (query) exercises = exercises.filter(function(e){
     return e.n.toLowerCase().includes(query.toLowerCase()) || (e.pri||'').toLowerCase().includes(query.toLowerCase());
   });
+  if (typeof InjuriesDB !== 'undefined') {
+    exercises = exercises.filter(function(e) { return !InjuriesDB.shouldAvoidExercise(e.n).avoid; });
+  }
 
   const filterTabs = '<div style="display:flex;overflow-x:auto;gap:8px;padding:0 16px 14px;-webkit-overflow-scrolling:touch">' +
     groups.map(function(g) {

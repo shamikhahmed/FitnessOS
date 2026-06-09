@@ -143,7 +143,9 @@ let _obData = {};
 let _obStep = 1;
 const OB_TOTAL = 7;
 
-const SPLIT_WEEKLY = { ppl:6, ul:4, fb:3, bro:5, str:4, home:4, custom:4 };
+const SPLIT_WEEKLY = (typeof SplitsDB !== 'undefined'
+  ? Object.fromEntries(SplitsDB.splits.map(function(s) { return [s.id, s.days || 4]; }))
+  : { ppl:6, ul:4, fb:3, bro:5, str:4, home:4, custom:4 });
 
 window.obSelect = function(field, val) {
   _obData[field] = val;
@@ -167,6 +169,7 @@ window.obBack = function() {
 };
 
 window.obContinue = function() {
+  haptic(30);
   if (!_validateStep(_obStep)) return;
   if (_obStep < OB_TOTAL) { _obStep++; go('onboarding'); }
   else _finishOnboarding();

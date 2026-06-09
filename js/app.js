@@ -507,13 +507,174 @@ const SplitEngine = {
     { n:'Core & Cardio', muscles:['core','full_body'], exercises:['Plank','Mountain Climbers','Russian Twists','Burpees','Dead Bug'],
       warmup:['5 min jumping jacks','Arm Circles — 10 each','Hip Circles — 10 each','Inchworm — 8 reps','World\'s Greatest Stretch — 5 each side','Jumping Jacks — 20 reps'] }
   ],
+  _arnold: [
+    { n:'Chest & Back A', muscles:['chest','back'], exercises:['Barbell Bench Press','Incline Dumbbell Press','Barbell Row','Lat Pulldown','Cable Fly','Face Pulls'],
+      warmup:['5 min light cardio','Band Pull-Aparts — 3×15','Scapular Pull-Ups — 2×8','Light DB Press — 2×12'] },
+    { n:'Shoulders & Arms A', muscles:['shoulders','biceps','triceps'], exercises:['Overhead Press','Dumbbell Lateral Raise','Barbell Curl','Tricep Pushdown','Hammer Curl','Skull Crushers'],
+      warmup:['5 min light cardio','Shoulder CARs — 5 each','Arm Circles — 10 each','Light Lateral Raise — 2×15'] },
+    { n:'Legs A', muscles:['quads','hamstrings','calves'], exercises:['Back Squat','Leg Press','Leg Extension','Leg Curl','Standing Calf Raise'],
+      warmup:['5 min bike','Hip Circles — 10 each','Bodyweight Squat — 2×15','Glute Bridge — 2×20'] },
+    { n:'Chest & Back B', muscles:['chest','back'], exercises:['Incline Barbell Bench Press','Dumbbell Bench Press','Seated Cable Row','Pull-Up','Dumbbell Fly','Rear Delt Fly'],
+      warmup:['5 min light cardio','Band Pull-Aparts — 3×15','Dead Hang — 3×20s','Light Row — 2×12'] },
+    { n:'Shoulders & Arms B', muscles:['shoulders','biceps','triceps'], exercises:['Arnold Press','Cable Lateral Raise','EZ Bar Curl','Overhead Tricep Extension','Incline Dumbbell Curl','Cable Curl'],
+      warmup:['5 min light cardio','Shoulder CARs — 5 each','Wall Slides — 2×10','Light Curl — 2×12'] },
+    { n:'Legs B', muscles:['glutes','hamstrings','calves'], exercises:['Romanian Deadlift','Hip Thrust','Leg Curl','Goblet Squat','Seated Calf Raise'],
+      warmup:['5 min bike','Hip Circles — 10 each','Leg Swings — 15 each','Glute Bridge — 2×20'] }
+  ],
+  _phul: [
+    { n:'Power Upper', muscles:['chest','back','shoulders'], exercises:['Barbell Bench Press','Barbell Row','Overhead Press','Weighted Pull-Up'],
+      warmup:['5 min light cardio','Band Pull-Aparts — 3×15','Arm Circles — 10 each','Ramp-up sets to working weight'] },
+    { n:'Power Lower', muscles:['quads','hamstrings','glutes'], exercises:['Back Squat','Romanian Deadlift','Leg Press'],
+      warmup:['5 min bike','Hip Circles — 10 each','Bodyweight Squat — 2×15','Ramp-up sets to working weight'] },
+    { n:'Hypertrophy Upper', muscles:['chest','back','arms'], exercises:['Incline Dumbbell Press','Lat Pulldown','Dumbbell Lateral Raise','EZ Bar Curl','Tricep Pushdown','Face Pulls'],
+      warmup:['5 min light cardio','Band Pull-Aparts — 3×15','Thoracic Rotation — 8 each side'] },
+    { n:'Hypertrophy Lower', muscles:['quads','hamstrings','calves'], exercises:['Leg Press','Leg Curl','Leg Extension','Hip Thrust','Calf Raise'],
+      warmup:['5 min bike','Hip Flexor Stretch — 30s each','Glute Bridge — 2×20'] }
+  ],
+  _phat: [
+    { n:'Power Upper', muscles:['chest','back'], exercises:['Barbell Bench Press','Barbell Row','Overhead Press','Lat Pulldown'],
+      warmup:['5 min light cardio','Band Pull-Aparts — 3×15','Ramp-up sets to working weight'] },
+    { n:'Power Lower', muscles:['quads','hamstrings'], exercises:['Back Squat','Romanian Deadlift','Leg Press'],
+      warmup:['5 min bike','Hip Circles — 10 each','Ramp-up sets to working weight'] },
+    { n:'Back & Shoulders Hypertrophy', muscles:['back','shoulders'], exercises:['Seated Cable Row','Face Pulls','Dumbbell Lateral Raise','Rear Delt Fly','Hammer Curl'],
+      warmup:['5 min rowing','Dead Hang — 3×20s','Band Pull-Aparts — 3×15'] },
+    { n:'Lower Hypertrophy', muscles:['quads','glutes','hamstrings'], exercises:['Leg Press','Leg Extension','Leg Curl','Hip Thrust','Calf Raise'],
+      warmup:['5 min bike','Leg Swings — 15 each','Glute Bridge — 2×20'] },
+    { n:'Chest & Arms Hypertrophy', muscles:['chest','biceps','triceps'], exercises:['Incline Dumbbell Press','Cable Fly','EZ Bar Curl','Tricep Pushdown','Incline Dumbbell Curl','Skull Crushers'],
+      warmup:['5 min light cardio','Arm Circles — 10 each','Push-Up — 2×10'] }
+  ],
+  _push_pull: [
+    { n:'Push A — Chest & Quads', muscles:['chest','shoulders','triceps','quads'], exercises:['Barbell Bench Press','Overhead Press','Tricep Pushdown','Back Squat','Leg Extension'],
+      warmup:['5 min treadmill walk','Arm Circles — 10 each','Band Pull-Aparts — 3×15','Bodyweight Squat — 2×15'] },
+    { n:'Pull A — Back & Hamstrings', muscles:['back','biceps','hamstrings'], exercises:['Deadlift','Barbell Row','Lat Pulldown','EZ Bar Curl','Leg Curl'],
+      warmup:['5 min rowing','Dead Hang — 3×20s','Cat-Cow — 10 reps','Light RDL — 2×10'] },
+    { n:'Push B — Delts & Glutes', muscles:['shoulders','chest','triceps','glutes'], exercises:['Incline Dumbbell Press','Dumbbell Lateral Raise','Hip Thrust','Romanian Deadlift','Cable Fly'],
+      warmup:['5 min light cardio','Shoulder CARs — 5 each','Glute Bridge — 2×20'] },
+    { n:'Pull B — Lats & Arms', muscles:['lats','rear_delts','biceps'], exercises:['Seated Cable Row','Face Pulls','Hammer Curl','Rear Delt Fly','Incline Dumbbell Curl'],
+      warmup:['5 min rowing','Band Pull-Aparts — 3×15','Scapular Pull-Ups — 2×8'] }
+  ],
+  _powerbuilding: [
+    { n:'Heavy Squat', muscles:['quads','glutes','core'], exercises:['Back Squat','Front Squat','Leg Press','Leg Extension'],
+      warmup:['10 min walk','Hip Circles — 10 each','Ramp-up sets to top set'] },
+    { n:'Heavy Bench', muscles:['chest','triceps'], exercises:['Barbell Bench Press','Close-Grip Bench','Dumbbell Fly','Tricep Pushdown'],
+      warmup:['5 min light cardio','Band Pull-Aparts — 3×15','Ramp-up sets to top set'] },
+    { n:'Heavy Deadlift', muscles:['back','hamstrings'], exercises:['Deadlift','Barbell Row','Lat Pulldown','Face Pulls'],
+      warmup:['5 min rowing','Dead Hang — 3×20s','Ramp-up sets to top set'] },
+    { n:'Hypertrophy Upper', muscles:['chest','back','shoulders'], exercises:['Incline Dumbbell Press','Cable Row','Dumbbell Lateral Raise','EZ Bar Curl','Overhead Tricep Extension'],
+      warmup:['5 min light cardio','Arm Circles — 10 each','Band Pull-Aparts — 3×15'] },
+    { n:'Hypertrophy Lower', muscles:['quads','hamstrings','glutes'], exercises:['Leg Press','Romanian Deadlift','Leg Curl','Hip Thrust','Calf Raise'],
+      warmup:['5 min bike','Hip Circles — 10 each','Glute Bridge — 2×20'] }
+  ],
+  _cardio_strength: [
+    { n:'Upper Strength', muscles:['chest','back','shoulders'], exercises:['Barbell Bench Press','Barbell Row','Overhead Press','Lat Pulldown','Face Pulls'],
+      warmup:['5 min light cardio','Band Pull-Aparts — 3×15','Arm Circles — 10 each'] },
+    { n:'Lower Strength', muscles:['quads','hamstrings','glutes'], exercises:['Back Squat','Romanian Deadlift','Leg Press','Hip Thrust'],
+      warmup:['5 min bike','Hip Circles — 10 each','Bodyweight Squat — 2×15'] },
+    { n:'Cardio — LISS', muscles:['cardio','full_body'], exercises:['Incline Walk 30min','Steady Bike 25min','Rowing Machine 20min'],
+      warmup:['3 min easy pace','Dynamic stretches — 5 min'] },
+    { n:'Cardio — Conditioning', muscles:['cardio','core'], exercises:['Burpees','Mountain Climbers','Jump Rope','Plank','Russian Twists'],
+      warmup:['5 min easy cardio','Joint circles head to toe'] }
+  ],
+  _starting_strength: [
+    { n:'Workout A', muscles:['legs','chest','back'], exercises:['Back Squat','Barbell Bench Press','Deadlift'],
+      warmup:['5 min walk','Hip Circles — 10 each','Empty bar warm-up sets'] },
+    { n:'Workout B', muscles:['legs','shoulders','back'], exercises:['Back Squat','Overhead Press','Barbell Row'],
+      warmup:['5 min walk','Shoulder CARs — 5 each','Empty bar warm-up sets'] },
+    { n:'Workout A (repeat)', muscles:['legs','chest','back'], exercises:['Back Squat','Barbell Bench Press','Deadlift'],
+      warmup:['5 min walk','Hip Circles — 10 each','Empty bar warm-up sets'] }
+  ],
+  _stronglifts: [
+    { n:'Workout A', muscles:['legs','chest','back'], exercises:['Back Squat','Barbell Bench Press','Barbell Row'],
+      warmup:['5 min walk','Hip Circles — 10 each','Ramp-up sets: 50%, 70%, 90% of working weight'] },
+    { n:'Workout B', muscles:['legs','shoulders','back'], exercises:['Back Squat','Overhead Press','Deadlift'],
+      warmup:['5 min walk','Shoulder CARs — 5 each','Ramp-up sets: 50%, 70%, 90% of working weight'] },
+    { n:'Workout A (repeat)', muscles:['legs','chest','back'], exercises:['Back Squat','Barbell Bench Press','Barbell Row'],
+      warmup:['5 min walk','Hip Circles — 10 each','Ramp-up sets: 50%, 70%, 90% of working weight'] }
+  ],
+  _531: [
+    { n:'Squat Day', muscles:['quads','glutes'], exercises:['Back Squat','Leg Press','Leg Curl','Plank'],
+      warmup:['5 min walk','Hip Circles — 10 each','Ramp-up sets per 5/3/1 protocol'] },
+    { n:'Bench Day', muscles:['chest','triceps'], exercises:['Barbell Bench Press','Dumbbell Bench Press','Tricep Pushdown','Face Pulls'],
+      warmup:['5 min light cardio','Band Pull-Aparts — 3×15','Ramp-up sets per 5/3/1 protocol'] },
+    { n:'Deadlift Day', muscles:['back','hamstrings'], exercises:['Deadlift','Barbell Row','Lat Pulldown','Hip Thrust'],
+      warmup:['5 min rowing','Dead Hang — 3×20s','Ramp-up sets per 5/3/1 protocol'] },
+    { n:'OHP Day', muscles:['shoulders','triceps'], exercises:['Overhead Press','Dumbbell Lateral Raise','EZ Bar Curl','Rear Delt Fly'],
+      warmup:['5 min light cardio','Shoulder CARs — 5 each','Ramp-up sets per 5/3/1 protocol'] }
+  ],
+  _upper_lower_fb: [
+    { n:'Upper A', muscles:['chest','back','shoulders'], exercises:['Barbell Bench Press','Barbell Row','Overhead Press','Lat Pulldown','Face Pulls'],
+      warmup:['5 min light cardio','Band Pull-Aparts — 3×15','Arm Circles — 10 each'] },
+    { n:'Lower A', muscles:['quads','hamstrings'], exercises:['Back Squat','Romanian Deadlift','Leg Press','Calf Raise'],
+      warmup:['5 min bike','Hip Circles — 10 each','Glute Bridge — 2×20'] },
+    { n:'Full Body', muscles:['full_body'], exercises:['Deadlift','Incline Dumbbell Press','Dumbbell Lateral Raise','Leg Curl','EZ Bar Curl'],
+      warmup:['5 min treadmill walk','Full Body Joint Circles','Bodyweight Squat — 15 reps'] },
+    { n:'Upper B', muscles:['chest','back','arms'], exercises:['Incline Barbell Bench Press','Seated Cable Row','Dumbbell Lateral Raise','Hammer Curl','Tricep Pushdown'],
+      warmup:['5 min light cardio','Band Pull-Aparts — 3×15','Thoracic Rotation — 8 each'] },
+    { n:'Lower B', muscles:['glutes','hamstrings','calves'], exercises:['Hip Thrust','Leg Curl','Goblet Squat','Seated Calf Raise','Plank'],
+      warmup:['5 min bike','Leg Swings — 15 each','Glute Bridge — 2×20'] }
+  ],
+  _custom: [
+    { n:'Flexible Day — Choose Your Focus', muscles:['full_body'], exercises:['Back Squat','Barbell Bench Press','Barbell Row','Overhead Press','Plank'],
+      warmup:['5 min light cardio','Joint circles head to toe','Pick exercises that match how you feel today'] }
+  ],
+  _exerciseAvailable(name) {
+    if (typeof ExDB === 'undefined' || typeof EquipmentDB === 'undefined') return true;
+    const ex = ExDB.byName(name);
+    if (!ex) return true;
+    return EquipmentDB.exerciseMatches(ex);
+  },
+  _isAvoided(name) {
+    return typeof InjuriesDB !== 'undefined' && InjuriesDB.shouldAvoidExercise(name).avoid;
+  },
+  resolveExercise(name) {
+    const result = { original: name, name: name, swapped: false, reason: null };
+    if (typeof InjuriesDB !== 'undefined') {
+      const check = InjuriesDB.shouldAvoidExercise(name);
+      if (check.avoid) {
+        const subs = this.getSubstitutes(name, check.reason || '');
+        for (let i = 0; i < subs.length; i++) {
+          if (!this._isAvoided(subs[i]) && this._exerciseAvailable(subs[i])) {
+            return { original: name, name: subs[i], swapped: true, reason: check.modify || check.reason, injury: check.injury };
+          }
+        }
+        return { original: name, name: null, skipped: true, reason: check.modify || check.reason, injury: check.injury };
+      }
+    }
+    if (!this._exerciseAvailable(name)) {
+      const subs = this.getSubstitutes(name, 'equipment');
+      for (let i = 0; i < subs.length; i++) {
+        if (!this._isAvoided(subs[i]) && this._exerciseAvailable(subs[i])) {
+          return { original: name, name: subs[i], swapped: true, reason: 'Substituted — equipment not available' };
+        }
+      }
+      return { original: name, name: null, skipped: true, reason: 'No equipment match' };
+    }
+    return result;
+  },
+  resolveExercises(names) {
+    const exercises = [];
+    const swaps = [];
+    (names || []).forEach(function(name) {
+      const r = SplitEngine.resolveExercise(name);
+      if (r.name) {
+        exercises.push(r.name);
+        if (r.swapped) swaps.push(r);
+      }
+    });
+    return { exercises: exercises, swaps: swaps };
+  },
+  _resolveDay(day) {
+    if (!day) return day;
+    const resolved = this.resolveExercises(day.exercises || []);
+    return Object.assign({}, day, { exercises: resolved.exercises, _swaps: resolved.swaps });
+  },
   getSplitDay() {
     try {
       const user = S.g('user') || {};
       const split = user.split || 'ppl';
       const dayIdx = ((user.splitDay || 1) - 1);
       const days = this._getSplitDays(split);
-      return days[dayIdx % days.length] || days[0];
+      return this._resolveDay(days[dayIdx % days.length] || days[0]);
     } catch(e) { return { n:'Rest Day', muscles:[], exercises:[], warmup:[] }; }
   },
   getNextDay() {
@@ -522,11 +683,22 @@ const SplitEngine = {
       const split = user.split || 'ppl';
       const dayIdx = user.splitDay || 1;
       const days = this._getSplitDays(split);
-      return days[dayIdx % days.length] || days[0];
+      return this._resolveDay(days[dayIdx % days.length] || days[0]);
     } catch(e) { return null; }
   },
   _getSplitDays(split) {
-    const m = { ppl:this._ppl, ul:this._ul, fb:this._fb, bro:this._bro, str:this._str, home:this._home };
+    const m = {
+      ppl: this._ppl, ppl_5: this._ppl.slice(0, 5),
+      ul: this._ul, ul_3: this._ul.slice(0, 3),
+      fb: this._fb, fb_2: this._fb.slice(0, 2),
+      bro: this._bro, str: this._str, home: this._home,
+      arnold: this._arnold, phul: this._phul, phat: this._phat,
+      push_pull: this._push_pull, powerbuilding: this._powerbuilding,
+      cardio_strength: this._cardio_strength,
+      starting_strength: this._starting_strength, stronglifts: this._stronglifts,
+      '531': this._531, upper_lower_fb: this._upper_lower_fb,
+      custom: this._custom
+    };
     return m[split] || this._ppl;
   },
   nextDay() {
@@ -541,11 +713,14 @@ const SplitEngine = {
     if (typeof ExDB === 'undefined') return [];
     const ex = ExDB.byName(exerciseName);
     if (!ex) return [];
-    return ExDB.db.filter(e =>
-      e.n !== exerciseName &&
-      (e.grp === ex.grp || (ex.pri && e.pri === ex.pri)) &&
-      (!reason || !reason.includes('shoulder') || (e.joint && (e.joint.shoulder||0) < 2))
-    ).slice(0,3).map(e => e.n);
+    const self = this;
+    return ExDB.db.filter(function(e) {
+      return e.n !== exerciseName &&
+        (e.grp === ex.grp || (ex.pri && e.pri === ex.pri)) &&
+        (!reason || !reason.includes('shoulder') || (e.joint && (e.joint.shoulder || 0) < 2)) &&
+        self._exerciseAvailable(e.n) &&
+        !self._isAvoided(e.n);
+    }).slice(0, 5).map(function(e) { return e.n; });
   }
 };
 window.SplitEngine = SplitEngine;

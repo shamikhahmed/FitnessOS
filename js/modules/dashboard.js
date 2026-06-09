@@ -268,6 +268,16 @@ reg('dashboard', function() {
       '<div style="font-size:11px;color:var(--txt3);margin-top:2px">Home, gym, Life Fitness machines — get matched workouts</div></div>' +
       '<span style="color:var(--c1);font-size:18px">›</span></div>' : '';
 
+    const injuryAssess = typeof InjuriesDB !== 'undefined' ? InjuriesDB.assessActive() : { shouldRest: false, messages: [], count: 0 };
+    const injuryBanner = injuryAssess.count > 0 && (injuryAssess.shouldRest || injuryAssess.messages.length) ?
+      '<div onclick="go(\'settings\',{tab:\'profile\'})" style="margin:0 16px 14px;border-radius:16px;padding:14px 16px;background:rgba(255,69,58,0.08);border:1px solid rgba(255,69,58,0.2);cursor:pointer;touch-action:manipulation">' +
+      '<div style="font-size:13px;font-weight:700;color:#ff453a;margin-bottom:4px">' +
+      (injuryAssess.shouldRest ? '⚠️ Consider a rest day' : '🩹 Injury modifications active') +
+      '</div>' +
+      '<div style="font-size:11px;color:var(--txt3);line-height:1.45">' +
+      esc(injuryAssess.messages.slice(0, 2).join(' · ') || 'Active injuries may swap exercises in today\'s workout') +
+      '</div></div>' : '';
+
     const splitRec = S.g('settings.suggestedSplit');
     const splitBanner = splitRec && !S.g('user.splitConfirmed') ?
       '<div style="margin:0 16px 14px;border-radius:16px;padding:14px 16px;background:var(--bg3);border:1px solid var(--border)">' +
@@ -277,7 +287,7 @@ reg('dashboard', function() {
       '<button class="btn btn-primary btn-sm" onclick="applySuggestedSplit()">Use this split</button> ' +
       '<button class="btn btn-ghost btn-sm" onclick="go(\'settings\',{tab:\'training\'})">Choose another</button></div>' : '';
 
-    return demoBanner + topbar + weightPrompt + setupBanner + splitBanner + briefingCard + heroCard + quickActions + todayWorkout + recoverySnapshot +
+    return demoBanner + topbar + weightPrompt + injuryBanner + setupBanner + splitBanner + briefingCard + heroCard + quickActions + todayWorkout + recoverySnapshot +
       muscleRecoveryMini + activeQuestCard + progressSnapshot + lastWktCard + exploreCta +
       '<div style="height:12px"></div>';
 
@@ -297,6 +307,7 @@ window.openMorningBriefing = function() {
 };
 
 window.applySuggestedSplit = function() {
+  haptic(40);
   const rec = S.g('settings.suggestedSplit');
   if (!rec) return;
   S.set('user.split', rec.id);

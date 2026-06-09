@@ -90,6 +90,7 @@ window.selectEquipmentPreset = function(preset) {
 };
 
 window.saveEquipmentSetup = function() {
+  haptic(40);
   S.set('user.equipmentConfigured', true);
   S.set('settings.equipmentSetupPending', false);
   toast('Equipment saved — workouts filtered to your setup', 'ok');

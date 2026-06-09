@@ -102,7 +102,12 @@ const ExerciseLibrary = (() => {
   }
 
   async function fetchAll(onProgress) {
-    if (!navigator.onLine) throw new Error('Offline — connect once to download the library');
+    const existing = getCached();
+    if (existing && existing.length > 0) return existing.length;
+    if (!navigator.onLine) {
+      if (existing && existing.length) return existing.length;
+      throw new Error('Offline — connect once to download the library');
+    }
     const all = [];
     let offset = 0;
     const limit = 50;
@@ -129,6 +134,10 @@ const ExerciseLibrary = (() => {
   async function sync(onProgress, force) {
     const cached = getCached();
     if (cached && cached.length > 0 && !force) {
+      const added = mergeIntoExDB();
+      return { fetched: cached.length, added: added, fromCache: true };
+    }
+    if (!navigator.onLine && cached && cached.length > 0) {
       const added = mergeIntoExDB();
       return { fetched: cached.length, added: added, fromCache: true };
     }
