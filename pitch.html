@@ -2,109 +2,361 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>FitnessOS — Pitch Deck</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--accent:#00d5ff;--accent2:#6b5fff;--muted:rgba(255,255,255,.55);--dim:rgba(255,255,255,.25)}
+:root{
+  --bg:#0d0d0f;--bg2:#12121a;--cyan:#00d5ff;--purple:#6b5fff;--pink:#ff4d9e;
+  --green:#00ffaa;--orange:#ff9500;--muted:#888899;--border:rgba(255,255,255,0.08);
+  --glass:rgba(255,255,255,0.04);font-size:16px}
 html{scroll-behavior:smooth}
-body{font-family:Inter,-apple-system,sans-serif;background:#000;color:#fff;overflow-x:hidden}
-.slide{min-height:100svh;display:flex;align-items:center;justify-content:center;padding:72px 40px;position:relative;text-align:center}
+body{font-family:Inter,-apple-system,sans-serif;background:var(--bg);color:#e8e8f0;overflow-x:hidden}
+#orb-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+.slide{min-height:100svh;display:flex;align-items:center;justify-content:center;padding:72px 40px;position:relative;text-align:center;overflow:hidden;z-index:1}
 @media(max-width:600px){.slide{padding:64px 22px}}
-.reveal{opacity:0;transform:translateY(40px);transition:opacity .8s,transform .8s}
+.reveal{opacity:0;transform:translateY(40px);transition:opacity .8s cubic-bezier(.22,1,.36,1),transform .8s cubic-bezier(.22,1,.36,1)}
 .reveal.visible{opacity:1;transform:none}
+.reveal-left{opacity:0;transform:translateX(-50px);transition:opacity .8s,transform .8s}
+.reveal-left.visible{opacity:1;transform:none}
+.reveal-right{opacity:0;transform:translateX(50px);transition:opacity .8s,transform .8s}
+.reveal-right.visible{opacity:1;transform:none}
+.delay-1{transition-delay:.1s}.delay-2{transition-delay:.2s}.delay-3{transition-delay:.35s}.delay-4{transition-delay:.5s}
 #nav-dots{position:fixed;right:16px;top:50%;transform:translateY(-50%);z-index:100;display:flex;flex-direction:column;gap:8px}
-.nav-dot{width:8px;height:8px;border-radius:50%;border:none;background:rgba(255,255,255,.25);cursor:pointer}
-.nav-dot.active{background:#fff;transform:scale(1.3)}
-#export-btn{position:fixed;top:16px;right:16px;z-index:100;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;padding:8px 16px;border-radius:99px;font-size:12px;cursor:pointer;font-family:inherit}
+.nav-dot{width:8px;height:8px;border-radius:50%;border:none;background:rgba(255,255,255,.2);cursor:pointer;transition:all .3s}
+.nav-dot.active{background:var(--cyan);transform:scale(1.4);box-shadow:0 0 8px rgba(0,213,255,0.5)}
+#export-btn{position:fixed;top:16px;right:16px;z-index:100;background:rgba(255,255,255,.06);border:1px solid var(--border);color:#e8e8f0;padding:8px 16px;border-radius:99px;font-size:12px;cursor:pointer;font-family:inherit}
 h1{font-size:clamp(3rem,12vw,7rem);font-weight:900;letter-spacing:-.05em;line-height:1}
 h2{font-size:clamp(1.6rem,4.5vw,2.8rem);font-weight:800;letter-spacing:-.03em;margin-bottom:1rem}
-.sub{color:var(--muted);font-size:clamp(1rem,2.2vw,1.2rem);max-width:560px;line-height:1.6;margin:0 auto 2rem}
+.sub{color:var(--muted);font-size:clamp(1rem,2.2vw,1.2rem);max-width:580px;line-height:1.7;margin:0 auto 2rem}
+.grad{background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.grad2{background:linear-gradient(135deg,var(--purple),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.overline{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--cyan);font-weight:600;margin-bottom:12px}
 .badges{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
-.badge{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:99px;padding:10px 18px;font-size:.85rem;font-weight:600}
-.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;max-width:720px;width:100%;margin-top:2rem;text-align:left}
+.badge{background:var(--glass);border:1px solid var(--border);border-radius:99px;padding:10px 18px;font-size:.85rem;font-weight:600}
+.badge-cyan{border-color:rgba(0,213,255,0.25);box-shadow:0 0 16px rgba(0,213,255,0.08)}
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;max-width:760px;width:100%;margin-top:2rem;text-align:left}
 @media(max-width:600px){.cards{grid-template-columns:1fr}}
-.card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:20px}
+.card{background:var(--glass);border:1px solid var(--border);border-radius:16px;padding:20px;transition:border-color .3s,transform .3s}
+.card:hover{transform:translateY(-4px)}
+.card-cyan{border-color:rgba(0,213,255,0.25);box-shadow:0 0 20px rgba(0,213,255,0.06)}
+.card-purple{border-color:rgba(107,95,255,0.25);box-shadow:0 0 20px rgba(107,95,255,0.06)}
+.card-green{border-color:rgba(0,255,170,0.25)}
 .card h3{font-size:1rem;margin-bottom:.4rem}
 .card p{font-size:.85rem;color:var(--muted);line-height:1.55}
 .btn-row{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:2rem}
-.btn{padding:16px 28px;border-radius:99px;font-weight:700;font-size:.95rem;text-decoration:none;border:none;cursor:pointer;font-family:inherit}
-.btn-p{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 8px 28px color-mix(in srgb,var(--accent) 40%,transparent)}
-.btn-s{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:#fff}
-#s1{background:radial-gradient(ellipse 70% 60% at 50% 40%,color-mix(in srgb,var(--accent) 25%,transparent),#000)}
-#s2{background:#0a0a0a}
-#s3{background:radial-gradient(ellipse 80% 60% at 30% 70%,color-mix(in srgb,var(--accent2) 20%,transparent),#050505)}
-#s4{background:#000}
-#s5{background:radial-gradient(ellipse 70% 50% at 50% 50%,color-mix(in srgb,var(--accent) 18%,transparent),#000)}
-@media print{#nav-dots,#export-btn{display:none!important}.slide{page-break-after:always;min-height:100vh}.reveal{opacity:1!important;transform:none!important}}
+.btn{padding:16px 28px;border-radius:14px;font-weight:700;font-size:.95rem;text-decoration:none;border:none;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:8px;transition:transform .2s,filter .2s}
+.btn-p{background:linear-gradient(135deg,var(--cyan),rgba(0,213,255,0.7));color:#000;box-shadow:0 8px 28px rgba(0,213,255,0.3)}
+.btn-s{background:var(--glass);border:1px solid var(--border);color:#e8e8f0}
+.btn:hover{transform:translateY(-2px);filter:brightness(1.1)}
+.section-title{font-size:clamp(1.8rem,4vw,2.6rem);font-weight:800;margin-bottom:2rem}
+/* mock UI from presentation */
+.score-ring{width:110px;height:110px;border-radius:50%;
+  background:conic-gradient(var(--green) 0% 87%,rgba(255,255,255,0.05) 87% 100%);
+  display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0;margin:0 auto}
+.score-ring::before{content:'';position:absolute;inset:10px;border-radius:50%;background:var(--bg2)}
+.score-num{position:relative;z-index:1;font-size:28px;font-weight:900;color:var(--green)}
+.coach-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:680px}
+.coach-card{background:var(--glass);border:1px solid var(--border);border-radius:14px;padding:14px 10px;flex:1;min-width:100px;max-width:120px;text-align:center}
+.coach-card .ci{font-size:1.6rem;margin-bottom:6px}
+.coach-card h3{font-size:12px;font-weight:700}
+.coach-card p{font-size:10px;color:var(--muted)}
+.tone-pill{background:var(--glass);border:1px solid var(--border);border-radius:20px;padding:7px 14px;font-size:12px}
+.flow{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;max-width:660px}
+.flow-box{background:var(--glass);border:1px solid var(--border);border-radius:12px;padding:12px 16px;font-size:13px;font-weight:600;text-align:center;min-width:120px}
+.flow-box.hl{border-color:rgba(255,68,68,0.4);color:#ff6b6b}
+.flow-box.hl2{border-color:rgba(255,149,0,0.4);color:var(--orange)}
+.flow-box.hl3{border-color:rgba(0,255,170,0.4);color:var(--green)}
+.flow-arrow{font-size:18px;color:var(--muted)}
+.body-map{width:min(100%,200px);height:280px;margin:0 auto;background:var(--glass);
+  border:1px solid rgba(0,213,255,0.2);border-radius:16px;position:relative;overflow:hidden}
+.muscle{position:absolute;border-radius:50%;background:rgba(0,213,255,0.15);border:1px solid rgba(0,213,255,0.3)}
+.equip-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-width:480px;margin:0 auto}
+.equip{background:var(--glass);border:1px solid var(--border);border-radius:10px;padding:12px 8px;font-size:11px;font-weight:600;text-align:center}
+.equip.on{border-color:rgba(0,213,255,0.4);color:var(--cyan)}
+.quest-card{background:var(--glass);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:left;max-width:320px;margin:0 auto}
+.quest-bar{height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;margin-top:8px}
+.quest-fill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--purple));border-radius:3px}
+.archetype{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.arch{background:var(--glass);border:1px solid var(--border);border-radius:14px;padding:16px 20px;min-width:130px;text-align:center}
+.arch.on{border-color:rgba(107,95,255,0.5);box-shadow:0 0 20px rgba(107,95,255,0.15)}
+.arch .icon{font-size:2rem;margin-bottom:6px}
+.arch h3{font-size:13px;font-weight:700}
+.ex-count{font-size:clamp(3rem,10vw,5rem);font-weight:900;line-height:1}
+#s1{background:radial-gradient(ellipse 80% 60% at 50% 40%,rgba(107,95,255,0.12) 0%,transparent 70%)}
+.glow-ring{position:absolute;width:400px;height:400px;border-radius:50%;
+  background:radial-gradient(circle,rgba(0,213,255,0.06) 0%,transparent 70%);pointer-events:none;animation:pulse 3s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 40px rgba(0,213,255,0.2)}50%{box-shadow:0 0 80px rgba(107,95,255,0.3)}}
+@media print{#nav-dots,#export-btn,#orb-canvas{display:none!important}.slide{page-break-after:always;min-height:100vh}.reveal,.reveal-left,.reveal-right{opacity:1!important;transform:none!important}}
 </style>
 </head>
 <body>
+<canvas id="orb-canvas"></canvas>
 <div id="nav-dots"></div>
 <button id="export-btn" onclick="window.print()">⬇ Export PDF</button>
 
 <section class="slide" id="s1">
-  <div>
-    <div style="font-size:4rem;margin-bottom:.5rem" class="reveal">💪</div>
-    <h1 class="reveal delay-1">FitnessOS</h1>
-    <p class="sub reveal delay-2">Intelligent Training Partner</p>
-    <p class="sub reveal delay-3" style="font-size:.9rem">Workouts · Body map · Physique · Offline coach</p>
-    <p class="reveal delay-4" style="color:var(--dim);font-size:.8rem;letter-spacing:.12em;text-transform:uppercase">Scroll to explore ↓</p>
+  <div class="glow-ring"></div>
+  <div style="position:relative;z-index:2">
+    <div class="overline reveal">AI-Powered Fitness OS</div>
+    <h1 class="grad reveal delay-1">FitnessOS</h1>
+    <p class="sub reveal delay-2">Your intelligent training partner — offline, private, adaptive</p>
+    <p class="reveal delay-3" style="color:rgba(255,255,255,0.3);font-size:.8rem;letter-spacing:.12em;text-transform:uppercase">Scroll to explore ↓</p>
   </div>
 </section>
 
 <section class="slide" id="s2">
   <div style="max-width:800px;width:100%">
-    <h2 class="reveal">The problem</h2>
-    <p class="sub reveal delay-1">Generic fitness apps ignore your equipment, injuries, and physique goals.</p>
+    <div class="overline reveal">The Problem</div>
+    <h2 class="reveal delay-1">Generic apps <span class="grad">ignore you.</span></h2>
+    <p class="sub reveal delay-2">Cookie-cutter programs. No injury awareness. Cloud-dependent. Zero intelligence.</p>
     <div class="cards">
-      <div class="card reveal delay-1"><h3>Pain 1</h3><p>Cookie-cutter programs waste gym time</p></div><div class="card reveal delay-2"><h3>Pain 2</h3><p>Injury history rarely respected</p></div><div class="card reveal delay-3"><h3>Pain 3</h3><p>Progress photos live outside the workout log</p></div>
+      <div class="card card-cyan reveal-left delay-1"><h3>🔄 Same plan for everyone</h3><p>Beginner and advanced athlete get identical programming — no equipment or physique awareness.</p></div>
+      <div class="card reveal-right delay-2"><h3>📡 Unusable offline</h3><p>No signal at the gym? Spinner. Lost workout. Not acceptable.</p></div>
+      <div class="card card-purple reveal-left delay-3"><h3>🩹 Injuries ignored</h3><p>Shoulder issues? App still prescribes overhead press.</p></div>
+      <div class="card reveal-right delay-4"><h3>🧠 Zero AI intelligence</h3><p>No readiness scoring. No deload signals. Just dumb logging.</p></div>
     </div>
   </div>
 </section>
 
 <section class="slide" id="s3">
   <div style="max-width:800px;width:100%">
-    <h2 class="reveal">Introducing FitnessOS</h2>
-    <p class="sub reveal delay-1">A training OS that adapts to your body, gear, and archetype.</p>
-    <div class="badges reveal delay-2">
-      <span class="badge">📱 PWA</span><span class="badge">🔒 Private</span><span class="badge">✈️ Offline</span>
+    <div class="overline reveal">Introducing</div>
+    <h2 class="grad reveal delay-1">FitnessOS Pro</h2>
+    <p class="sub reveal delay-2">One training OS that adapts to your body, gear, goals, and injuries — completely offline.</p>
+    <div class="badges reveal delay-3">
+      <span class="badge badge-cyan">📱 PWA</span><span class="badge">🔒 Private</span><span class="badge">📴 Offline</span><span class="badge">🤖 AI Coach</span>
     </div>
   </div>
 </section>
 
 <section class="slide" id="s4">
-  <div style="max-width:900px;width:100%">
-    <h2 class="reveal">Core pillars</h2>
-    <div class="cards">
-      <div class="card reveal delay-1"><div style="font-size:1.8rem;margin-bottom:.5rem">🏋️</div><h3>Workouts</h3><p>300+ exercises, smart splits</p></div><div class="card reveal delay-2"><div style="font-size:1.8rem;margin-bottom:.5rem">🗺️</div><h3>Body map</h3><p>Muscle coverage & weak points</p></div><div class="card reveal delay-3"><div style="font-size:1.8rem;margin-bottom:.5rem">📐</div><h3>Physique</h3><p>Archetype-driven programming</p></div><div class="card reveal delay-4"><div style="font-size:1.8rem;margin-bottom:.5rem">📈</div><h3>Progress</h3><p>PRs, quests, dashboards</p></div>
+  <div style="max-width:800px;width:100%">
+    <div class="overline reveal">Exercise Library</div>
+    <h2 class="reveal delay-1"><span class="ex-count grad">300+</span> Exercises</h2>
+    <p class="sub reveal delay-2">Coaching cues · setup · mistakes · breathing · joint stress ratings per exercise</p>
+    <div class="badges reveal delay-3" style="margin-bottom:1.5rem">
+      <span class="badge badge-cyan">14 Muscle Groups</span>
+      <span class="badge">Difficulty Ratings</span>
+      <span class="badge">Custom Exercises</span>
+    </div>
+    <div class="cards reveal delay-4">
+      <div class="card"><h3>✓ Setup &amp; mistakes</h3><p>Per-exercise coaching detail</p></div>
+      <div class="card"><h3>✓ Joint stress heatmap</h3><p>Respects injury flags automatically</p></div>
+      <div class="card"><h3>✓ Progressions</h3><p>Regressions and spotter flags</p></div>
+      <div class="card"><h3>✓ Equipment filter</h3><p>Hides exercises you can't perform</p></div>
     </div>
   </div>
 </section>
 
 <section class="slide" id="s5">
+  <div style="max-width:800px;width:100%">
+    <div class="overline reveal">Body Tracking</div>
+    <h2 class="reveal delay-1">Interactive <span class="grad">Body Map</span></h2>
+    <div class="body-map reveal delay-2" style="margin-bottom:1.5rem">
+      <div class="muscle" style="width:40px;height:30px;left:50%;top:18%;transform:translateX(-50%)"></div>
+      <div class="muscle" style="width:50px;height:35px;left:50%;top:32%;transform:translateX(-50%)"></div>
+      <div class="muscle" style="width:28px;height:50px;left:30%;top:38%"></div>
+      <div class="muscle" style="width:28px;height:50px;right:30%;top:38%"></div>
+      <div class="muscle" style="width:36px;height:45px;left:38%;top:58%"></div>
+      <div class="muscle" style="width:36px;height:45px;right:38%;top:58%"></div>
+      <div style="position:absolute;bottom:10px;left:0;right:0;text-align:center;font-size:10px;color:var(--muted)">Tap muscle → recovery status</div>
+    </div>
+    <div class="cards reveal delay-3">
+      <div class="card card-cyan"><h3>Front/back SVG</h3><p>Clickable muscles with recovery hours</p></div>
+      <div class="card card-purple"><h3>11 measurements</h3><p>Neck to calves · cm/in toggle · trend charts</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s6">
+  <div style="max-width:800px;width:100%">
+    <div class="overline reveal">Programming</div>
+    <h2 class="reveal delay-1">Physique <span class="grad2">Archetype</span></h2>
+    <p class="sub reveal delay-2">Training adapts to your build — not a one-size template</p>
+    <div class="archetype reveal delay-3" style="margin-bottom:1.5rem">
+      <div class="arch on"><div class="icon">🏋️</div><h3>Athletic</h3></div>
+      <div class="arch"><div class="icon">💪</div><h3>Powerlifter</h3></div>
+      <div class="arch"><div class="icon">🔥</div><h3>Lean</h3></div>
+      <div class="arch"><div class="icon">📐</div><h3>Balanced</h3></div>
+    </div>
+    <div class="badges reveal delay-4">
+      <span class="badge">Fat Loss</span><span class="badge">Hypertrophy</span><span class="badge">Strength</span>
+      <span class="badge">Recomp</span><span class="badge">Maintenance</span>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s7">
+  <div style="max-width:800px;width:100%">
+    <div class="overline reveal">AI Coach</div>
+    <h2 class="reveal delay-1">5 Coaches <span class="grad">× 3 Tones</span></h2>
+    <div class="coach-row reveal delay-2" style="margin:1.5rem 0">
+      <div class="coach-card"><div class="ci">🧪</div><h3>Maya</h3><p>Scientist</p></div>
+      <div class="coach-card"><div class="ci">🔥</div><h3>Alex</h3><p>Drill Sgt</p></div>
+      <div class="coach-card"><div class="ci">⚡</div><h3>Sam</h3><p>Motivator</p></div>
+      <div class="coach-card"><div class="ci">🧘</div><h3>Zen</h3><p>Mindful</p></div>
+      <div class="coach-card"><div class="ci">💪</div><h3>Rex</h3><p>Powerlifter</p></div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap" class="reveal delay-3">
+      <span class="tone-pill">🎯 Motivational</span>
+      <span class="tone-pill">🔬 Scientific</span>
+      <span class="tone-pill">💀 Hardcore</span>
+    </div>
+    <p class="sub reveal delay-4" style="margin-top:1.5rem">Goal-aware insights · deload signals · supplement timing</p>
+  </div>
+</section>
+
+<section class="slide" id="s8">
+  <div style="max-width:800px;width:100%">
+    <div class="overline reveal">Daily Briefing</div>
+    <h2 class="reveal delay-1">Readiness <span class="grad">Score Ring</span></h2>
+    <div style="display:flex;gap:24px;align-items:center;justify-content:center;flex-wrap:wrap;margin:1.5rem 0" class="reveal delay-2">
+      <div class="score-ring"><div class="score-num">87</div></div>
+      <div style="text-align:left;font-size:14px;max-width:260px">
+        <div style="padding:6px 0;border-bottom:1px solid var(--border)">😴 Sleep · 85%</div>
+        <div style="padding:6px 0;border-bottom:1px solid var(--border)">💪 Soreness · 62%</div>
+        <div style="padding:6px 0;border-bottom:1px solid var(--border)">⚡ Energy · 90%</div>
+        <div style="padding:6px 0">🔥 Streak · 14 days</div>
+      </div>
+    </div>
+    <p class="sub reveal delay-3">0–100 score from sleep, soreness, stress, energy, hydration, streak, injuries — coach adjusts your plan</p>
+  </div>
+</section>
+
+<section class="slide" id="s9">
+  <div style="max-width:800px;width:100%">
+    <div class="overline reveal">Safety</div>
+    <h2 class="reveal delay-1">Intelligent <span class="grad">Injury Flow</span></h2>
+    <div class="flow reveal delay-2" style="margin:1.5rem 0">
+      <div class="flow-box hl">Log Injury</div><div class="flow-arrow">→</div>
+      <div class="flow-box hl2">Joint Stress</div><div class="flow-arrow">→</div>
+      <div class="flow-box hl">Flag Exercises</div><div class="flow-arrow">→</div>
+      <div class="flow-box hl2">Modify Plan</div><div class="flow-arrow">→</div>
+      <div class="flow-box hl3">Mark Recovered</div>
+    </div>
+    <div class="card card-green reveal delay-3" style="max-width:480px;margin:0 auto;text-align:center">
+      <p>Shoulder, knee, back flags block risky exercises by body part — automatically returns to full program when healed</p>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s10">
+  <div style="max-width:800px;width:100%">
+    <div class="overline reveal">Onboarding</div>
+    <h2 class="reveal delay-1">Equipment <span class="grad">Setup</span></h2>
+    <p class="sub reveal delay-2">12-step onboarding — goals, equipment, injuries, split — hides exercises you can't perform</p>
+    <div class="equip-grid reveal delay-3" style="margin-bottom:1.5rem">
+      <div class="equip on">🏋️ Barbell</div>
+      <div class="equip on">🔔 Dumbbells</div>
+      <div class="equip on">🪑 Bench</div>
+      <div class="equip">🔗 Cables</div>
+      <div class="equip on">🏃 Cardio</div>
+      <div class="equip">🤸 Bands</div>
+      <div class="equip on">📍 Pull-up</div>
+      <div class="equip">🏠 Home only</div>
+    </div>
+    <div class="badges reveal delay-4">
+      <span class="badge">PPL</span><span class="badge">Upper/Lower</span><span class="badge">Full Body</span>
+      <span class="badge">Bro Split</span><span class="badge">Strength</span><span class="badge">Home</span>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s11">
+  <div style="max-width:800px;width:100%">
+    <div class="overline reveal">Gamification</div>
+    <h2 class="reveal delay-1">Hub & <span class="grad2">Quests</span></h2>
+    <div class="quest-card reveal delay-2" style="margin-bottom:12px">
+      <div style="font-weight:700;margin-bottom:4px">🏆 PR Wall Quest</div>
+      <div style="font-size:12px;color:var(--muted)">Beat 3 personal records this week</div>
+      <div class="quest-bar"><div class="quest-fill" style="width:66%"></div></div>
+      <div style="font-size:10px;color:var(--cyan);margin-top:4px">2 / 3 complete</div>
+    </div>
+    <div class="quest-card reveal delay-3">
+      <div style="font-weight:700;margin-bottom:4px">🔥 Consistency Streak</div>
+      <div style="font-size:12px;color:var(--muted)">Log 5 workouts in 7 days</div>
+      <div class="quest-bar"><div class="quest-fill" style="width:80%"></div></div>
+      <div style="font-size:10px;color:var(--cyan);margin-top:4px">4 / 5 complete</div>
+    </div>
+    <p class="sub reveal delay-4" style="margin-top:1.5rem">Achievement badges · PR wall · strength trends · 15 unique milestones</p>
+  </div>
+</section>
+
+<section class="slide" id="s12">
+  <div style="max-width:800px;width:100%">
+    <div class="overline reveal">Platform</div>
+    <h2 class="reveal delay-1">Offline-First <span class="grad">PWA</span></h2>
+    <div class="cards reveal delay-2">
+      <div class="card card-cyan"><h3>📴 100% offline</h3><p>Service worker cache-first fos-v17</p></div>
+      <div class="card"><h3>👤 Multi-profile</h3><p>Unlimited isolated localStorage namespaces</p></div>
+      <div class="card card-purple"><h3>🎨 8 themes</h3><p>Carbon cyan/purple default</p></div>
+      <div class="card"><h3>📤 JSON export</h3><p>Full backup before device reset</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" id="s13">
   <div style="max-width:700px;width:100%">
-    <h2 class="reveal">Your FitnessOS awaits.</h2>
-    <p class="sub reveal delay-1">Serious lifters who want a personal coach in their pocket.</p>
-    <div class="btn-row reveal delay-2">
-      <a class="btn btn-p" href="https://shamikhahmed.github.io/FitnessOS/" target="_blank" rel="noopener">Open FitnessOS</a>
+    <div style="width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,rgba(0,213,255,0.2),rgba(107,95,255,0.2));
+      border:2px solid rgba(0,213,255,0.4);display:flex;align-items:center;justify-content:center;
+      font-size:2rem;font-weight:800;margin:0 auto 1.5rem;box-shadow:0 0 40px rgba(0,213,255,0.2)" class="reveal">SA</div>
+    <h2 class="reveal delay-1">Shamikh Ahmed</h2>
+    <p class="sub reveal delay-2" style="font-style:italic;border-left:3px solid var(--cyan);padding-left:16px;text-align:left">
+      "I built FitnessOS because generic apps couldn't adapt to my injuries, equipment, or goals — and I refused to let a corporation own my health data."
+    </p>
+    <p class="sub reveal delay-3" style="font-size:.9rem">14 dev sessions · Zero dependencies · Part of the OS family</p>
+  </div>
+</section>
+
+<section class="slide" id="s14">
+  <div style="max-width:800px;width:100%;position:relative">
+    <div class="glow-ring" style="position:absolute;inset:auto;left:50%;top:50%;transform:translate(-50%,-50%)"></div>
+    <div class="overline reveal" style="position:relative">Ship It</div>
+    <h1 class="grad reveal delay-1" style="font-size:clamp(2.5rem,8vw,4.5rem);position:relative">Your FitnessOS awaits.</h1>
+    <p class="sub reveal delay-2" style="position:relative">Production-grade. Offline-first. Zero dependencies.</p>
+    <div class="btn-row reveal delay-3" style="position:relative">
+      <a class="btn btn-p" href="https://shamikhahmed.github.io/FitnessOS/" target="_blank" rel="noopener">💪 Open FitnessOS</a>
       <a class="btn btn-s" href="presentation.html">📊 Presentation</a>
       <a class="btn btn-s" href="landing.html">🌐 Landing</a>
       <a class="btn btn-s" href="docs/GUIDE.md">📖 Guide</a>
-      <a class="btn btn-s" href="https://github.com/shamikhahmed/FitnessOS" target="_blank" rel="noopener">GitHub</a>
     </div>
-    <p class="reveal delay-3" style="margin-top:2.5rem;font-size:.75rem;color:var(--dim)">© 2026 Shamikh Ahmed · shamikhahmed.github.io/FitnessOS/</p>
+    <p class="reveal delay-4" style="margin-top:2.5rem;font-size:.75rem;color:rgba(255,255,255,0.25);position:relative">© 2026 Shamikh Ahmed · shamikhahmed.github.io/FitnessOS</p>
   </div>
 </section>
 
 <script>
-const slides=document.querySelectorAll('.slide'),nav=document.getElementById('nav-dots');
-slides.forEach((s,i)=>{const d=document.createElement('button');d.className='nav-dot'+(i?'':' active');d.onclick=()=>s.scrollIntoView({behavior:'smooth'});nav.appendChild(d);});
-const obs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.querySelectorAll('.reveal').forEach(r=>r.classList.add('visible'));}),{threshold:.2});
-slides.forEach(s=>obs.observe(s));
-let cur=0;window.addEventListener('scroll',()=>{slides.forEach((s,i)=>{const r=s.getBoundingClientRect();if(Math.abs(r.top)<innerHeight/2)cur=i;});nav.querySelectorAll('.nav-dot').forEach((d,i)=>d.classList.toggle('active',i===cur));},{passive:true});
-document.querySelectorAll('#s1 .reveal').forEach(el=>setTimeout(()=>el.classList.add('visible'),80));
+// orb canvas (matches presentation.html)
+(function(){
+var c=document.getElementById('orb-canvas'),ctx=c.getContext('2d'),orbs=[];
+function resize(){c.width=innerWidth;c.height=innerHeight}
+function init(){orbs=[];var cols=['rgba(0,213,255,','rgba(107,95,255,','rgba(255,77,158,'];
+for(var i=0;i<8;i++)orbs.push({x:Math.random()*c.width,y:Math.random()*c.height,r:120+Math.random()*160,
+vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.4,color:cols[i%3],alpha:.04+Math.random()*.05})}
+function draw(){ctx.clearRect(0,0,c.width,c.height);orbs.forEach(function(o){
+o.x+=o.vx;o.y+=o.vy;if(o.x<-o.r)o.x=c.width+o.r;if(o.x>c.width+o.r)o.x=-o.r;
+if(o.y<-o.r)o.y=c.height+o.r;if(o.y>c.height+o.r)o.y=-o.r;
+var g=ctx.createRadialGradient(o.x,o.y,0,o.x,o.y,o.r);
+g.addColorStop(0,o.color+o.alpha+')');g.addColorStop(1,o.color+'0)');
+ctx.beginPath();ctx.arc(o.x,o.y,o.r,0,Math.PI*2);ctx.fillStyle=g;ctx.fill()});
+requestAnimationFrame(draw)}
+resize();init();draw();addEventListener('resize',function(){resize();init()})})();
+
+const slides=document.querySelectorAll('.slide'),navDots=document.getElementById('nav-dots');
+let currentSlide=0;
+slides.forEach((_,i)=>{const d=document.createElement('button');d.className='nav-dot'+(i===0?' active':'');d.onclick=()=>slides[i].scrollIntoView({behavior:'smooth'});navDots.appendChild(d)});
+function updateDots(){let idx=0;slides.forEach((s,i)=>{if(Math.abs(s.getBoundingClientRect().top)<innerHeight/2)idx=i});currentSlide=idx;navDots.querySelectorAll('.nav-dot').forEach((d,i)=>d.classList.toggle('active',i===idx))}
+addEventListener('scroll',updateDots,{passive:true});
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowDown'||e.key==='PageDown'){e.preventDefault();if(currentSlide<slides.length-1)slides[currentSlide+1].scrollIntoView({behavior:'smooth'})}
+  if(e.key==='ArrowUp'||e.key==='PageUp'){e.preventDefault();if(currentSlide>0)slides[currentSlide-1].scrollIntoView({behavior:'smooth'})}
+});
+let ty=0;addEventListener('touchstart',e=>{ty=e.touches[0].clientY},{passive:true});
+addEventListener('touchend',e=>{const dy=ty-e.changedTouches[0].clientY;if(Math.abs(dy)>50){if(dy>0&&currentSlide<slides.length-1)slides[currentSlide+1].scrollIntoView({behavior:'smooth'});else if(dy<0&&currentSlide>0)slides[currentSlide-1].scrollIntoView({behavior:'smooth'})}},{passive:true});
+const obs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible')}),{threshold:.15});
+document.querySelectorAll('.reveal,.reveal-left,.reveal-right').forEach(el=>obs.observe(el));
+setTimeout(()=>document.querySelectorAll('#s1 .reveal').forEach(el=>el.classList.add('visible')),100);
 </script>
 </body>
 </html>
