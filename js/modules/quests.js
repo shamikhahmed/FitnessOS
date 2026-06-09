@@ -745,8 +745,8 @@ reg('physique-timeline', function() {
     (points.length === 0 ?
       '<div style="padding:60px 20px;text-align:center"><div style="font-size:56px;margin-bottom:14px">📸</div>' +
       '<div style="font-size:16px;font-weight:800;color:var(--txt);margin-bottom:8px">No Measurements Yet</div>' +
-      '<div style="font-size:13px;color:var(--txt2);line-height:1.6;max-width:260px;margin:0 auto">Add body measurements in Settings to track your physique transformation over time.</div>' +
-      '<button onclick="go(\'settings\',{tab:\'measurements\'})" class="btn btn-primary" style="margin-top:20px">Add First Measurement ›</button>' +
+      '<div style="font-size:13px;color:var(--txt2);line-height:1.6;max-width:260px;margin:0 auto">Add body measurements in Body tab to track your physique transformation over time.</div>' +
+      '<button onclick="go(\'bodymap\')" class="btn btn-primary" style="margin-top:20px">Add First Measurement ›</button>' +
       '</div>' :
 
       (changes ?

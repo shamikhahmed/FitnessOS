@@ -69,9 +69,9 @@ function _renderIntro(idx) {
 
     '<div style="display:flex;justify-content:flex-end;padding:8px 20px">' +
     (idx < INTRO_SLIDES.length - 1 ?
-      '<button onclick="go(\'onboarding\')" style="background:none;border:none;' +
+      '<button onclick="introQuickStart()" style="background:none;border:none;' +
       'color:rgba(255,255,255,0.4);font-size:14px;font-weight:600;cursor:pointer;' +
-      'touch-action:manipulation;padding:8px 4px;min-height:44px">Skip</button>'
+      'touch-action:manipulation;padding:8px 4px;min-height:44px">Skip setup</button>'
       : '<div style="height:44px"></div>') +
     '</div>' +
 
@@ -118,6 +118,11 @@ function _renderIntro(idx) {
 
     '</div></div>';
 }
+
+window.introQuickStart = function() {
+  _obData = { name: 'Athlete', goal: 'hypertrophy', split: 'ppl', weeklyGoal: 4 };
+  _finishOnboarding();
+};
 
 window._introNext = function() {
   _introSlide++;

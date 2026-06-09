@@ -230,57 +230,46 @@ reg('dashboard', function() {
       '<div style="color:var(--txt3);font-size:18px">›</div>' +
       '</div></div>' : '';
 
-    /* ── EXPLORE GRID (grouped) ── */
-    function eCard(icon, title, sub, screen) {
-      return '<div onclick="go(\'' + screen + '\')" class="card-press" style="background:var(--bg3);border:1px solid var(--border);border-radius:16px;padding:16px;cursor:pointer;touch-action:manipulation;position:relative;overflow:hidden">' +
-        '<div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--grad)"></div>' +
-        '<div style="font-size:28px;margin-bottom:8px">' + icon + '</div>' +
-        '<div style="font-size:13px;font-weight:700;color:var(--txt);margin-bottom:2px">' + title + '</div>' +
-        '<div style="font-size:11px;color:var(--txt3)">' + sub + '</div>' +
+    /* ── Morning briefing (optional card, not full-screen intercept) ── */
+    const briefingCard = (function() {
+      if (S.g('settings.dailyBriefing') === false) return '';
+      const todayStr = new Date().toISOString().slice(0, 10);
+      if (S.g('settings.lastBriefingDate') === todayStr) return '';
+      const coachMsg = ReadinessEngine.coachQuote(score, user.coachPersonality || 'maya');
+      return '<div style="margin:0 16px 14px;border-radius:18px;padding:14px 16px;' +
+        'background:linear-gradient(135deg,rgba(0,213,255,0.1),rgba(123,95,255,0.08));' +
+        'border:1px solid rgba(0,213,255,0.2);display:flex;align-items:center;gap:12px">' +
+        '<div style="font-size:28px;flex-shrink:0">☀️</div>' +
+        '<div style="flex:1;min-width:0">' +
+        '<div style="font-size:13px;font-weight:700;color:var(--txt);margin-bottom:3px">Morning Briefing</div>' +
+        '<div style="font-size:11px;color:var(--txt3);line-height:1.45;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">' + esc(coachMsg) + '</div>' +
+        '</div>' +
+        '<button onclick="openMorningBriefing()" style="flex-shrink:0;padding:8px 12px;border-radius:10px;' +
+        'background:var(--grad);border:none;color:#fff;font-size:11px;font-weight:700;cursor:pointer;touch-action:manipulation">Open</button>' +
         '</div>';
-    }
-    function grpLabel(label) {
-      return '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--txt3);padding:0 16px;margin-top:20px;margin-bottom:8px">' + label + '</div>';
-    }
-    const exploreGridGrouped =
-      grpLabel('Train') +
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px;margin-bottom:4px">' +
-      eCard('💪', 'Workout', 'Log your session', 'workout') +
-      eCard('🤸', 'Skills', 'Calisthenics', 'calisthenics') +
-      eCard('🔄', 'Rotation', 'Exercise swaps', 'training-style') +
-      '</div>' +
-      grpLabel('Analyze') +
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px;margin-bottom:4px">' +
-      eCard('📊', 'Physique', 'Scores & growth', 'physique') +
-      eCard('🧬', 'Body Intel', 'Recovery · DNA', 'body-intelligence') +
-      eCard('🧠', 'Training', 'Age & volume', 'training-intel') +
-      eCard('🦴', 'Joints', 'Injury risk', 'injury-risk') +
-      eCard('📡', 'Visuals', 'Heatmaps & radar', 'visualizations') +
-      '</div>' +
-      grpLabel('Know') +
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px;margin-bottom:4px">' +
-      eCard('📖', 'Encyclopedia', 'Mobility & sports', 'encyclopedia') +
-      eCard('🎓', 'Academy', 'Learn & earn XP', 'academy') +
-      eCard('🩹', 'Rehab', 'Injury protocols', 'rehab') +
-      eCard('🔬', 'Anatomy', '80+ muscles', 'anatomy') +
-      '</div>' +
-      grpLabel('Me') +
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px;margin-bottom:14px">' +
-      eCard('🎯', 'Archetype', 'Physique goals', 'physique-archetype') +
-      eCard('⚔️', 'Quests', 'Missions & rewards', 'quests') +
-      eCard('📸', 'Timeline', 'Transformation', 'physique-timeline') +
-      eCard('📈', 'Progress', 'Charts & PRs', 'progress') +
-      '</div>';
+    })();
 
-    return demoBanner + topbar + heroCard + quickActions + todayWorkout + recoverySnapshot +
-      muscleRecoveryMini + activeQuestCard + progressSnapshot + lastWktCard + exploreGridGrouped +
-      '<div style="height:20px"></div>';
+    const exploreCta = '<div onclick="go(\'hub\')" style="margin:0 16px 14px;border-radius:16px;padding:14px 16px;' +
+      'background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;cursor:pointer;touch-action:manipulation">' +
+      '<div><div style="font-size:14px;font-weight:700;color:var(--txt)">Explore all features</div>' +
+      '<div style="font-size:11px;color:var(--txt3);margin-top:2px">Splits · Rehab · Academy · Quests · Search</div></div>' +
+      '<span style="font-size:18px;color:var(--txt3)">›</span></div>';
+
+    return demoBanner + topbar + briefingCard + heroCard + quickActions + todayWorkout + recoverySnapshot +
+      muscleRecoveryMini + activeQuestCard + progressSnapshot + lastWktCard + exploreCta +
+      '<div style="height:12px"></div>';
 
   } catch(e) {
     console.error('dashboard', e);
-    return '<div style="padding:28px;color:var(--txt)">Loading...</div>';
+    return '<div style="padding:28px 20px;color:var(--txt);line-height:1.6">' +
+      '<div style="font-size:32px;margin-bottom:12px">⚠️</div>' +
+      '<strong>Dashboard error</strong><br><span style="color:var(--txt3);font-size:13px">' + esc(e.message) + '</span>' +
+      '<br><br><button class="btn btn-secondary" onclick="go(\'dashboard\')">Retry</button></div>';
   }
 });
 
 window._nextTheme = _nextTheme;
-window._eCard = function(i, t, s, sc) { return ''; };
+window.openMorningBriefing = function() {
+  S.set('settings.lastBriefingDate', new Date().toISOString().slice(0, 10));
+  go('briefing');
+};

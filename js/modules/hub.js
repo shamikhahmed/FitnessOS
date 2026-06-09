@@ -58,6 +58,7 @@ reg('hub', function() {
 
     hubSection('Train') +
     '<div style="background:var(--bg3);border-top:1px solid var(--border)">' +
+    hubRow('📚', 'Exercise Library', (typeof ExDB !== 'undefined' ? ExDB.db.length + ' exercises' : 'Browse all') + ' · wger sync', 'workout', '') +
     hubRow('💪', 'Workout Logger', 'Log sets · PRs · Volume tracking', 'workout', '') +
     hubRow('🔄', 'Smart Rotation', 'Exercise swap suggestions', 'training-style', '') +
     hubRow('🤸', 'Calisthenics', 'Skill progressions', 'calisthenics', '') +
@@ -90,7 +91,7 @@ reg('hub', function() {
     '<div style="background:var(--bg3);border-top:1px solid var(--border)">' +
     hubRow('⚔️', 'Quests & Missions', 'Auto-generated challenges', 'quests', activeQuests > 0 ? activeQuests + ' active' : '') +
     hubRow('🏆', 'Achievements', 'Milestones · Badges · History', 'progress', '') +
-    hubRow('💊', 'Nutrition & Supps', 'Macros · Tracking', 'nutrition', '') +
+    hubRow('📈', 'Progress & PRs', 'Charts · Volume · History', 'progress', '') +
     '</div>' +
 
     '<div style="height:30px"></div>';

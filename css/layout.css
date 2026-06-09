@@ -19,7 +19,7 @@
   flex: 1; min-height: 0;
   overflow-y: auto; overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: 20px;
+  padding-bottom: 12px;
   scroll-behavior: smooth;
   overscroll-behavior: contain;
 }

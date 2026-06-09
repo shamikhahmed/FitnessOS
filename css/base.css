@@ -2,7 +2,7 @@
 
 :root {
   /* Spacing */
-  --nav-h: 80px;
+  --nav-h: 64px;
   --safe: env(safe-area-inset-bottom, 0px);
   --top-safe: env(safe-area-inset-top, 0px);
 

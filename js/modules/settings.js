@@ -239,9 +239,9 @@ function _tabAppearance(u) {
     _sectionTitle('Navigation Tabs') +
     '<div style="font-size:13px;color:var(--txt2);margin-bottom:10px;line-height:1.5">Tap to toggle which tabs appear in the bottom nav (minimum 3).</div>' +
     (function() {
-      const allTabs = ['dashboard','workout','hub','recovery','settings','bodymap','coach','progress','rehab','anatomy','calisthenics'];
-      const tabIcons = {dashboard:'🏠',workout:'💪',hub:'🔍',recovery:'😴',settings:'⚙️',bodymap:'🫀',coach:'🤖',progress:'📈',rehab:'🩹',anatomy:'🫀',calisthenics:'🤸'};
-      const cur = S.g('nav.tabs') || ['dashboard','workout','hub','recovery','settings'];
+      const allTabs = ['dashboard','workout','hub','bodymap','settings','recovery','coach','progress','rehab','anatomy','calisthenics','search','assistant'];
+      const tabIcons = {dashboard:'🏠',workout:'💪',hub:'🔍',bodymap:'🫀',settings:'⚙️',recovery:'😴',coach:'🤖',progress:'📈',rehab:'🩹',anatomy:'🔬',calisthenics:'🤸',search:'🔎',assistant:'💬'};
+      const cur = (typeof _getNavTabIds === 'function' ? _getNavTabIds() : (S.g('settings.navTabs') || CORE_NAV_DEFAULT));
       return allTabs.map(function(t) {
         const active = cur.includes(t);
         return '<div onclick="toggleNavTab(\''+t+'\')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;touch-action:manipulation">' +
@@ -292,6 +292,20 @@ function _tabData() {
     _sectionTitle('Profiles') +
     '<button class="btn btn-secondary" onclick="go(\'profiles\')" style="margin-bottom:10px">👤 Manage Profiles</button>' +
     '<button class="btn btn-danger" onclick="confirmClearData()" style="margin-bottom:10px">🗑️ Reset This Profile</button>' +
+
+    _sectionTitle('Exercise Library') +
+    (function() {
+      const st = typeof ExerciseLibrary !== 'undefined' ? ExerciseLibrary.status() : { cached: false, count: 0 };
+      const exCount = typeof ExDB !== 'undefined' ? ExDB.db.length : 0;
+      return '<div class="card card-solid" style="margin-bottom:14px">' +
+        '<div style="font-size:13px;color:var(--txt2);line-height:1.55;margin-bottom:12px">' +
+        'Built-in: <strong style="color:var(--txt)">' + exCount + '</strong> exercises. ' +
+        (st.cached ? 'wger cache: <strong style="color:var(--txt)">' + st.count + '</strong> (offline).' : 'Download wger.de library once while online — stays on your phone forever.') +
+        '</div>' +
+        '<button id="ex-lib-sync-btn" class="btn btn-secondary" onclick="syncExerciseLibrary()" style="width:100%">' +
+        (st.cached ? '↻ Re-sync Exercise Library' : '↓ Download Exercise Library (wger)') +
+        '</button></div>';
+    })() +
 
     _sectionTitle('Export & Import') +
     '<button class="btn btn-secondary" onclick="exportData()" style="margin-bottom:10px">📤 Export Backup (JSON)</button>' +
@@ -437,15 +451,16 @@ window.confirmClearData = function() {
 };
 
 window.toggleNavTab = function(tab) {
-  const cur = S.g('nav.tabs') || ['dashboard','workout','hub','recovery','settings'];
+  const cur = (typeof _getNavTabIds === 'function' ? _getNavTabIds() : (S.g('settings.navTabs') || CORE_NAV_DEFAULT)).slice();
   const idx = cur.indexOf(tab);
   if (idx >= 0) {
     if (cur.length <= 3) { toast('Minimum 3 tabs required', 'warn'); return; }
     cur.splice(idx, 1);
   } else {
+    if (cur.length >= 6) { toast('Maximum 6 tabs in nav', 'warn'); return; }
     cur.push(tab);
   }
-  S.set('nav.tabs', cur);
+  S.set('settings.navTabs', cur);
   buildNav();
   go('settings', { tab: 'appearance' });
 };
