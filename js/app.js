@@ -18,6 +18,8 @@ function go(id, data) {
     const v = document.getElementById('view');
     if (!v) return;
     v.scrollTop = 0;
+    /* Boot splash in index.html has no .screen class — clear it on first navigation */
+    if (!v.querySelector('.screen')) v.innerHTML = '';
     const div = document.createElement('div');
     div.className = 'screen screen-enter';
     div.innerHTML = html;
