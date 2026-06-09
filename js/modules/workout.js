@@ -1496,7 +1496,7 @@ function showBrowseExercises(filterGrp, filterQuery) {
   const query = filterQuery || '';
   const groups = ['all','chest','back','legs','shoulders','biceps','triceps','core','glutes','cardio','sports','fullbody','forearms'];
 
-  let exercises = ExDB.db;
+  let exercises = typeof EquipmentDB !== 'undefined' ? EquipmentDB.filterExercises(ExDB.db) : ExDB.db;
   if (grp && grp !== 'all') exercises = exercises.filter(function(e){return e.grp===grp;});
   if (query) exercises = exercises.filter(function(e){
     return e.n.toLowerCase().includes(query.toLowerCase()) || (e.pri||'').toLowerCase().includes(query.toLowerCase());

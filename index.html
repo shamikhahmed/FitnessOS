@@ -134,6 +134,9 @@ window.addEventListener('offline', function(){ document.getElementById('offline-
   <div id="rest-sheet"></div>
 
   <script src="js/storage.js"></script>
+  <script src="js/data/equipment-db.js"></script>
+  <script src="js/data/splits-db.js"></script>
+  <script src="js/data/injuries-db.js"></script>
   <script src="js/app.js"></script>
   <script src="js/modules/onboarding.js"></script>
   <script src="js/modules/dashboard.js"></script>
@@ -163,6 +166,7 @@ window.addEventListener('offline', function(){ document.getElementById('offline-
   <script src="js/modules/fitness-assistant.js"></script>
   <script src="js/modules/quests.js"></script>
   <script src="js/modules/hub.js"></script>
+  <script src="js/modules/equipment-setup.js"></script>
 
   <script>
     S.init();
@@ -212,7 +216,7 @@ window.addEventListener('offline', function(){ document.getElementById('offline-
       });
     };
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js?v=14').then(function(r){ r.update(); }).catch(function(){});
+      navigator.serviceWorker.register('sw.js?v=15').then(function(r){ r.update(); }).catch(function(){});
     }
   </script>
 </body>

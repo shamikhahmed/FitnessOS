@@ -11,6 +11,7 @@ reg('progress', function() {
 
   return '<div class="topbar"><div class="topbar-title">Progress</div></div>' +
     _weeklySummary(ws, prs) +
+    _monthlyReport(ws, prs, bodyStats) +
     _heroStats(ws, prs, streak, totalVol) +
     _strengthLineChart(ws) +
     _workoutCalendar(ws) +
@@ -23,6 +24,27 @@ reg('progress', function() {
     '<div style="padding:0 16px 16px"><button class="btn btn-secondary" onclick="go(\'physique\')" style="width:100%">📊 Physique Analysis & Growth Simulator →</button></div>' +
     '<div style="height:20px"></div>';
 });
+
+function _monthlyReport(ws, prs, bodyStats) {
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+  const monthWs = ws.filter(w => (w.date || '') >= monthStart);
+  const monthVol = monthWs.reduce((a, w) => a + (w.totalVol || 0), 0);
+  const monthPRs = prs.filter(p => (p.date || '') >= monthStart).length;
+  const monthName = now.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  const weights = (bodyStats || []).filter(b => (b.date || '') >= monthStart && b.weight);
+  const weightChange = weights.length >= 2 ? (weights[weights.length - 1].weight - weights[0].weight).toFixed(1) : null;
+  return '<div style="margin:0 16px 14px;background:linear-gradient(135deg,rgba(123,95,255,0.1),rgba(0,213,255,0.06));border:1px solid rgba(123,95,255,0.18);border-radius:20px;padding:16px">' +
+    '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--c2);margin-bottom:4px">Monthly Report</div>' +
+    '<div style="font-size:15px;font-weight:800;color:var(--txt);margin-bottom:12px">'+esc(monthName)+'</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">' +
+    _pStat(monthWs.length, 'Sessions', '📅') +
+    _pStat(Math.round(monthVol / 1000) + 'k', 'Volume kg', '🏋️') +
+    _pStat(monthPRs, 'PRs', '🏆') +
+    '</div>' +
+    (weightChange !== null ? '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;color:var(--txt3)">Weight this month: <span style="color:'+(parseFloat(weightChange)<=0?'var(--c3)':'var(--c5)')+';font-weight:700">'+(parseFloat(weightChange)>0?'+':'')+weightChange+' kg</span></div>' : '') +
+    '</div>';
+}
 
 function _weeklySummary(ws, prs) {
   const thisWeek = ws.filter(w => daysAgo(w.date) < 7);

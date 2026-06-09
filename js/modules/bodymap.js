@@ -239,11 +239,28 @@ function _measurementsSection(latest, prev, user) {
     return '<button onclick="setMeasUnit(\''+u+'\')" style="flex:1;padding:8px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;touch-action:manipulation;border:1px solid var(--border);background:'+(unit===u?'var(--grad)':'var(--bg4)')+';color:'+(unit===u?'#fff':'var(--txt3)')+'">'+u+'</button>';
   }).join('');
 
+  var allMeas = S.g('measurements') || [];
+  var waistPts = allMeas.filter(m => m.waist).slice(-12);
+  var miniChart = '';
+  if (waistPts.length >= 2) {
+    var vals = waistPts.map(m => m.waist);
+    var minV = Math.min.apply(null, vals), maxV = Math.max.apply(null, vals);
+    var W = 280, H = 48, pad = 4;
+    var pts = waistPts.map(function(m, i) {
+      var x = pad + (waistPts.length > 1 ? i / (waistPts.length - 1) : 0.5) * (W - pad * 2);
+      var y = pad + (1 - (m.waist - minV) / (maxV - minV || 1)) * (H - pad * 2);
+      return x + ',' + y;
+    }).join(' ');
+    miniChart = '<div style="margin-bottom:14px;padding-top:8px;border-top:1px solid var(--border)">' +
+      '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--txt3);margin-bottom:6px">Waist trend</div>' +
+      '<svg width="100%" viewBox="0 0 '+W+' '+H+'" style="display:block"><polyline fill="none" stroke="var(--c1)" stroke-width="2.5" stroke-linecap="round" points="'+pts+'"/></svg></div>';
+  }
+
   return sh('Measurements', '+ Log', 'showLogMeasurements()') +
     '<div class="card card-solid" style="margin:0 16px 14px">' +
     '<div style="display:flex;gap:6px;margin-bottom:14px">'+unitBtns+'</div>' +
     (latest ? '<div style="font-size:12px;color:var(--txt3);margin-bottom:10px">Last logged: '+esc(latest.date || '—')+(prev ? ' · Previous: '+esc(prev.date||'—') : '')+'</div>' : '') +
-    rows +
+    miniChart + rows +
     '</div>';
 }
 
@@ -388,19 +405,33 @@ window.showLogWeight = function() {
   var isImperial = user.units === 'imperial';
   var goalKg = user.goalWeight || 70;
   var curKg = user.weight || 75;
-  modal('Log Weight',
+  modal('What do you weigh today?',
     '<div class="field-wrap">' +
     '<label class="field-label">Weight ('+(isImperial?'lb':'kg')+')</label>' +
     '<input id="wt-inp" class="field" type="number" step="0.1" inputmode="decimal" ' +
     'placeholder="'+(isImperial ? Math.round(curKg*2.205) : curKg)+'" ' +
     'style="font-size:26px;font-weight:800;text-align:center">' +
     '</div>' +
-    '<div style="font-size:13px;color:var(--txt3);text-align:center;margin-top:8px">' +
-    'Goal: '+(isImperial ? Math.round(goalKg*2.205)+' lb' : goalKg+' kg') +
-    ' · '+Math.abs(curKg - goalKg).toFixed(1)+'kg to go' +
+    '<div style="margin-top:14px">' +
+    '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--txt3);margin-bottom:8px">Measured</div>' +
+    '<div style="display:flex;gap:8px">' +
+    '<button id="wt-fasted" class="btn btn-primary btn-sm" style="flex:1" onclick="setWeightFasted(true)">🌅 Fasted</button>' +
+    '<button id="wt-fed" class="btn btn-secondary btn-sm" style="flex:1" onclick="setWeightFasted(false)">🍽 After eating</button>' +
+    '</div></div>' +
+    '<div style="font-size:12px;color:var(--txt3);text-align:center;margin-top:12px;line-height:1.45">' +
+    'Fasted morning weight is most consistent for tracking.<br>Goal: '+(isImperial ? Math.round(goalKg*2.205)+' lb' : goalKg+' kg') +
     '</div>',
-    '<button class="btn btn-primary" onclick="saveWeight()" style="margin-top:12px">Log Weight</button>'
+    '<button class="btn btn-primary" onclick="saveWeight()" style="margin-top:12px">Save Weight</button>'
   );
+  window._weightFasted = true;
+};
+
+window.setWeightFasted = function(fasted) {
+  window._weightFasted = fasted;
+  var f = document.getElementById('wt-fasted');
+  var e = document.getElementById('wt-fed');
+  if (f) { f.className = 'btn btn-' + (fasted ? 'primary' : 'secondary') + ' btn-sm'; f.style.flex = '1'; }
+  if (e) { e.className = 'btn btn-' + (fasted ? 'secondary' : 'primary') + ' btn-sm'; e.style.flex = '1'; }
 };
 
 window.saveWeight = function() {
@@ -410,9 +441,10 @@ window.saveWeight = function() {
   var raw = parseFloat(el ? el.value : '');
   if (!raw) { toast('Enter a weight', 'warn'); return; }
   var kg = isImperial ? Math.round(raw / 2.205 * 10) / 10 : raw;
+  var fasted = window._weightFasted !== false;
   S.set('user.weight', kg);
-  S.push('bodyStats', { date: today(), weight: kg });
+  S.push('bodyStats', { date: today(), weight: kg, fasted: fasted });
   closeModal();
-  toast('Weight logged: '+kg+'kg', 'ok');
+  toast('Weight logged: '+kg+'kg'+(fasted?' (fasted)':' (fed)'), 'ok');
   go('bodymap');
 };

@@ -58,8 +58,10 @@ function _tabProfile(u) {
 
     _sectionTitle('Goal') +
     _selectWrap('Primary Goal', 'user.goal', u.goal||'hypertrophy', [
-      {v:'hypertrophy',l:'Build Muscle'},{v:'fat_loss',l:'Lose Fat'},{v:'recomp',l:'Recomposition'},
-      {v:'athletic',l:'Athletic'},{v:'strength',l:'Strength'},{v:'maintenance',l:'Maintain'}
+      {v:'hypertrophy',l:'Build Muscle'},{v:'fat_loss',l:'Lose Fat'},{v:'weight_gain',l:'Gain Weight'},
+      {v:'general_health',l:'Get Healthier'},{v:'recomp',l:'Recomposition'},{v:'strength',l:'Strength'},
+      {v:'athletic',l:'Athletic'},{v:'endurance',l:'Cardio & Endurance'},{v:'mobility',l:'Mobility'},
+      {v:'maintenance',l:'Maintain'}
     ]) +
     _selectWrap('Experience', 'user.exp', u.exp||'intermediate', [
       {v:'beginner',l:'Beginner'},{v:'intermediate',l:'Intermediate'},{v:'advanced',l:'Advanced'},{v:'athlete',l:'Athlete'}
@@ -80,42 +82,59 @@ function _tabProfile(u) {
     '<button class="btn btn-secondary btn-sm" onclick="showLogWeight()">📊 Log Weight Today</button>' +
     '</div></div>' +
 
-    _sectionTitle('Active Injuries') +
+    _sectionTitle('Injuries & Pain') +
     '<div style="margin-bottom:14px">' +
-    '<div style="font-size:13px;color:var(--txt2);margin-bottom:10px;line-height:1.5">These affect exercise recommendations and readiness score. Tap to mark recovered.</div>' +
+    '<div style="font-size:13px;color:var(--txt2);margin-bottom:10px;line-height:1.5">Add injuries anytime. Severity affects rest suggestions and exercise filtering.</div>' +
     (function() {
       const injuries = S.g('user.injuries') || [];
-      if (!injuries.length) return '<div style="font-size:14px;color:var(--txt3);padding:10px 0">No injuries logged. Add via onboarding or below.</div>';
-      return injuries.map(function(inj, i) {
-        const name = typeof inj === 'string' ? inj : (inj.bodyPart || 'Unknown');
-        const recovered = typeof inj === 'object' ? inj.recovered : false;
-        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">' +
-          '<div style="display:flex;align-items:center;gap:10px">' +
-          '<span style="font-size:18px">'+(recovered?'✅':'⚠️')+'</span>' +
-          '<div><div style="font-size:14px;font-weight:600;color:var(--txt)">'+esc(name.replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();}))+'</div>' +
-          '<div style="font-size:12px;color:var(--txt3)">'+(recovered?'Recovered':'Active injury — affecting recommendations')+'</div></div>' +
-          '</div>' +
-          '<button onclick="toggleInjuryRecovered('+i+')" style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;touch-action:manipulation;border:1px solid '+(recovered?'var(--border)':'rgba(255,69,58,0.3)')+';background:'+(recovered?'var(--bg4)':'rgba(255,69,58,0.1)')+';color:'+(recovered?'var(--txt3)':'#ff453a')+'">'+(recovered?'Re-activate':'Mark Recovered')+'</button>' +
+      const assess = typeof InjuriesDB !== 'undefined' ? InjuriesDB.assessActive() : { messages: [], shouldRest: false };
+      let html = '';
+      if (assess.shouldRest) html += '<div style="background:rgba(255,69,58,0.1);border:1px solid rgba(255,69,58,0.2);border-radius:12px;padding:12px;margin-bottom:12px;font-size:13px;color:#ff453a">⚠️ Consider a rest day — severe injury flagged</div>';
+      if (!injuries.length) html += '<div style="font-size:14px;color:var(--txt3);padding:10px 0">No injuries logged.</div>';
+      html += injuries.map(function(inj, i) {
+        if (typeof inj === 'string') inj = { id: inj, severity: 1, recovered: false };
+        const db = typeof InjuriesDB !== 'undefined' ? InjuriesDB.byId(inj.id || inj.bodyPart) : null;
+        const name = db ? db.name : (inj.bodyPart || inj.id || 'Unknown').replace(/_/g,' ');
+        const sev = inj.severity || 1;
+        const sevLabel = typeof InjuriesDB !== 'undefined' ? (InjuriesDB.severities.find(s=>s.id===sev)||{}).label : 'Mild';
+        const recovered = inj.recovered;
+        return '<div style="padding:12px 0;border-bottom:1px solid var(--border)">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">' +
+          '<div><div style="font-size:14px;font-weight:600;color:var(--txt)">'+esc(name)+(recovered?' ✓':'')+'</div>' +
+          '<div style="font-size:12px;color:var(--txt3)">'+(recovered?'Recovered':sevLabel+' — '+(db?db.modify:''))+'</div></div>' +
+          '<button onclick="toggleInjuryRecovered('+i+')" style="padding:6px 12px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg4);color:var(--txt3)">'+(recovered?'Re-activate':'Recovered')+'</button></div>' +
+          (recovered ? '' : '<div style="display:flex;gap:6px">'+[1,2,3].map(s=>'<button onclick="setInjurySeverity('+i+','+s+')" style="flex:1;padding:6px;border-radius:8px;font-size:11px;font-weight:600;border:1px solid '+(sev===s?'var(--c1)':'var(--border)')+';background:'+(sev===s?'rgba(var(--c1-rgb),0.15)':'transparent')+';color:var(--txt);cursor:pointer">'+(typeof InjuriesDB!=='undefined'?InjuriesDB.severities.find(x=>x.id===s).label:s)+'</button>').join('')+'</div>') +
           '</div>';
       }).join('');
+      html += '<button class="btn btn-secondary btn-sm" onclick="showAddInjury()" style="width:100%;margin-top:10px">+ Add Injury</button>';
+      return html;
     })() +
     '</div>' +
     '</div>';
 }
 
 function _tabTraining(u) {
-  const equipment = [
-    {v:'barbell',l:'Barbell & Rack'},{v:'dumbbell',l:'Dumbbells'},{v:'cables',l:'Cable Machine'},
-    {v:'machine',l:'Weight Machines'},{v:'bar',l:'Pull-up Bar'},{v:'kettlebell',l:'Kettlebell'},
-    {v:'bands',l:'Resistance Bands'},{v:'legpress',l:'Leg Press'},{v:'smith',l:'Smith Machine'}
-  ];
-  const eq = u.equipment || [];
+  const rec = typeof SplitsDB !== 'undefined' ? SplitsDB.recommend(u) : null;
+  const splitOpts = (typeof SplitsDB !== 'undefined' ? SplitsDB.splits : [
+    {id:'ppl',name:'Push Pull Legs',days:6},{id:'ul',name:'Upper Lower',days:4},{id:'fb',name:'Full Body',days:3}
+  ]).map(s => ({ v: s.id, l: s.name + (s.days ? ' ('+s.days+'d)' : '') }));
+
+  const eqCount = (S.g('user.equipmentIds') || []).length;
+  const eqLabel = S.g('user.equipmentConfigured') ? eqCount + ' items configured' : 'Not set up yet — tap to configure';
+
   return '<div style="padding:16px">' +
-    _sectionTitle('Split & Schedule') +
-    _selectWrap('Training Split', 'user.split', u.split||'ppl', [
-      {v:'ppl',l:'Push Pull Legs (6d)'},{v:'ul',l:'Upper Lower (4d)'},{v:'fb',l:'Full Body (3d)'},
-      {v:'bro',l:'Bro Split (5d)'},{v:'str',l:'Strength (4d)'},{v:'home',l:'Home Warrior (4d)'}
-    ]) +
+    (rec ? '<div style="background:linear-gradient(135deg,rgba(0,213,255,0.08),rgba(123,95,255,0.06));border:1px solid rgba(0,213,255,0.15);border-radius:14px;padding:14px;margin-bottom:16px">' +
+      '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--c1);margin-bottom:6px">✨ Recommended for you</div>' +
+      '<div style="font-size:15px;font-weight:700;color:var(--txt)">'+esc(rec.name)+'</div>' +
+      '<div style="font-size:12px;color:var(--txt3);margin-top:4px;line-height:1.45">'+esc(rec.reason)+'</div>' +
+      '<button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="_setSetting(\'user.split\',\''+rec.id+'\');toast(\'Split updated\',\'ok\');go(\'settings\',{tab:\'training\'})">Apply suggestion</button></div>' : '') +
+
+    _sectionTitle('Training Split') +
+    _selectWrap('Active Split', 'user.split', u.split||'ppl', splitOpts) +
+
+    _sectionTitle('My Equipment') +
+    '<button class="btn btn-primary" onclick="go(\'equipment-setup\')" style="width:100%;margin-bottom:8px">🏋️ Configure Equipment</button>' +
+    '<div style="font-size:12px;color:var(--txt3);text-align:center;margin-bottom:14px">'+esc(eqLabel)+' — Life Fitness, Technogym, home, bodyweight & more</div>' +
 
     _sectionTitle('Rest Timer') +
     _fieldWrap('Default Rest (seconds)', '<input class="field" type="number" value="'+(u.restSecs||120)+'" min="30" max="600" step="15" oninput="_setSetting(\'user.restSecs\',parseInt(this.value))">') +
@@ -125,15 +144,7 @@ function _tabTraining(u) {
     _toggle('Show Warmup Protocol', 'user.warmupEnabled', u.warmupEnabled!==false) +
     _toggle('Cardio Recommendations', 'user.cardioEnabled', u.cardioEnabled!==false) +
     _toggle('Deload Reminders', 'user.deloadReminder', u.deloadReminder!==false) +
-
-    _sectionTitle('Equipment') +
-    equipment.map(e => {
-      const on = eq.includes(e.v);
-      return '<div class="toggle-row">' +
-        '<div class="toggle-info"><div class="toggle-label">'+esc(e.l)+'</div></div>' +
-        '<button class="toggle'+(on?' on':'')+'" onclick="toggleEquipment(\''+e.v+'\')"></button>' +
-        '</div>';
-    }).join('') + '</div>';
+    '</div>';
 }
 
 function _tabSupplements() {
@@ -356,7 +367,7 @@ window.toggleInjuryRecovered = function(idx) {
   const injuries = S.g('user.injuries') || [];
   const inj = injuries[idx];
   if (typeof inj === 'string') {
-    injuries[idx] = { bodyPart: inj, recovered: true };
+    injuries[idx] = { id: inj, bodyPart: inj, severity: 1, recovered: true };
   } else {
     injuries[idx] = Object.assign({}, inj, { recovered: !inj.recovered });
   }
@@ -364,17 +375,38 @@ window.toggleInjuryRecovered = function(idx) {
   go('settings', { tab: 'profile' });
 };
 
+window.setInjurySeverity = function(idx, severity) {
+  const injuries = (S.g('user.injuries') || []).slice();
+  const inj = injuries[idx];
+  if (!inj) return;
+  injuries[idx] = Object.assign({}, typeof inj === 'string' ? { id: inj, bodyPart: inj } : inj, { severity: severity, recovered: false });
+  S.set('user.injuries', injuries);
+  go('settings', { tab: 'profile' });
+};
+
+window.showAddInjury = function() {
+  if (typeof InjuriesDB === 'undefined') return;
+  const opts = InjuriesDB.injuries.map(i =>
+    '<button class="btn btn-secondary btn-sm" style="width:100%;margin-bottom:6px;text-align:left" onclick="addInjury(\''+i.id+'\')">'+esc(i.name)+'</button>'
+  ).join('');
+  modal('Add Injury', '<div style="max-height:50vh;overflow-y:auto">'+opts+'</div>', '');
+};
+
+window.addInjury = function(id) {
+  const injuries = S.g('user.injuries') || [];
+  if (injuries.some(i => (typeof i === 'object' ? i.id : i) === id)) {
+    toast('Already logged', 'warn'); closeModal(); return;
+  }
+  injuries.push({ id: id, bodyPart: id, severity: 1, recovered: false, addedAt: today() });
+  S.set('user.injuries', injuries);
+  closeModal();
+  toast('Injury added — exercises will adapt', 'ok');
+  go('settings', { tab: 'profile' });
+};
+
 window.toggleSetting = function(key) {
   const cur = S.g(key);
   S.set(key, !cur);
-  go('settings', { tab: _activeSettingsTab });
-};
-
-window.toggleEquipment = function(val) {
-  const eq = S.g('user.equipment') || [];
-  const idx = eq.indexOf(val);
-  if (idx >= 0) eq.splice(idx, 1); else eq.push(val);
-  S.set('user.equipment', eq);
   go('settings', { tab: _activeSettingsTab });
 };
 

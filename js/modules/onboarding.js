@@ -141,7 +141,7 @@ reg('intro', function() {
 
 let _obData = {};
 let _obStep = 1;
-const OB_TOTAL = 16;
+const OB_TOTAL = 7;
 
 const SPLIT_WEEKLY = { ppl:6, ul:4, fb:3, bro:5, str:4, home:4, custom:4 };
 
@@ -195,12 +195,14 @@ function _finishOnboarding() {
     weight: parseFloat(_obData.weight) || 75,
     goalWeight: parseFloat(_obData.goalWeight) || 70,
     targetBodyFat: parseFloat(_obData.targetBodyFat) || 15,
-    split: _obData.split || 'ppl',
-    weeklyGoal: _obData.weeklyGoal || 4,
-    equipment: _obData.equipment || ['barbell','dumbbell','cables','machine','bar'],
-    gymBrands: _obData.gymBrands || [],
-    gymDays: _obData.gymDays || [],
-    injuries: _obData.injuries || [],
+    split: (typeof SplitsDB !== 'undefined' ? SplitsDB.recommend({ goal: _obData.goal, exp: _obData.exp, weeklyGoal: 4 }).id : 'ppl'),
+    weeklyGoal: (typeof SplitsDB !== 'undefined' ? SplitsDB.recommend({ goal: _obData.goal, exp: _obData.exp }).daysPerWeek : 4),
+    equipment: [],
+    equipmentIds: [],
+    equipmentConfigured: false,
+    gymBrands: [],
+    gymDays: [],
+    injuries: [],
     trainingPersonality: _obData.trainingPersonality || 'balanced',
     physiqueArchetype: _obData.physiqueArchetype || 'classic',
     trainingEnvironments: _obData.trainingEnvironments || ['gym'],
@@ -215,7 +217,12 @@ function _finishOnboarding() {
   S.set('user', u);
   S.set('supplements', selSupps);
   S.set('onboarded', true);
-  toast('Welcome, ' + u.name + '! Let\'s build.', 'ok', 4000);
+  S.set('settings.equipmentSetupPending', true);
+  if (typeof SplitsDB !== 'undefined') {
+    const rec = SplitsDB.recommend(u);
+    S.set('settings.suggestedSplit', rec);
+  }
+  toast('Welcome, ' + u.name + '! Your plan is ready.', 'ok', 4000);
   go('dashboard');
 }
 
@@ -274,12 +281,16 @@ const OB_STEPS = {
       '<div class="ob-title">What\'s your primary goal?</div>' +
       '<div class="ob-sub">Your AI coach will build everything around this.</div>' +
       '<div class="ob-body">' +
-      _opt('goal','hypertrophy','💪','Build Muscle','Gain lean muscle mass and improve body composition') +
-      _opt('goal','fat_loss','🔥','Lose Fat','Reduce body fat while preserving muscle') +
-      _opt('goal','recomp','⚡','Recomposition','Simultaneously build muscle and lose fat') +
-      _opt('goal','athletic','🏃','Athletic Performance','Speed, power, and functional fitness') +
+      _opt('goal','hypertrophy','💪','Build Muscle','Gain lean muscle and improve body composition') +
+      _opt('goal','fat_loss','🔥','Lose Fat','Reduce body fat while keeping muscle') +
+      _opt('goal','weight_gain','📈','Gain Weight','Healthy mass gain — muscle and size') +
+      _opt('goal','general_health','❤️','Get Healthier','Move more, feel better, live longer') +
+      _opt('goal','recomp','⚡','Recomposition','Build muscle and lose fat together') +
       _opt('goal','strength','🏋️','Get Stronger','Maximise strength in the big lifts') +
-      _opt('goal','maintenance','✅','Maintain','Stay fit and healthy, no dramatic changes') +
+      _opt('goal','athletic','🏃','Athletic','Speed, power, and sport performance') +
+      _opt('goal','endurance','🏃‍♂️','Cardio & Endurance','Stamina, heart health, conditioning') +
+      _opt('goal','mobility','🧘','Mobility','Flexibility, joint health, pain-free movement') +
+      _opt('goal','maintenance','✅','Maintain','Stay fit with no dramatic changes') +
       '</div>' + _footer(2) + '</div>';
   },
   3() {
@@ -342,169 +353,6 @@ const OB_STEPS = {
       '</div>' + _footer(5) + '</div>';
   },
   6() {
-    return '<div class="ob-screen">' + _dots(6) +
-      '<div class="ob-title">Training split</div>' +
-      '<div class="ob-sub">Your weekly workout structure. Weekly days auto-set.</div>' +
-      '<div class="ob-body">' +
-      _opt('split','ppl','🔄','Push Pull Legs','6 days/week — the gold standard for hypertrophy') +
-      _opt('split','ul','↕️','Upper Lower','4 days/week — balanced frequency and volume') +
-      _opt('split','fb','⭕','Full Body','3 days/week — maximum frequency for beginners') +
-      _opt('split','bro','💪','Bro Split','5 days/week — one muscle group per day') +
-      _opt('split','str','🏋️','Strength Focus','4 days/week — powerlifting-style programming') +
-      _opt('split','home','🏠','Home Warrior','4 days/week — minimal equipment at home') +
-      '</div>' + _footer(6) + '</div>';
-  },
-  7() {
-    const equip = _obData.equipment || [];
-    const brands = _obData.gymBrands || [];
-    const equipList = [
-      {v:'barbell',l:'Barbell & Rack'},{v:'dumbbell',l:'Dumbbells'},{v:'cables',l:'Cable Machine'},
-      {v:'machine',l:'Weight Machines'},{v:'bar',l:'Pull-up Bar'},{v:'kettlebell',l:'Kettlebell'},
-      {v:'bands',l:'Resistance Bands'},{v:'legpress',l:'Leg Press'},{v:'smith',l:'Smith Machine'},
-      {v:'crossover',l:'Cable Crossover'}
-    ];
-    const brandList = ['Life Fitness','Technogym','Hammer Strength','Precor','Matrix','No preference'];
-    return '<div class="ob-screen">' + _dots(7) +
-      '<div class="ob-title">Where do you train?</div>' +
-      '<div class="ob-sub">Select all equipment you have regular access to.</div>' +
-      '<div class="ob-body">' +
-      '<div class="ob-sub" style="color:rgba(255,255,255,0.5);font-size:11px;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px">EQUIPMENT</div>' +
-      equipList.map(e => {
-        const on = equip.includes(e.v);
-        return '<button class="ob-opt'+(on?' sel':'')+'" data-field="equipment" data-val="'+e.v+'" onclick="obToggle(\'equipment\',\''+e.v+'\')" style="margin-bottom:8px;width:100%">' +
-          '<div class="ob-opt-title">'+e.l+'</div>' +
-          '<div class="ob-opt-check" style="margin-left:auto">'+(on?'✓':'')+'</div></button>';
-      }).join('') +
-      '<div class="ob-sub" style="color:rgba(255,255,255,0.5);font-size:11px;text-transform:uppercase;letter-spacing:0.1em;margin:16px 0 8px">GYM BRAND (optional)</div>' +
-      brandList.map(b => {
-        const on = brands.includes(b);
-        return '<button class="ob-opt'+(on?' sel':'')+'" data-field="gymBrands" data-val="'+b+'" onclick="obToggle(\'gymBrands\',\''+esc(b)+'\')" style="margin-bottom:8px;width:100%">' +
-          '<div class="ob-opt-title">'+esc(b)+'</div>' +
-          '<div class="ob-opt-check" style="margin-left:auto">'+(on?'✓':'')+'</div></button>';
-      }).join('') +
-      '</div>' + _footer(7) + '</div>';
-  },
-  8() {
-    const days = _obData.gymDays || [];
-    const dList = [{v:'mon',l:'Mon'},{v:'tue',l:'Tue'},{v:'wed',l:'Wed'},{v:'thu',l:'Thu'},{v:'fri',l:'Fri'},{v:'sat',l:'Sat'},{v:'sun',l:'Sun'}];
-    return '<div class="ob-screen">' + _dots(8) +
-      '<div class="ob-title">Gym schedule</div>' +
-      '<div class="ob-sub">Which days do you train? Select all that apply.</div>' +
-      '<div class="ob-body">' +
-      '<div style="display:flex;flex-wrap:wrap;gap:10px">' +
-      dList.map(d => {
-        const on = days.includes(d.v);
-        return '<button class="ob-opt'+(on?' sel':'')+'" data-field="gymDays" data-val="'+d.v+'" onclick="obToggle(\'gymDays\',\''+d.v+'\')" style="flex:1;min-width:80px;justify-content:center;padding:16px 8px">' +
-          '<div class="ob-opt-title" style="text-align:center">'+d.l+'</div></button>';
-      }).join('') +
-      '</div></div>' + _footer(8) + '</div>';
-  },
-  9() {
-    const parts = [
-      {v:'none',l:'None / No injuries 🙌'},
-      {v:'left_shoulder',l:'Left Shoulder'},{v:'right_shoulder',l:'Right Shoulder'},
-      {v:'lower_back',l:'Lower Back'},{v:'upper_back',l:'Upper Back'},
-      {v:'left_knee',l:'Left Knee'},{v:'right_knee',l:'Right Knee'},
-      {v:'left_elbow',l:'Left Elbow'},{v:'right_elbow',l:'Right Elbow'},
-      {v:'wrist',l:'Wrist'},{v:'neck',l:'Neck'},{v:'hip',l:'Hip'}
-    ];
-    const inj = _obData.injuries || [];
-    return '<div class="ob-screen">' + _dots(9) +
-      '<div class="ob-title">Any injuries or pain areas?</div>' +
-      '<div class="ob-sub">Your coach will modify exercises to protect these areas.</div>' +
-      '<div class="ob-body">' +
-      parts.map(p => {
-        const on = inj.includes(p.v) || (p.v==='none' && inj.length===0 && _obData._injTouched);
-        return '<button class="ob-opt'+(on?' sel':'')+'" data-field="injuries" data-val="'+p.v+'" onclick="' +
-          (p.v==='none' ? '_obData.injuries=[];_obData._injTouched=true;document.querySelectorAll(\'[data-field=injuries]\').forEach(e=>e.classList.remove(\'sel\'));this.classList.add(\'sel\')' :
-          '_obData._injTouched=true;obToggle(\'injuries\',\''+p.v+'\')') +
-          '" style="margin-bottom:8px;width:100%">' +
-          '<div class="ob-opt-title">'+p.l+'</div></button>';
-      }).join('') +
-      '</div>' + _footer(9) + '</div>';
-  },
-  10() {
-    const sel = _obData.supplements || [];
-    const timingOptions = ['pre','post','morning','night','anytime','with_meal'];
-    const timingLabels = { pre:'Pre-Workout', post:'Post-Workout', morning:'Morning', night:'Before Bed', anytime:'Any Time', with_meal:'With Meal' };
-    return '<div class="ob-screen">' + _dots(10) +
-      '<div class="ob-title">Supplement stack</div>' +
-      '<div class="ob-sub">Select what you take. We\'ll build a timing schedule.</div>' +
-      '<div class="ob-body">' +
-      SupplementDB.map(s => {
-        const isOn = sel.includes(s.id);
-        const timing = _obData['suppTiming_'+s.id] || s.timing;
-        return '<div style="margin-bottom:8px">' +
-          '<button class="ob-opt'+(isOn?' sel':'')+'" data-field="supplements" data-val="'+s.id+'" onclick="obToggle(\'supplements\',\''+s.id+'\')" style="margin-bottom:0;width:100%;border-radius:'+(isOn?'16px 16px 0 0':'16px')+'">' +
-          '<div class="ob-opt-title">'+esc(s.name)+'</div>' +
-          '<div class="ob-opt-sub">'+esc(s.dose)+'</div>' +
-          '<div class="ob-opt-check" style="margin-left:auto">'+(isOn?'✓':'')+'</div>' +
-          '</button>' +
-          (isOn ? '<div style="background:var(--bg4);border:1.5px solid var(--c1);border-top:none;border-radius:0 0 16px 16px;padding:10px 14px">' +
-            '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--txt3);margin-bottom:6px">TIMING</div>' +
-            '<div style="display:flex;flex-wrap:wrap;gap:6px">' +
-            timingOptions.map(t => '<button onclick="_obData[\'suppTiming_'+s.id+'\']=\''+t+'\';document.getElementById(\'st_'+s.id+'_'+t+'\').classList.add(\'sel\');document.querySelectorAll(\'.st_'+s.id+'\').forEach(e=>e.classList.remove(\'sel\'));this.classList.add(\'sel\')" class="pill st_'+s.id+(timing===t?' on':'')+'" id="st_'+s.id+'_'+t+'">'+timingLabels[t]+'</button>'
-            ).join('') +
-            '</div></div>' : '') +
-          '</div>';
-      }).join('') +
-      '</div>' + _footer(10) + '</div>';
-  },
-  11() {
-    return '<div class="ob-screen">' + _dots(11) +
-      '<div class="ob-title">How do you like to train?</div>' +
-      '<div class="ob-sub">Your AI coach will tailor every workout to your style.</div>' +
-      '<div class="ob-body"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
-      _gridCard('trainingPersonality','strength','🏋️','Strength','Heavy lifting, low reps, big compounds') +
-      _gridCard('trainingPersonality','hypertrophy','💪','Hypertrophy','Volume training, muscle building') +
-      _gridCard('trainingPersonality','athletic','⚡','Athletic','Performance, explosive, functional') +
-      _gridCard('trainingPersonality','fat_loss','🔥','Fat Loss','High intensity, conditioning focus') +
-      _gridCard('trainingPersonality','balanced','⚖️','Balanced','Mix of everything') +
-      _gridCard('trainingPersonality','mindful','🧘','Mindful','Controlled, technique-focused') +
-      '</div></div>' + _footer(11) + '</div>';
-  },
-  12() {
-    return '<div class="ob-screen">' + _dots(12) +
-      '<div class="ob-title">What\'s your physique goal?</div>' +
-      '<div class="ob-sub">Your program will be sculpted around this archetype.</div>' +
-      '<div class="ob-body"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
-      _gridCard('physiqueArchetype','v_taper','🔱','V-Taper','Wide shoulders, narrow waist') +
-      _gridCard('physiqueArchetype','classic','🏆','Classic','Balanced and proportional') +
-      _gridCard('physiqueArchetype','physique','🌊','Physique','Upper body dominant, lean') +
-      _gridCard('physiqueArchetype','athletic','⚡','Athletic','Functional, capable body') +
-      _gridCard('physiqueArchetype','mass','🏋️','Mass','Maximum muscle size') +
-      _gridCard('physiqueArchetype','lean','🎯','Lean','Low body fat, visible abs') +
-      '</div></div>' + _footer(12) + '</div>';
-  },
-  13() {
-    return '<div class="ob-screen">' + _dots(13) +
-      '<div class="ob-title">Where do you train?</div>' +
-      '<div class="ob-sub">Select all environments. We\'ll adapt plans for each.</div>' +
-      '<div class="ob-body">' +
-      _opt('trainingEnvironments','gym','🏢','Commercial Gym','Full equipment access', true) +
-      _opt('trainingEnvironments','home','🏠','Home Gym','Limited equipment', true) +
-      _opt('trainingEnvironments','travel','🌍','Travel','Minimal equipment, hotels', true) +
-      _opt('trainingEnvironments','outdoor','🌲','Outdoors','Parks, bodyweight', true) +
-      '</div>' + _footer(13) + '</div>';
-  },
-  14() {
-    const durations = [
-      {v:'20',l:'⚡ 20 min'},{v:'30',l:'🏃 30 min'},{v:'45',l:'💪 45 min'},
-      {v:'60',l:'🔥 60 min'},{v:'90',l:'🏆 90 min+'}
-    ];
-    return '<div class="ob-screen">' + _dots(14) +
-      '<div class="ob-title">How long are your sessions?</div>' +
-      '<div class="ob-sub">We\'ll compress or expand your workouts to fit.</div>' +
-      '<div class="ob-body">' +
-      '<div style="display:flex;flex-wrap:wrap;gap:10px">' +
-      durations.map(function(o) {
-        const on = _obData.sessionLength === o.v;
-        return '<button class="ob-opt'+(on?' sel':'')+'" data-field="sessionLength" data-val="'+o.v+'" onclick="obSelect(\'sessionLength\',\''+o.v+'\')" style="flex:1;min-width:120px;justify-content:center;padding:16px 8px">' +
-          '<div class="ob-opt-title" style="text-align:center">'+o.l+'</div></button>';
-      }).join('') +
-      '</div></div>' + _footer(14) + '</div>';
-  },
-  15() {
     const coaches = [
       {v:'maya',e:'🧪',n:'Maya',role:'Sports Scientist',d:'Evidence-based, analytical'},
       {v:'alex',e:'🔥',n:'Alex',role:'Drill Sergeant',d:'Intense, no excuses'},
@@ -512,45 +360,38 @@ const OB_STEPS = {
       {v:'zen',e:'🧘',n:'Zen',role:'Mindful Coach',d:'Calm, technique-focused'},
       {v:'rex',e:'💪',n:'Rex',role:'Powerlifter',d:'Strength-focused, raw'}
     ];
-    return '<div class="ob-screen">' + _dots(15) +
+    return '<div class="ob-screen">' + _dots(6) +
       '<div class="ob-title">Choose your coach</div>' +
-      '<div class="ob-sub">Their personality shapes all coaching messages and motivation.</div>' +
+      '<div class="ob-sub">Shapes motivation and daily guidance. Change anytime in Settings.</div>' +
       '<div class="ob-body">' +
       coaches.map(function(c) { return _opt('personality', c.v, c.e, c.n + ' · ' + c.role, c.d); }).join('') +
-      '</div>' + _footer(15) + '</div>';
+      '</div>' + _footer(6) + '</div>';
   },
-  16() {
+  7() {
     const u = _obData;
     const name = (u.name || 'Athlete').trim();
     const coaches = { alex:'Alex', maya:'Maya', sam:'Sam', zen:'Zen', rex:'Rex' };
-    const splits = { ppl:'Push Pull Legs', ul:'Upper Lower', fb:'Full Body', bro:'Bro Split', str:'Strength', home:'Home Warrior' };
-    const goals = { hypertrophy:'Build Muscle', fat_loss:'Lose Fat', recomp:'Recomposition', athletic:'Athletic', strength:'Strength', maintenance:'Maintain' };
-    const personalities = { strength:'Strength', hypertrophy:'Hypertrophy', athletic:'Athletic', fat_loss:'Fat Loss', balanced:'Balanced', mindful:'Mindful' };
-    const physiques = { v_taper:'V-Taper', classic:'Classic', physique:'Physique', athletic:'Athletic', mass:'Mass', lean:'Lean' };
+    const goals = { hypertrophy:'Build Muscle', fat_loss:'Lose Fat', weight_gain:'Gain Weight', general_health:'Get Healthier', recomp:'Recomposition', athletic:'Athletic', strength:'Strength', endurance:'Cardio', mobility:'Mobility', maintenance:'Maintain' };
     const cName = coaches[u.personality||'maya'] || 'Maya';
     const cEmoji = { alex:'🔥', maya:'🧪', sam:'⚡', zen:'🧘', rex:'💪' }[u.personality||'maya'] || '🧪';
-    const sessionLen = u.sessionLength ? u.sessionLength + (u.sessionLength === '90' ? '+' : '') + ' min' : '60 min';
-    return '<div class="ob-screen">' + _dots(16) +
+    const rec = typeof SplitsDB !== 'undefined' ? SplitsDB.recommend({ goal: u.goal, exp: u.exp }) : { name: 'Push Pull Legs', reason: 'Balanced hypertrophy split', daysPerWeek: 4 };
+    return '<div class="ob-screen">' + _dots(7) +
       '<div style="text-align:center;padding:24px 0 20px">' +
       '<div style="font-size:64px;margin-bottom:16px">'+cEmoji+'</div>' +
       '<div style="font-size:28px;font-weight:900;color:#fff;letter-spacing:-1px">Ready, '+esc(name)+'!</div>' +
-      '<div style="font-size:15px;color:rgba(255,255,255,0.65);margin-top:8px">Your OS has been calibrated.</div>' +
+      '<div style="font-size:15px;color:rgba(255,255,255,0.65);margin-top:8px">We\'ll suggest your split & equipment on Home.</div>' +
       '</div>' +
       '<div class="card card-solid" style="margin:0 0 14px">' +
-      _summaryRow('🎯','Goal', goals[u.goal||'hypertrophy'] || u.goal || '—') +
-      _summaryRow('📅','Split', splits[u.split||'ppl'] || u.split || '—') +
-      _summaryRow('🏋️','Style', personalities[u.trainingPersonality||'balanced'] || '—') +
-      _summaryRow('🔱','Physique', physiques[u.physiqueArchetype||'classic'] || '—') +
-      _summaryRow('⏱️','Sessions', sessionLen) +
+      _summaryRow('🎯','Goal', goals[u.goal||'hypertrophy'] || '—') +
+      _summaryRow('📅','Suggested split', rec.name + ' (' + rec.daysPerWeek + 'd/wk)') +
+      _summaryRow('💡','Why', rec.reason) +
       _summaryRow('⚡','Coach', cName) +
-      _summaryRow('💊','Supplements', (u.supplements||[]).length + ' selected') +
-      (u.injuries && u.injuries.length && !u.injuries.includes('none') ? _summaryRow('⚠️','Injuries', u.injuries.length + ' flagged') : '') +
       '</div>' +
       '<div class="ob-body">' +
       '<div class="ai-msg"><div class="ai-msg-header"><span>'+cEmoji+'</span><span class="ai-msg-label">'+cName+' says</span></div>' +
-      '<div class="ai-msg-text">Your program is personalised and ready. Log every workout, track your recovery, and trust the process. FitnessOS will adapt as you grow.</div></div>' +
+      '<div class="ai-msg-text">Set up your equipment and injuries anytime in Settings. I\'ll adapt every workout to what you actually have access to.</div></div>' +
       '</div>' +
-      _footer(16) + '</div>';
+      _footer(7) + '</div>';
   }
 };
 

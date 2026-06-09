@@ -255,7 +255,29 @@ reg('dashboard', function() {
       '<div style="font-size:11px;color:var(--txt3);margin-top:2px">Splits · Rehab · Academy · Quests · Search</div></div>' +
       '<span style="font-size:18px;color:var(--txt3)">›</span></div>';
 
-    return demoBanner + topbar + briefingCard + heroCard + quickActions + todayWorkout + recoverySnapshot +
+    const todayWt = (S.g('bodyStats') || []).find(b => b.date === new Date().toISOString().slice(0, 10));
+    const weightPrompt = !todayWt ?
+      '<div style="margin:0 16px 14px;border-radius:16px;padding:14px 16px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px">' +
+      '<div><div style="font-size:13px;font-weight:700;color:var(--txt)">⚖️ Weigh in today?</div>' +
+      '<div style="font-size:11px;color:var(--txt3);margin-top:2px">Fasted morning weight tracks best</div></div>' +
+      '<button class="btn btn-primary btn-sm" style="width:auto;padding:10px 16px;min-height:auto" onclick="showLogWeight()">Log</button></div>' : '';
+
+    const setupBanner = (S.g('settings.equipmentSetupPending') || !S.g('user.equipmentConfigured')) ?
+      '<div onclick="go(\'equipment-setup\')" style="margin:0 16px 14px;border-radius:16px;padding:14px 16px;background:rgba(0,213,255,0.08);border:1px solid rgba(0,213,255,0.2);display:flex;align-items:center;justify-content:space-between;cursor:pointer;touch-action:manipulation">' +
+      '<div><div style="font-size:13px;font-weight:700;color:var(--c1)">🏋️ Set up your equipment</div>' +
+      '<div style="font-size:11px;color:var(--txt3);margin-top:2px">Home, gym, Life Fitness machines — get matched workouts</div></div>' +
+      '<span style="color:var(--c1);font-size:18px">›</span></div>' : '';
+
+    const splitRec = S.g('settings.suggestedSplit');
+    const splitBanner = splitRec && !S.g('user.splitConfirmed') ?
+      '<div style="margin:0 16px 14px;border-radius:16px;padding:14px 16px;background:var(--bg3);border:1px solid var(--border)">' +
+      '<div style="font-size:12px;font-weight:700;color:var(--txt3);margin-bottom:4px">SUGGESTED SPLIT</div>' +
+      '<div style="font-size:15px;font-weight:800;color:var(--txt)">'+esc(splitRec.name)+'</div>' +
+      '<div style="font-size:11px;color:var(--txt3);margin:6px 0 10px">'+esc(splitRec.reason)+'</div>' +
+      '<button class="btn btn-primary btn-sm" onclick="applySuggestedSplit()">Use this split</button> ' +
+      '<button class="btn btn-ghost btn-sm" onclick="go(\'settings\',{tab:\'training\'})">Choose another</button></div>' : '';
+
+    return demoBanner + topbar + weightPrompt + setupBanner + splitBanner + briefingCard + heroCard + quickActions + todayWorkout + recoverySnapshot +
       muscleRecoveryMini + activeQuestCard + progressSnapshot + lastWktCard + exploreCta +
       '<div style="height:12px"></div>';
 
@@ -272,4 +294,14 @@ window._nextTheme = _nextTheme;
 window.openMorningBriefing = function() {
   S.set('settings.lastBriefingDate', new Date().toISOString().slice(0, 10));
   go('briefing');
+};
+
+window.applySuggestedSplit = function() {
+  const rec = S.g('settings.suggestedSplit');
+  if (!rec) return;
+  S.set('user.split', rec.id);
+  S.set('user.weeklyGoal', rec.daysPerWeek || 4);
+  S.set('user.splitConfirmed', true);
+  toast('Split set to ' + rec.name, 'ok');
+  go('dashboard');
 };

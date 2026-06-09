@@ -126,10 +126,15 @@ const ExerciseLibrary = (() => {
     return all.length;
   }
 
-  async function sync(onProgress) {
+  async function sync(onProgress, force) {
+    const cached = getCached();
+    if (cached && cached.length > 0 && !force) {
+      const added = mergeIntoExDB();
+      return { fetched: cached.length, added: added, fromCache: true };
+    }
     const n = await fetchAll(onProgress);
     const added = mergeIntoExDB();
-    return { fetched: n, added: added };
+    return { fetched: n, added: added, fromCache: false };
   }
 
   function status() {
@@ -150,7 +155,7 @@ window.syncExerciseLibrary = async function() {
     const r = await ExerciseLibrary.sync(function(done, total) {
       if (btn) btn.textContent = 'Downloading… ' + done + '/' + total;
     });
-    toast('Exercise library: ' + r.fetched + ' exercises (' + r.added + ' new)', 'ok', 4000);
+    toast(r.fromCache ? 'Library loaded from phone (' + r.fetched + ' exercises)' : 'Downloaded ' + r.fetched + ' exercises (' + r.added + ' new)', 'ok', 4000);
     if (btn) btn.textContent = '✓ Library synced';
   } catch (e) {
     toast(e.message || 'Sync failed', 'err');
