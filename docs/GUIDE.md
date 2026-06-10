@@ -17,20 +17,17 @@ FitnessOS is your **Smart Coach fitness operating system** — a comprehensive, 
 
 ## Main navigation
 
-Customisable bottom nav (minimum 3 tabs). Default includes:
+Customisable bottom nav (minimum 3 tabs). **Default tabs** (enterprise demo):
 
 | Screen | Purpose |
 |--------|---------|
 | **Dashboard** | Readiness, coach quote, today's plan, quick actions |
 | **Workout** | Exercise library, active logger, cardio protocols |
-| **Body** | SVG body map, measurements, weight, BMI/TDEE |
-| **Coach** | Daily briefing, personality-driven insights |
-| **Progress** | Strength charts, PR wall, achievements |
-| **Nutrition** | Macros, supplements, water |
-| **Recovery** | Readiness sliders, muscle recovery grid |
-| **Settings** | Themes, profiles, import/export, injuries |
+| **Smart Coach** (`assistant`) | Rule-based coaching chat — ask training questions |
+| **Recovery** | Sleep/soreness check-in, muscle recovery grid |
+| **Settings** | Themes, profiles, demo mode, import/export, injuries |
 
-Toggle visible tabs in **Settings → Navigation**.
+Additional screens (Body map, Progress, Nutrition, Hub explore, Rehab, etc.) are available via **Settings → Navigation** — pin any tab to the bottom bar.
 
 ---
 
