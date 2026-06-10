@@ -28,6 +28,8 @@ desktop.ini
 
 # Test coverage
 coverage/
+test-results/
+playwright-report/
 
 # Logs
 *.log
