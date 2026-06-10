@@ -7,11 +7,11 @@
   --top-safe: env(safe-area-inset-top, 0px);
 
   /* Border radius */
-  --r8: 8px; --r12: 12px; --r14: 14px; --r16: 16px;
-  --r20: 20px; --r24: 24px; --r32: 32px; --r999: 999px;
+  --r8: 6px; --r12: 9px; --r14: 11px; --r16: 12px;
+  --r20: 14px; --r24: 16px; --r32: 20px; --r999: 999px;
 
   /* Typography */
-  --font: -apple-system, "SF Pro Display", "SF Pro Text", Inter, system-ui, sans-serif;
+  --font: "Sora", -apple-system, "SF Pro Display", "SF Pro Text", Inter, system-ui, sans-serif;
 
   /* Animations */
   --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -85,16 +85,16 @@
 
 /* Carbon (default) — Cyan + Electric Purple */
 [data-theme="carbon"], [data-theme="dark"] {
-  --c1: #00d5ff; --c1-rgb: 0,213,255;
-  --c2: #7b5fff; --c2-rgb: 123,95,255;
-  --c3: #00ff88; --c3-rgb: 0,255,136;
+  --c1: #00f2ff; --c1-rgb: 0,242,255;
+  --c2: #0e7bff; --c2-rgb: 14,123,255;
+  --c3: #73ffcf; --c3-rgb: 115,255,207;
   --c4: #ff4560; --c4-rgb: 255,69,96;
-  --c5: #ffaa00; --c5-rgb: 255,170,0;
-  --grad: linear-gradient(135deg, #00d5ff 0%, #7b5fff 100%);
-  --grad2: linear-gradient(135deg, #7b5fff 0%, #ff6bff 100%);
-  --orb1: #00d5ff; --orb2: #7b5fff;
-  --shadow: 0 4px 24px rgba(0,213,255,0.1);
-  --glow: rgba(0,213,255,0.15);
+  --c5: #ffe04a; --c5-rgb: 255,224,74;
+  --grad: linear-gradient(128deg, #00f2ff 0%, #0e7bff 58%, #73ffcf 100%);
+  --grad2: linear-gradient(128deg, #0e7bff 0%, #00f2ff 100%);
+  --orb1: #00f2ff; --orb2: #0e7bff;
+  --shadow: 0 10px 30px rgba(0,242,255,0.14);
+  --glow: rgba(0,242,255,0.2);
 }
 
 /* Aurora — Teal + Emerald */
@@ -213,6 +213,21 @@ body {
   height: 100dvh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  position: relative;
+  background-image:
+    linear-gradient(158deg, rgba(0,242,255,0.12) 0%, transparent 36%),
+    linear-gradient(28deg, rgba(14,123,255,0.1) 14%, transparent 54%),
+    radial-gradient(95% 72% at 86% -10%, rgba(115,255,207,0.13), transparent 64%),
+    linear-gradient(170deg, #060b12 0%, #09111b 58%, #0b1724 100%);
+}
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.16;
+  background-image: repeating-linear-gradient(130deg, rgba(0,242,255,0.08) 0 2px, transparent 2px 22px);
+  z-index: 0;
 }
 
 input, button, select, textarea {
@@ -312,3 +327,9 @@ img { max-width: 100%; }
 /* Row helpers */
 .row-between { display: flex; justify-content: space-between; align-items: center; }
 .row-center  { display: flex; align-items: center; }
+
+/* Athletic display typography */
+h1, h2, h3, .topbar-title, .topbar-greeting, .btn, .nb span {
+  font-family: "Rajdhani", "Sora", sans-serif;
+  letter-spacing: 0.04em;
+}

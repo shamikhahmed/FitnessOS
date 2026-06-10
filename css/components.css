@@ -4,7 +4,7 @@
 .card{
   background:var(--card-bg);
   border:1px solid var(--border);
-  border-radius:var(--r20);
+  border-radius:var(--r14);
   padding:20px;
   margin:0 16px 12px;
   backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
@@ -40,7 +40,7 @@
 [data-theme="arctic"] .stat{background:#fff;box-shadow:0 1px 6px rgba(0,0,0,0.06);}
 .stat:active{transform:scale(0.96);}
 .stat-v{
-  font-size:22px;font-weight:800;
+  font-size:24px;font-weight:800;
   font-variant-numeric:tabular-nums;
   color:var(--txt);letter-spacing:-0.5px;
 }
@@ -57,12 +57,13 @@
 /* ══ BUTTONS ═════════════════════════════════════════════════════ */
 .btn{
   display:block;width:100%;padding:15px 20px;
-  border-radius:var(--r16);font-size:15px;font-weight:700;
+  border-radius:var(--r12);font-size:16px;font-weight:800;
   cursor:pointer;
   transition:transform 0.18s var(--spring),opacity 0.14s var(--ease),box-shadow 0.2s var(--ease);
   touch-action:manipulation;-webkit-appearance:none;
   text-align:center;line-height:1;min-height:52px;
-  letter-spacing:-0.2px;
+  letter-spacing:0.06em;
+  text-transform:uppercase;
   -webkit-font-smoothing:antialiased;
 }
 .btn:active{transform:scale(0.97);opacity:0.92;}
@@ -87,8 +88,8 @@
   border:1px solid rgba(255,68,68,0.25);
 }
 .btn-sm{
-  padding:9px 18px;font-size:13px;
-  border-radius:var(--r12);display:inline-block;
+  padding:9px 18px;font-size:12px;
+  border-radius:var(--r8);display:inline-block;
   width:auto;min-height:40px;
 }
 .btn-row{display:flex;gap:10px;padding:0 16px;margin-bottom:14px;}

@@ -38,10 +38,12 @@
   height: calc(var(--nav-h) + var(--safe));
   display: flex; align-items: flex-start; justify-content: space-around;
   padding: 8px 4px var(--safe);
-  background: color-mix(in srgb, var(--bg2) 94%, transparent);
+  background: color-mix(in srgb, #07131f 88%, transparent);
   backdrop-filter: blur(14px) saturate(160%);
   -webkit-backdrop-filter: blur(14px) saturate(160%);
-  border-top: 1px solid var(--border);
+  border-top: 1px solid rgba(var(--c1-rgb), 0.26);
+  box-shadow: 0 -8px 28px rgba(0, 12, 24, 0.45);
+  clip-path: polygon(0 12px, 20% 0, 80% 0, 100% 12px, 100% 100%, 0 100%);
 }
 
 [data-theme="light"] #nav {
@@ -52,7 +54,7 @@
   flex: 1 1 0; min-width: 0; max-width: 76px;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  gap: 3px; padding: 4px 2px 6px;
+  gap: 3px; padding: 6px 2px 6px;
   background: none; border: none;
   color: var(--txt3);
   transition: color 0.2s var(--ease);
@@ -61,22 +63,22 @@
 }
 
 .nb svg { width: 22px; height: 22px; flex-shrink: 0; transition: transform 0.22s var(--spring), filter 0.2s; }
-.nb span { font-size: 10px; font-weight: 600; letter-spacing: 0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; text-align: center; transition: color 0.2s; }
+.nb span { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; text-align: center; transition: color 0.2s; }
 
 /* Active indicator pill */
 .nb::before {
   content: '';
   position: absolute; top: 0; left: 50%;
   transform: translateX(-50%);
-  width: 0; height: 3px;
-  border-radius: 0 0 3px 3px;
+  width: 0; height: 2px;
+  border-radius: 0;
   background: var(--grad);
   transition: width 0.28s var(--spring);
 }
 
 .nb.on { color: var(--c1); }
-.nb.on::before { width: 32px; }
-.nb.on svg { transform: scale(1.1); filter: drop-shadow(0 0 6px rgba(var(--c1-rgb), 0.5)); }
+.nb.on::before { width: 36px; }
+.nb.on svg { transform: scale(1.14); filter: drop-shadow(0 0 10px rgba(var(--c1-rgb), 0.58)); }
 .nb:active svg { transform: scale(0.86); }
 
 /* ── Topbar ─────────────────────────────────── */
