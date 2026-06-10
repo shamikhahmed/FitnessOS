@@ -23,4 +23,4 @@
 
 ## Reporting
 
-Open a private security issue on the [FitnessOS GitHub repo](https://github.com/shamikhahmed/FitnessOS) for vulnerabilities.
+Open a private security issue on the [FitnessOS GitHub repo](https://github.com/shamikhahmed/PulseCap) for vulnerabilities.

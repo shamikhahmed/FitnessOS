@@ -1,8 +1,8 @@
 # FitnessOS Pro v4 — CLAUDE.md
 
 ## Project
-- Live: https://shamikhahmed.github.io/FitnessOS
-- Repo: github.com/shamikhahmed/FitnessOS
+- Live: https://shamikhahmed.github.io/PulseCap
+- Repo: github.com/shamikhahmed/PulseCap
 - Local: ~/Desktop/Projects/fitnessos
 - Owner: Shamikh Ahmed, Karachi PK
 

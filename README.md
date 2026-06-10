@@ -2,8 +2,8 @@
 
 **Your Smart Coach fitness operating system — by Capricorn Systems, built as a single offline-first PWA.**
 
-🔗 **Live:** https://shamikhahmed.github.io/FitnessOS  
-📁 **Repo:** https://github.com/shamikhahmed/FitnessOS
+🔗 **Live:** https://shamikhahmed.github.io/PulseCap  
+📁 **Repo:** https://github.com/shamikhahmed/PulseCap
 
 ---
 
@@ -164,7 +164,7 @@ High-value features that fit FitnessOS’s workout-first, offline-first, Apple-n
 ## Running Locally
 
 ```bash
-git clone https://github.com/shamikhahmed/FitnessOS.git
+git clone https://github.com/shamikhahmed/PulseCap.git
 cd FitnessOS
 # Open index.html directly or serve with any static server:
 npx serve .

@@ -9,7 +9,7 @@
 
 *300+ exercises · Smart Coach · Offline PWA*
 
-**Live:** shamikhahmed.github.io/FitnessOS
+**Live:** shamikhahmed.github.io/PulseCap
 
 ---
 
@@ -125,7 +125,7 @@ sw.js         — cache-first PWA
 
 ## Slide 12 — Try it
 
-📱 shamikhahmed.github.io/FitnessOS
+📱 shamikhahmed.github.io/PulseCap
 
 🏋️ Complete onboarding → log your first set in 5 minutes
 

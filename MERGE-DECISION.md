@@ -13,8 +13,8 @@
 
 | Item | Status |
 |------|--------|
-| Canonical repo | `https://github.com/shamikhahmed/FitnessOS` |
-| Live URL | `https://shamikhahmed.github.io/FitnessOS/` |
+| Canonical repo | `https://github.com/shamikhahmed/PulseCap` |
+| Live URL | `https://shamikhahmed.github.io/PulseCap/` |
 | v2 fork | **Archived** — engines pattern absorbed where useful (`BodyEngine`, `PlanEngine`, `SplitEngine`, etc.) |
 | User data | No migration required — v2 never shipped to production |
 

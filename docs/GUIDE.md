@@ -2,7 +2,7 @@
 
 FitnessOS is your **Smart Coach fitness operating system** — a comprehensive, offline-first PWA for workouts, cardio, body tracking, nutrition, and coaching.
 
-**Live app:** https://shamikhahmed.github.io/FitnessOS
+**Live app:** https://shamikhahmed.github.io/PulseCap
 
 ---
 
