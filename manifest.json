@@ -1,7 +1,7 @@
 {
-  "name": "FitnessOS",
-  "short_name": "FitnessOS",
-  "description": "Your Smart Coach fitness operating system",
+  "name": "PulseCap",
+  "short_name": "PulseCap",
+  "description": "PulseCap by Capricorn Systems — your Smart Coach fitness operating system",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

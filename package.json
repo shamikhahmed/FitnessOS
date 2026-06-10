@@ -1,5 +1,5 @@
 {
-  "name": "fitnessos",
+  "name": "pulsecap",
   "private": true,
   "scripts": {
     "test": "playwright test",

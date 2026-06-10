@@ -1,6 +1,6 @@
 {
   "appId": "com.shamikhahmed.fitnessos",
-  "appName": "FitnessOS",
+  "appName": "PulseCap",
   "webDir": ".",
   "server": {
     "androidScheme": "https"

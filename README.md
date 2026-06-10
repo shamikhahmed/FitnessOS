@@ -1,6 +1,6 @@
-# FitnessOS
+# PulseCap
 
-**Your Smart Coach fitness operating system — built as a single offline-first PWA.**
+**Your Smart Coach fitness operating system — by Capricorn Systems, built as a single offline-first PWA.**
 
 🔗 **Live:** https://shamikhahmed.github.io/FitnessOS  
 📁 **Repo:** https://github.com/shamikhahmed/FitnessOS
