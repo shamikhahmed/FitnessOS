@@ -1,0 +1,12 @@
+{
+  "appId": "com.shamikhahmed.fitnessos",
+  "appName": "FitnessOS",
+  "webDir": ".",
+  "server": {
+    "androidScheme": "https"
+  },
+  "ios": {
+    "contentInset": "automatic",
+    "scrollEnabled": true
+  }
+}
