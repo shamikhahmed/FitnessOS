@@ -53,7 +53,7 @@ reg('hub', function() {
     hubRow('📊', 'Physique Analysis', 'Scores · Growth simulator · Radar', 'physique', '') +
     hubRow('🦴', 'Joint Health', 'Injury risk monitor · 7 joints', 'injury-risk', '') +
     hubRow('📡', 'Visualizations', 'Heatmaps · Fatigue map · Radar', 'visualizations', '') +
-    hubRow('🤖', 'AI Coach', 'Ask anything about training', 'assistant', '') +
+    hubRow('🤖', 'Smart Coach', 'Ask anything about training', 'assistant', '') +
     '</div>' +
 
     hubSection('Train') +

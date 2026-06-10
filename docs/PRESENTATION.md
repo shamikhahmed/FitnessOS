@@ -7,7 +7,7 @@
 # FitnessOS
 ### Your Intelligent Training Partner
 
-*300+ exercises · AI Coach · Offline PWA*
+*300+ exercises · Smart Coach · Offline PWA*
 
 **Live:** shamikhahmed.github.io/FitnessOS
 
@@ -29,7 +29,7 @@ Serious lifters need **depth** — not generic 10-exercise libraries.
 
 - 300+ exercise database with coaching cues
 - Active set logger + PR detection + rest timer
-- 5 AI coach personalities
+- 5 Smart Coach personalities
 - Body map, readiness, nutrition — one app
 
 **Vanilla JS. Zero framework. Fully offline.**
@@ -46,7 +46,7 @@ Serious lifters need **depth** — not generic 10-exercise libraries.
 
 ---
 
-## Slide 5 — AI Coach
+## Slide 5 — Smart Coach
 
 | Personality | Voice |
 |-------------|-------|

@@ -402,3 +402,10 @@ input[type=range] {
 .btn-secondary { background: var(--bg4); border: 1px solid var(--border2); color: var(--txt); }
 .btn-sm { padding: 10px 16px; font-size: 13px; border-radius: var(--r12); width: auto; }
 .btn-danger { background: rgba(255,69,58,0.15); border: 1px solid rgba(255,69,58,0.3); color: #ff453a; }
+
+@media (prefers-reduced-motion: no-preference) {
+  #toast { animation: fos-toast-in .28s cubic-bezier(.22,1,.36,1); }
+  .page.on { animation: fos-page-in .22s ease-out; }
+  @keyframes fos-toast-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes fos-page-in { from { opacity: .92; } to { opacity: 1; } }
+}

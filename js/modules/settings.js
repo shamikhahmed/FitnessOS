@@ -210,7 +210,10 @@ function _tabAppearance(u) {
     {id:'forest',label:'Forest',grad:'linear-gradient(135deg,#10B981,#059669)'},
     {id:'arctic',label:'Arctic',grad:'linear-gradient(135deg,#007AFF,#5856D6)'},
     {id:'electric',label:'Electric',grad:'linear-gradient(135deg,#00f0ff,#0080ff)'},
-    {id:'sunset',label:'Sunset',grad:'linear-gradient(135deg,#ff6b35,#f7931e)'}
+    {id:'sunset',label:'Sunset',grad:'linear-gradient(135deg,#ff6b35,#f7931e)'},
+    {id:'aurora',label:'Aurora',grad:'linear-gradient(135deg,#a855f7,#22d3ee)'},
+    {id:'midnight',label:'Midnight',grad:'linear-gradient(135deg,#1e3a5f,#0f172a)'},
+    {id:'light',label:'Light',grad:'linear-gradient(135deg,#f2f2f7,#e5e5ea)'}
   ];
   const coaches = [
     {id:'alex',e:'🔥',n:'Alex — Drill Sergeant'},

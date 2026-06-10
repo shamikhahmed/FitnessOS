@@ -13,11 +13,9 @@
   <meta name="theme-color" content="#000000">
   <meta name="format-detection" content="telephone=no">
   <!-- Apple splash / startup feel -->
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon-180.png">
-  <link rel="apple-touch-icon" sizes="152x152" href="assets/apple-touch-icon-152.png">
-  <link rel="apple-touch-icon" sizes="120x120" href="assets/apple-touch-icon-120.png">
-  <link rel="apple-touch-startup-image" href="assets/apple-touch-icon-180.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)">
-  <link rel="apple-touch-startup-image" href="assets/apple-touch-icon-180.png" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3)">
+  <link rel="apple-touch-icon" href="icon-512.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
+  <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
   <title>FitnessOS</title>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -227,7 +225,7 @@ window.addEventListener('offline', function(){ document.getElementById('offline-
       });
     };
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js?v=19').then(function(r){ r.update(); }).catch(function(){});
+      navigator.serviceWorker.register('sw.js?v=20').then(function(r){ r.update(); }).catch(function(){});
     }
   </script>
 </body>

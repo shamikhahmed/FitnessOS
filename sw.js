@@ -1,10 +1,15 @@
 'use strict';
 
-const CACHE = 'fos-v19';
+const CACHE = 'fos-v20';
 const ASSETS = [
   './',
   './index.html',
   './landing.html',
+  './presentation.html',
+  './pitch.html',
+  './icon-192.png',
+  './icon-512.png',
+  './manifest.json',
   './css/base.css',
   './css/layout.css',
   './css/components.css',

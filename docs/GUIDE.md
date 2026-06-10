@@ -1,6 +1,6 @@
 # FitnessOS — User Guide
 
-FitnessOS is your **AI-powered fitness operating system** — a comprehensive, offline-first PWA for workouts, cardio, body tracking, nutrition, and coaching.
+FitnessOS is your **Smart Coach fitness operating system** — a comprehensive, offline-first PWA for workouts, cardio, body tracking, nutrition, and coaching.
 
 **Live app:** https://shamikhahmed.github.io/FitnessOS
 
@@ -56,7 +56,7 @@ HIIT (Tabata, 30/30), LISS, MISS, SIT (Wingate), Fartlek, Circuit — each with 
 
 ---
 
-## AI Coach
+## Smart Coach
 
 Five personalities:
 
@@ -113,7 +113,7 @@ Coach adapts to your goal (fat loss, strength, hypertrophy, recomp, athletic, ma
 ## Offline & data
 
 - All data in localStorage (`fos_profiles_[id]`)
-- Service worker cache-first (`fos-v17`)
+- Service worker cache-first (`fos-v20`)
 - No backend required
 - Export JSON before device reset
 

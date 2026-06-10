@@ -1,6 +1,6 @@
 # FitnessOS
 
-**Your AI-powered fitness operating system — built as a single offline-first PWA.**
+**Your Smart Coach fitness operating system — built as a single offline-first PWA.**
 
 🔗 **Live:** https://shamikhahmed.github.io/FitnessOS  
 📁 **Repo:** https://github.com/shamikhahmed/FitnessOS
@@ -42,7 +42,7 @@ Built by Shamikh Ahmed across 14 development sessions as a production-grade pers
 - **Body stats** — BMI, BMR, TDEE, healthy range, weight history
 - **Weight logging** — metric/imperial, goal tracking
 
-### 🤖 AI Coach
+### 🤖 Smart Coach
 - **Daily Briefing** — readiness score, coach quote, today's plan, injury alerts, supplement reminders
 - **5 coach personalities** — Maya (Sports Scientist), Alex (Drill Sergeant), Sam (Motivator), Zen (Mindful), Rex (Powerlifter)
 - **3 coach tones** — Motivational, Scientific, Hardcore
@@ -113,7 +113,7 @@ js/
     settings.js     — 6-tab settings screen
     profiles.js     — Profile switcher, demo mode
     onboarding.js   — 12-step onboarding + 4 intro slides
-sw.js               — Service worker (cache: fos-v17)
+sw.js               — Service worker (cache: fos-v20)
 manifest.json       — PWA manifest
 ```
 

@@ -26,7 +26,7 @@ js/modules/onboarding.js — 12-step onboarding + intro slides
 js/modules/dashboard.js — dashboard + explore grid
 js/modules/workout.js — exercise DB (160+), logger
 js/modules/bodymap.js — body visualiser
-js/modules/coach.js — AI coach screen
+js/modules/coach.js — Smart Coach screen
 js/modules/progress.js — charts, PRs
 js/modules/nutrition.js — meals, macros, supplements
 js/modules/recovery.js — readiness, sliders
