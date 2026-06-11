@@ -55,7 +55,7 @@ User preference saved to S.g('user.theme')
 - Electric/Carbon dark theme aesthetic
 - Animated canvas orbs always on
 - Premium glassmorphism everywhere
-- Use Smart Coach naming in user-facing copy (not "AI Coach").
+- Use Smart Coach naming in user-facing copy (never the legacy AI-prefixed coach name).
 - No questions — just build it
 - Test on iPhone Safari 390px viewport
 - Commit and push after every working build
