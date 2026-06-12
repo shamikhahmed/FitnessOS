@@ -56,6 +56,7 @@ const S = {
     }
     this._pid = meta.activeId || meta.profiles[0].id;
     this._load();
+    this.applyGlobalCoach();
   },
 
   /* ── Switch profile ── */
@@ -67,7 +68,26 @@ const S = {
     this.saveMeta(meta);
     this._pid = id;
     this._load();
+    this.applyGlobalCoach();
     return true;
+  },
+
+  _coachGlobalKey: 'fos_coach_global',
+
+  getGlobalCoach() {
+    try { return localStorage.getItem(this._coachGlobalKey) || null; } catch(e) { return null; }
+  },
+
+  setGlobalCoach(id) {
+    if (id) localStorage.setItem(this._coachGlobalKey, id);
+  },
+
+  applyGlobalCoach() {
+    const coach = this.getGlobalCoach();
+    if (!coach) return;
+    if (!this.d.user) this.d.user = {};
+    this.d.user.coachPersonality = coach;
+    this._save();
   },
 
   /* ── Create profile ── */

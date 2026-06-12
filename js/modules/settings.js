@@ -388,6 +388,9 @@ function _infoStat(label, val, sub) {
 /* ── Actions ── */
 window._setSetting = function(key, val) {
   S.set(key, val);
+  if (key === 'user.coachPersonality') {
+    S.setGlobalCoach(val);
+  }
   if (key === 'settings.lowPower' && window._fitnessCanvas) {
     if (val) window._fitnessCanvas.stop();
     else window._fitnessCanvas.start();

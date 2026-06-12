@@ -1,6 +1,23 @@
 /* FitnessOS — identity overlay (theme in base.css) */
 
+:root {
+  --font-display: var(--font);
+}
+
+h1, .topbar-title, .sh-t, .readiness-score, .ob-title {
+  font-family: var(--font);
+  letter-spacing: -0.03em;
+}
+
 .dash-stat-n, .stat-v {
   font-family: var(--font);
   letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.topbar-sub, .stat-l, .field-label {
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 700;
 }

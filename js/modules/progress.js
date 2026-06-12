@@ -10,6 +10,7 @@ reg('progress', function() {
   const totalVol = StreakEngine.totalVolume();
 
   return '<div class="topbar"><div class="topbar-title">Progress</div></div>' +
+    _periodizationBlock(ws) +
     _weeklySummary(ws, prs) +
     _monthlyReport(ws, prs, bodyStats) +
     _heroStats(ws, prs, streak, totalVol) +
@@ -44,6 +45,37 @@ function _monthlyReport(ws, prs, bodyStats) {
     '</div>' +
     (weightChange !== null ? '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;color:var(--txt3)">Weight this month: <span style="color:'+(parseFloat(weightChange)<=0?'var(--c3)':'var(--c5)')+';font-weight:700">'+(parseFloat(weightChange)>0?'+':'')+weightChange+' kg</span></div>' : '') +
     '</div>';
+}
+
+function _periodizationBlock(ws) {
+  const blockStart = S.g('periodization.blockStart') || new Date().toISOString().slice(0, 10);
+  const start = new Date(blockStart + 'T12:00:00');
+  const today = new Date();
+  const dayMs = 86400000;
+  const elapsed = Math.max(0, Math.floor((today - start) / dayMs));
+  const week = Math.min(4, Math.floor(elapsed / 7) + 1);
+  const weekStart = new Date(start.getTime() + (week - 1) * 7 * dayMs);
+  const weekEnd = new Date(weekStart.getTime() + 6 * dayMs);
+  const weekWs = ws.filter(function(w) {
+    const d = w.date || '';
+    return d >= weekStart.toISOString().slice(0, 10) && d <= weekEnd.toISOString().slice(0, 10);
+  });
+  const phases = ['Accumulation', 'Intensification', 'Peak', 'Deload'];
+  const phase = phases[week - 1] || 'Deload';
+  const labels = ['W1', 'W2', 'W3', 'W4'];
+  return '<div style="margin:0 16px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:16px">' +
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">' +
+    '<div><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--c2);margin-bottom:4px">Training Block</div>' +
+    '<div style="font-size:15px;font-weight:800;color:var(--txt)">Week ' + week + ' · ' + esc(phase) + '</div></div>' +
+    '<div style="font-size:11px;color:var(--txt3);text-align:right">4-week mesocycle<br><span style="font-weight:700;color:var(--c1)">' + weekWs.length + ' sessions</span></div></div>' +
+    '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">' +
+    labels.map(function(l, i) {
+      const on = i + 1 === week;
+      return '<div style="text-align:center;padding:10px 6px;border-radius:12px;border:1px solid ' + (on ? 'var(--c1)' : 'var(--border)') + ';background:' + (on ? 'rgba(var(--c1-rgb),0.12)' : 'var(--bg4)') + '">' +
+        '<div style="font-size:12px;font-weight:800;color:' + (on ? 'var(--c1)' : 'var(--txt3)') + '">' + l + '</div>' +
+        '<div style="font-size:9px;color:var(--txt3);margin-top:4px;text-transform:uppercase">' + esc(phases[i]) + '</div></div>';
+    }).join('') +
+    '</div></div>';
 }
 
 function _weeklySummary(ws, prs) {
