@@ -46,4 +46,14 @@ test.describe('PulseCap smoke', () => {
     const fatal = errors.filter(e => !/serviceWorker|ResizeObserver|favicon/i.test(e));
     expect(fatal).toEqual([]);
   });
+
+  test('progress screen shows periodization block in demo mode', async ({ page }) => {
+    await page.goto('/?demo=1');
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForFunction(() => typeof window.go === 'function');
+    await page.evaluate(() => window.go('progress'));
+    await page.waitForTimeout(600);
+    await expect(page.getByText('Training Block')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/Week \d+ ·/)).toBeVisible();
+  });
 });
