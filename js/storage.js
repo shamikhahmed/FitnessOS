@@ -130,7 +130,8 @@ const S = {
         goalWeight: 78, split: 'ppl', weeklyGoal: 4,
         equipment: ['barbell','dumbbell','cables','machine','bar'],
         coachPersonality: 'maya', theme: 'carbon', mode: 'dark',
-        splitDay: 2, joinDate: new Date(Date.now()-60*864e5).toISOString()
+        splitDay: 2, joinDate: new Date(Date.now()-60*864e5).toISOString(),
+        calorieTarget: 2400, proteinTarget: 165, waterTarget: 8
       },
       recovery: {
         sleep: 7.5, soreness: 3, stress: 4, energy: 8, hydration: 2.5,
@@ -169,16 +170,47 @@ const S = {
         }
         return bs;
       })(),
-      mealLogs: (function() {
+      meals: (function() {
         var ml = [];
-        for (var i=4; i>=0; i--) {
-          var d3=new Date(); d3.setDate(d3.getDate()-i); var ds=d3.toISOString().slice(0,10);
-          ml.push({name:'Oats & Eggs',calories:450,protein:35,carbs:45,fat:12,date:ds,time:d3.toISOString()});
-          ml.push({name:'Chicken Rice',calories:600,protein:50,carbs:60,fat:10,date:ds,time:d3.toISOString()});
-          ml.push({name:'Protein Shake',calories:200,protein:40,carbs:8,fat:3,date:ds,time:d3.toISOString()});
+        var todayStr = new Date().toISOString().slice(0, 10);
+        for (var i = 4; i >= 0; i--) {
+          var d3 = new Date(); d3.setDate(d3.getDate() - i); var ds = d3.toISOString().slice(0, 10);
+          var t1 = new Date(d3); t1.setHours(8, 15, 0, 0);
+          var t2 = new Date(d3); t2.setHours(13, 0, 0, 0);
+          var t3 = new Date(d3); t3.setHours(19, 30, 0, 0);
+          ml.push({ name: 'Oats & Eggs', calories: 450, protein: 35, carbs: 45, fat: 12, date: ds, time: t1.toISOString() });
+          ml.push({ name: 'Chicken Rice Bowl', calories: 600, protein: 50, carbs: 60, fat: 10, date: ds, time: t2.toISOString() });
+          ml.push({ name: 'Protein Shake', calories: 200, protein: 40, carbs: 8, fat: 3, date: ds, time: t3.toISOString() });
+          if (ds === todayStr) {
+            ml.push({ name: 'Greek Yogurt & Berries', calories: 180, protein: 18, carbs: 22, fat: 4, date: ds, time: new Date().toISOString() });
+          }
         }
         return ml;
       })(),
+      water: (function() {
+        var w = [];
+        var ds = new Date().toISOString().slice(0, 10);
+        for (var i = 0; i < 5; i++) {
+          w.push({ date: ds, time: new Date(Date.now() - i * 3600000).toISOString() });
+        }
+        return w;
+      })(),
+      activeQuests: [{
+        id: 'demo_quest_1',
+        templateId: 'strength_foundation',
+        title: 'Strength Foundation',
+        icon: '🏋️',
+        description: 'Build real strength on the big compound lifts',
+        category: 'Strength',
+        goals: [
+          { type: 'sessions_total', target: 30, label: '30 strength sessions', progress: 0, completed: false },
+          { type: 'sets_muscle', muscle: 'chest', target: 200, label: '200 chest sets', progress: 0, completed: false }
+        ],
+        reward: { xp: 800, badge: '💪 Strength Foundation', tip: 'PR frequency drops naturally — celebrate each one' },
+        startDate: new Date(Date.now() - 14 * 864e5).toISOString().slice(0, 10),
+        dueDate: new Date(Date.now() + 42 * 864e5).toISOString().slice(0, 10),
+        status: 'active'
+      }],
       supplementLogs: [
         { suppId:'creatine', date:new Date().toISOString().slice(0,10), time:new Date().toISOString() },
         { suppId:'whey', date:new Date().toISOString().slice(0,10), time:new Date().toISOString() }

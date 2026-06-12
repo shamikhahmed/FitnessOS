@@ -18,6 +18,22 @@ test.describe('PulseCap smoke', () => {
     await expect(page.locator('link[rel="manifest"]')).toHaveCount(1);
   });
 
+  test('demo mode has nutrition and active quest data', async ({ page }) => {
+    await page.goto('/?demo=1');
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForFunction(() => typeof window.S !== 'undefined' && window.S.activeId && window.S.activeId() === 'demo');
+    await page.waitForTimeout(400);
+    const demo = await page.evaluate(() => {
+      const meals = window.S.g('meals') || [];
+      const today = new Date().toISOString().slice(0, 10);
+      const todayMeals = meals.filter(m => m.date === today);
+      const quests = window.S.g('activeQuests') || [];
+      return { todayMeals: todayMeals.length, activeQuests: quests.length };
+    });
+    expect(demo.todayMeals).toBeGreaterThan(0);
+    expect(demo.activeQuests).toBeGreaterThan(0);
+  });
+
   test('navigates to workout screen without JS errors', async ({ page }) => {
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));

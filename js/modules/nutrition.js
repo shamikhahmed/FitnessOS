@@ -19,6 +19,7 @@ reg('nutrition', function() {
 
   return '<div class="topbar"><div class="topbar-title">Nutrition & Supplements</div></div>' +
     _calSection(todayCals, calTarget, todayP, todayC, todayF, user) +
+    _mealPresets() +
     _nutritionStreak(meals) +
     _waterSection(todayWater, waterTarget) +
     _mealHistory(meals) +
@@ -136,6 +137,48 @@ function _stackSuggestions(user) {
     ).join('');
 }
 
+var MEAL_PRESETS = {
+  breakfast: [
+    { name: 'Oats & Banana', calories: 380, protein: 12, carbs: 62, fat: 8 },
+    { name: 'Eggs & Toast', calories: 420, protein: 28, carbs: 32, fat: 18 },
+    { name: 'Greek Yogurt Bowl', calories: 280, protein: 24, carbs: 28, fat: 6 }
+  ],
+  lunch: [
+    { name: 'Chicken Rice Bowl', calories: 580, protein: 48, carbs: 58, fat: 12 },
+    { name: 'Turkey Wrap', calories: 450, protein: 32, carbs: 42, fat: 14 },
+    { name: 'Tuna Salad', calories: 390, protein: 36, carbs: 18, fat: 16 }
+  ],
+  dinner: [
+    { name: 'Salmon & Veg', calories: 520, protein: 42, carbs: 24, fat: 22 },
+    { name: 'Steak & Potato', calories: 640, protein: 46, carbs: 38, fat: 28 },
+    { name: 'Stir Fry & Rice', calories: 490, protein: 34, carbs: 52, fat: 14 }
+  ],
+  snacks: [
+    { name: 'Protein Shake', calories: 200, protein: 40, carbs: 8, fat: 3 },
+    { name: 'Apple & PB', calories: 220, protein: 6, carbs: 24, fat: 12 },
+    { name: 'Rice Cakes', calories: 140, protein: 4, carbs: 28, fat: 2 }
+  ]
+};
+
+function _mealPresets() {
+  var chips = [
+    { key: 'breakfast', label: 'Breakfast', icon: '🌅' },
+    { key: 'lunch', label: 'Lunch', icon: '🥗' },
+    { key: 'dinner', label: 'Dinner', icon: '🍽️' },
+    { key: 'snacks', label: 'Snacks', icon: '🍎' }
+  ];
+  return sh('Quick Add') +
+    '<div style="padding:0 16px 14px">' +
+    '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">' +
+    chips.map(function(c) {
+      return '<button onclick="showMealPresets(\'' + c.key + '\')" style="flex:1;min-width:72px;padding:10px 8px;background:var(--bg4);border:1px solid var(--border);border-radius:12px;color:var(--txt);font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation">' +
+        c.icon + ' ' + esc(c.label) + '</button>';
+    }).join('') +
+    '</div>' +
+    '<div style="font-size:11px;color:var(--txt3)">Tap a meal slot, then pick a preset — or use + Log for custom entries.</div>' +
+    '</div>';
+}
+
 function _mealHistory(meals) {
   const todayMeals = meals.filter(m => m.date === today());
   if (!todayMeals.length) return '';
@@ -209,6 +252,30 @@ window.showAddSuppModal = function() {
     '</div>'
   ).join('');
   modal('Add Supplement', list||'<div style="color:var(--txt3);padding:16px">All supplements already in stack</div>');
+};
+
+window.showMealPresets = function(slot) {
+  var presets = MEAL_PRESETS[slot] || [];
+  if (!presets.length) return;
+  var labels = { breakfast: 'Breakfast', lunch: 'Lunch', dinner: 'Dinner', snacks: 'Snacks' };
+  modal((labels[slot] || 'Meal') + ' Presets',
+    presets.map(function(p, i) {
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">' +
+        '<div><div style="font-size:14px;font-weight:600;color:var(--txt)">' + esc(p.name) + '</div>' +
+        '<div style="font-size:11px;color:var(--txt3)">P:' + p.protein + 'g · C:' + p.carbs + 'g · F:' + p.fat + 'g</div></div>' +
+        '<button onclick="quickAddMeal(' + i + ',\'' + slot + '\')" style="color:var(--c1);background:none;border:none;font-size:13px;font-weight:700;cursor:pointer;padding:8px;min-height:44px">+' + p.calories + '</button>' +
+        '</div>';
+    }).join('')
+  );
+};
+
+window.quickAddMeal = function(idx, slot) {
+  var p = (MEAL_PRESETS[slot] || [])[idx];
+  if (!p) return;
+  S.push('meals', { name: p.name, calories: p.calories, protein: p.protein, carbs: p.carbs, fat: p.fat, date: today(), time: isoNow() });
+  closeModal();
+  toast(p.name + ' logged (' + p.calories + ' kcal)', 'ok');
+  go('nutrition');
 };
 
 window.showLogMeal = function() {
